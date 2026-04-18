@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CUSTOMER)
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders  Order[]
+  cart    Cart[]
+  reviews Review[]
+
+  @@map("users")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  slug     String    @unique
+  image    String?
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String
+  price       Float
+  comparePrice Float?
+  stock       Int      @default(0)
+  images      String[]
+  categoryId  String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  cartItems  Cart[]
+  reviews    Review[]
+
+  @@map("products")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  status          OrderStatus @default(PENDING)
+  total           Float
+  paymentId       String?
+  paymentMethod   String?
+  paymentStatus   String      @default("pending")
+  shippingAddress Json
+  shippingCost    Float       @default(0)
+  trackingCode    String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id])
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Cart {
+  id        String  @id @default(uuid())
+  userId    String
+  productId String
+  quantity  Int
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@map("cart")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@map("reviews")
+}
+
+model Coupon {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  discount    Float
+  type        String   @default("percentage")
+  minValue    Float    @default(0)
+  maxUses     Int?
+  usedCount   Int      @default(0)
+  expiresAt   DateTime?
+  active      Boolean  @default(true)
+
+  @@map("coupons")
+}
