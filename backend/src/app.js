@@ -21,6 +21,10 @@ const app = express();
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',
+  'https://atlantasports.vercel.app',
+  'https://atlanta-sports-loja.vercel.app',
+  'https://www.atlantasports.com.br',
+  'https://atlantasports.com.br',
 ].filter(Boolean);
 
 app.use(cors({
