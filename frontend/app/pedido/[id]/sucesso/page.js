@@ -3,7 +3,8 @@ import { CheckCircle } from 'lucide-react';
 
 export const metadata = { title: 'Pedido confirmado' };
 
-export default function PedidoSucessoPage({ params }) {
+export default async function PedidoSucessoPage({ params }) {
+  const { id } = await params;
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-md">
@@ -13,7 +14,7 @@ export default function PedidoSucessoPage({ params }) {
           Seu pagamento foi aprovado. Você receberá um e-mail de confirmação em breve.
         </p>
         <p className="text-sm text-gray-400 mb-8">
-          Pedido: <span className="font-mono font-bold">#{params.id.slice(0, 8).toUpperCase()}</span>
+          Pedido: <span className="font-mono font-bold">#{id.slice(0, 8).toUpperCase()}</span>
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/minha-conta/pedidos" className="btn-primary">Ver meus pedidos</Link>

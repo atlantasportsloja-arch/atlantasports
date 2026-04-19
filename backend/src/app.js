@@ -13,10 +13,27 @@ const couponRoutes = require('./routes/coupons');
 const freteRoutes = require('./routes/frete');
 const uploadRoutes = require('./routes/upload');
 const configRoutes = require('./routes/config');
+const reviewRoutes = require('./routes/reviews');
+const wishlistRoutes = require('./routes/wishlist');
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
+// Raw body for payment webhook (must come before express.json)
+app.use('/payment/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
@@ -33,6 +50,8 @@ app.use('/coupons', couponRoutes);
 app.use('/frete', freteRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/config', configRoutes);
+app.use('/reviews', reviewRoutes);
+app.use('/wishlist', wishlistRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok', app: 'Atlanta Sports API' }));
 

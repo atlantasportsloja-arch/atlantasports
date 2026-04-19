@@ -13,13 +13,16 @@ router.get('/dashboard', async (req, res) => {
       totalRevenue,
       totalProducts,
       totalUsers,
+      pendingOrders,
       recentOrders,
       topProducts,
+      lowStockProducts,
     ] = await Promise.all([
       prisma.order.count(),
-      prisma.order.aggregate({ _sum: { total: true }, where: { status: 'PAID' } }),
+      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } } }),
       prisma.product.count({ where: { active: true } }),
       prisma.user.count({ where: { role: 'CUSTOMER' } }),
+      prisma.order.count({ where: { status: 'PENDING' } }),
       prisma.order.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
@@ -30,6 +33,12 @@ router.get('/dashboard', async (req, res) => {
         _sum: { quantity: true },
         orderBy: { _sum: { quantity: 'desc' } },
         take: 5,
+      }),
+      prisma.product.findMany({
+        where: { active: true, stock: { lte: 5 } },
+        select: { id: true, name: true, stock: true, images: true },
+        orderBy: { stock: 'asc' },
+        take: 10,
       }),
     ]);
 
@@ -49,8 +58,10 @@ router.get('/dashboard', async (req, res) => {
       totalRevenue: totalRevenue._sum.total || 0,
       totalProducts,
       totalUsers,
+      pendingOrders,
       recentOrders,
       topProducts: topProductsWithDetails,
+      lowStockProducts,
     });
   } catch (err) {
     console.error(err);

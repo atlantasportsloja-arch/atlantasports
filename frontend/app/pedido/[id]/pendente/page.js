@@ -3,7 +3,8 @@ import { Clock } from 'lucide-react';
 
 export const metadata = { title: 'Pagamento pendente' };
 
-export default function PedidoPendentePage({ params }) {
+export default async function PedidoPendentePage({ params }) {
+  const { id } = await params;
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-md">
@@ -13,7 +14,7 @@ export default function PedidoPendentePage({ params }) {
           Seu pagamento está sendo processado. Pode levar alguns minutos para ser confirmado.
         </p>
         <p className="text-sm text-gray-400 mb-8">
-          Pedido: <span className="font-mono font-bold">#{params.id.slice(0, 8).toUpperCase()}</span>
+          Pedido: <span className="font-mono font-bold">#{id.slice(0, 8).toUpperCase()}</span>
         </p>
         <Link href="/minha-conta/pedidos" className="btn-primary">Acompanhar pedido</Link>
       </div>

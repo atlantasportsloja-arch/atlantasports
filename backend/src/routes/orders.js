@@ -110,7 +110,7 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
         where,
-        include: { user: { select: { name: true, email: true } }, items: true },
+        include: { user: { select: { name: true, email: true } }, items: { include: { product: { select: { name: true } } } } },
         orderBy: { createdAt: 'desc' },
         skip,
         take: Number(limit),

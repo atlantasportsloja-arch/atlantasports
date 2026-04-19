@@ -25,6 +25,11 @@ export const useAuthStore = create((set) => ({
 export const useCartStore = create((set, get) => ({
   items: [],
   total: 0,
+  couponCode: null,
+  discount: 0,
   setCart: (items, total) => set({ items, total }),
+  setCoupon: (code, discount) => set({ couponCode: code, discount }),
+  clearCoupon: () => set({ couponCode: null, discount: 0 }),
+  clearCart: () => set({ items: [], total: 0, couponCode: null, discount: 0 }),
   count: () => get().items.reduce((n, i) => n + i.quantity, 0),
 }));

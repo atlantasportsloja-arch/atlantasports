@@ -59,8 +59,9 @@ router.post('/create', authMiddleware, async (req, res) => {
   }
 });
 
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const { type, data } = req.body;
+router.post('/webhook', async (req, res) => {
+  const body = Buffer.isBuffer(req.body) ? JSON.parse(req.body.toString()) : req.body;
+  const { type, data } = body;
 
   try {
     if (type === 'payment') {

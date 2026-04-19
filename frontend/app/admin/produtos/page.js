@@ -1,12 +1,23 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Loader2, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 
 const EMPTY = { name: '', description: '', price: '', comparePrice: '', stock: '', categoryId: '', images: [] };
+
+function DeleteConfirm({ name, onConfirm, onCancel }) {
+  return (
+    <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm">
+      <AlertTriangle size={14} className="text-red-500 flex-shrink-0" />
+      <span className="text-red-700 text-xs">Desativar "{name}"?</span>
+      <button onClick={onConfirm} className="bg-red-500 text-white text-xs px-2 py-0.5 rounded font-semibold hover:bg-red-600">Sim</button>
+      <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
+    </div>
+  );
+}
 
 export default function AdminProdutos() {
   const [products, setProducts] = useState([]);
@@ -14,6 +25,10 @@ export default function AdminProdutos() {
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     load();
@@ -21,12 +36,18 @@ export default function AdminProdutos() {
   }, []);
 
   async function load() {
-    const { data } = await api.get('/products', { params: { limit: 100 } });
-    setProducts(data.products);
+    setLoading(true);
+    try {
+      const { data } = await api.get('/products', { params: { limit: 100 } });
+      setProducts(data.products);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function submit(e) {
     e.preventDefault();
+    setSaving(true);
     const payload = {
       ...form,
       price: Number(form.price),
@@ -44,53 +65,72 @@ export default function AdminProdutos() {
       setForm(EMPTY); setEditing(null); setShowForm(false);
       load();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro');
+      toast.error(err.response?.data?.error || 'Erro ao salvar');
+    } finally {
+      setSaving(false);
     }
   }
 
   async function remove(id) {
-    if (!confirm('Desativar produto?')) return;
-    await api.delete(`/products/${id}`);
-    toast.success('Produto desativado');
-    load();
+    try {
+      await api.delete(`/products/${id}`);
+      toast.success('Produto desativado');
+      setConfirmDelete(null);
+      load();
+    } catch {
+      toast.error('Erro ao desativar');
+    }
   }
 
   function edit(p) {
     setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', stock: p.stock, categoryId: p.categoryId, images: p.images || [] });
-    setEditing(p.id); setShowForm(true);
+    setEditing(p.id);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  const filtered = products.filter(p =>
+    !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.category?.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-black">Produtos</h1>
-        <button onClick={() => { setForm(EMPTY); setEditing(null); setShowForm(!showForm); }} className="btn-primary flex items-center gap-2">
+        <button
+          onClick={() => { setForm(EMPTY); setEditing(null); setShowForm(!showForm); }}
+          className="btn-primary flex items-center gap-2"
+        >
           <Plus size={18} /> Novo produto
         </button>
       </div>
 
       {showForm && (
         <div className="card p-6">
-          <h2 className="font-black mb-4">{editing ? 'Editar' : 'Novo'} produto</h2>
-          <form onSubmit={submit} className="grid grid-cols-2 gap-4">
-            {[
-              ['name', 'Nome', 'col-span-2'],
-              ['description', 'Descrição', 'col-span-2'],
-              ['price', 'Preço (R$)'],
-              ['comparePrice', 'Preço original (opcional)'],
-              ['stock', 'Estoque'],
-            ].map(([key, label, cls]) => (
-              <div key={key} className={cls || ''}>
-                <label className="block text-sm font-medium mb-1">{label}</label>
-                {key === 'description' ? (
-                  <textarea className="input" rows={3} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} required />
-                ) : (
-                  <input className="input" type={['price','comparePrice','stock'].includes(key) ? 'number' : 'text'} step="0.01" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} required={key !== 'comparePrice'} />
-                )}
-              </div>
-            ))}
-            <div className="col-span-2">
-              <ImageUpload images={form.images} onChange={imgs => setForm({ ...form, images: imgs })} maxImages={6} />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-black">{editing ? 'Editar produto' : 'Novo produto'}</h2>
+            <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+          </div>
+          <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">Nome</label>
+              <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required placeholder="Nome do produto" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">Descrição</label>
+              <textarea className="input" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required placeholder="Descreva o produto..." />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Preço (R$)</label>
+              <input className="input" type="number" step="0.01" min="0" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required placeholder="99.90" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Preço original <span className="text-gray-400 font-normal">(opcional)</span></label>
+              <input className="input" type="number" step="0.01" min="0" value={form.comparePrice} onChange={e => setForm({ ...form, comparePrice: e.target.value })} placeholder="129.90" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Estoque</label>
+              <input className="input" type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} required placeholder="0" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Categoria</label>
@@ -99,52 +139,102 @@ export default function AdminProdutos() {
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <div className="col-span-2 flex gap-3">
-              <button type="submit" className="btn-primary">{editing ? 'Salvar' : 'Criar produto'}</button>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-2">Imagens</label>
+              <ImageUpload images={form.images} onChange={imgs => setForm({ ...form, images: imgs })} maxImages={6} />
+            </div>
+            <div className="md:col-span-2 flex gap-3">
+              <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
+                {saving && <Loader2 size={16} className="animate-spin" />}
+                {editing ? 'Salvar alterações' : 'Criar produto'}
+              </button>
               <button type="button" onClick={() => setShowForm(false)} className="btn-outline">Cancelar</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>{['', 'Produto', 'Categoria', 'Preço', 'Estoque', 'Ações'].map(h => (
-              <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>
-            ))}</tr>
-          </thead>
-          <tbody className="divide-y">
-            {products.map(p => (
-              <tr key={p.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                    {p.images?.[0] ? (
-                      <Image src={p.images[0]} alt={p.name} fill className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">📦</div>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3 font-medium max-w-xs truncate">{p.name}</td>
-                <td className="px-4 py-3 text-gray-500">{p.category?.name}</td>
-                <td className="px-4 py-3 font-bold text-primary-500">R$ {p.price.toFixed(2).replace('.', ',')}</td>
-                <td className="px-4 py-3">
-                  <span className={`font-semibold ${p.stock === 0 ? 'text-red-500' : p.stock < 5 ? 'text-orange-500' : 'text-green-600'}`}>
-                    {p.stock}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => edit(p)} className="text-blue-500 hover:text-blue-700"><Edit size={16} /></button>
-                    <button onClick={() => remove(p.id)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Busca */}
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          className="input pl-9 max-w-sm"
+          placeholder="Buscar por nome ou categoria..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        {search && (
+          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <X size={14} />
+          </button>
+        )}
       </div>
+
+      {loading ? (
+        <div className="card p-12 text-center text-gray-400 animate-pulse">Carregando produtos...</div>
+      ) : (
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  {['', 'Produto', 'Categoria', 'Preço', 'Estoque', 'Ações'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filtered.map(p => (
+                  <tr key={p.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                        {p.images?.[0] ? (
+                          <Image src={p.images[0]} alt={p.name} fill className="object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">📦</div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-medium max-w-[200px] truncate">{p.name}</td>
+                    <td className="px-4 py-3 text-gray-500">{p.category?.name}</td>
+                    <td className="px-4 py-3 font-bold text-primary-500 whitespace-nowrap">R$ {p.price.toFixed(2).replace('.', ',')}</td>
+                    <td className="px-4 py-3">
+                      <span className={`font-semibold ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-orange-500' : 'text-green-600'}`}>
+                        {p.stock}
+                        {p.stock <= 5 && p.stock > 0 && <span className="text-xs ml-1">⚠️</span>}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {confirmDelete === p.id ? (
+                        <DeleteConfirm
+                          name={p.name}
+                          onConfirm={() => remove(p.id)}
+                          onCancel={() => setConfirmDelete(null)}
+                        />
+                      ) : (
+                        <div className="flex gap-2">
+                          <button onClick={() => edit(p)} className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50"><Edit size={16} /></button>
+                          <button onClick={() => setConfirmDelete(p.id)} className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50"><Trash2 size={16} /></button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-gray-400">
+                      {search ? `Nenhum produto encontrado para "${search}"` : 'Nenhum produto cadastrado'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-3 border-t text-xs text-gray-400 bg-gray-50">
+            {filtered.length} de {products.length} produtos
+          </div>
+        </div>
+      )}
     </div>
   );
 }

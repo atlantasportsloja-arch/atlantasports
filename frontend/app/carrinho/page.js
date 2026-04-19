@@ -9,9 +9,8 @@ import { useCartStore, useAuthStore } from '@/lib/store';
 
 export default function CarrinhoPage() {
   const { token } = useAuthStore();
-  const { items, total, setCart } = useCartStore();
-  const [coupon, setCoupon] = useState('');
-  const [discount, setDiscount] = useState(0);
+  const { items, total, setCart, setCoupon: saveCoupon, clearCoupon, couponCode, discount } = useCartStore();
+  const [coupon, setCoupon] = useState(couponCode || '');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -37,11 +36,13 @@ export default function CarrinhoPage() {
   }
 
   async function validateCoupon() {
+    if (!coupon) return;
     try {
       const { data } = await api.post('/coupons/validate', { code: coupon, subtotal: total });
-      setDiscount(data.discount);
+      saveCoupon(coupon, data.discount);
       toast.success(`Cupom aplicado! Desconto de R$ ${data.discount.toFixed(2).replace('.', ',')}`);
     } catch (err) {
+      clearCoupon();
       toast.error(err.response?.data?.error || 'Cupom inválido');
     }
   }
