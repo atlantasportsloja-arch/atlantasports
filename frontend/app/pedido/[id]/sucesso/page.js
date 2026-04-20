@@ -1,10 +1,13 @@
+'use client';
+import { use } from 'react';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
+import WhatsAppOrderButton from '@/components/WhatsAppOrderButton';
 
-export const metadata = { title: 'Pedido confirmado' };
+export default function PedidoSucessoPage({ params }) {
+  const { id } = use(params);
+  const codigo = `#${id.slice(0, 8).toUpperCase()}`;
 
-export default async function PedidoSucessoPage({ params }) {
-  const { id } = await params;
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-md">
@@ -14,9 +17,11 @@ export default async function PedidoSucessoPage({ params }) {
           Seu pagamento foi aprovado. Você receberá um e-mail de confirmação em breve.
         </p>
         <p className="text-sm text-gray-400 mb-8">
-          Pedido: <span className="font-mono font-bold">#{id.slice(0, 8).toUpperCase()}</span>
+          Pedido: <span className="font-mono font-bold">{codigo}</span>
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+
+        <div className="flex flex-col gap-3 justify-center">
+          <WhatsAppOrderButton orderId={id} className="w-full" />
           <Link href="/minha-conta/pedidos" className="btn-primary">Ver meus pedidos</Link>
           <Link href="/" className="btn-outline">Continuar comprando</Link>
         </div>
