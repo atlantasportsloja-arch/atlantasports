@@ -1,11 +1,17 @@
 'use client';
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { XCircle } from 'lucide-react';
 import WhatsAppOrderButton from '@/components/WhatsAppOrderButton';
+import api from '@/lib/api';
 
 export default function PedidoErroPage({ params }) {
   const { id } = use(params);
+  const [order, setOrder] = useState(null);
+
+  useEffect(() => {
+    api.get(`/orders/${id}`).then(r => setOrder(r.data)).catch(() => {});
+  }, [id]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -20,7 +26,7 @@ export default function PedidoErroPage({ params }) {
         </p>
 
         <div className="flex flex-col gap-3 justify-center">
-          <WhatsAppOrderButton orderId={id} className="w-full" />
+          <WhatsAppOrderButton orderId={id} orderNumber={order?.orderNumber} total={order?.total} className="w-full" />
           <Link href="/carrinho" className="btn-primary">Tentar novamente</Link>
           <Link href="/" className="btn-outline">Voltar à loja</Link>
         </div>

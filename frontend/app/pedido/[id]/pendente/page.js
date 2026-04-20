@@ -1,12 +1,19 @@
 'use client';
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Clock } from 'lucide-react';
 import WhatsAppOrderButton from '@/components/WhatsAppOrderButton';
+import api from '@/lib/api';
 
 export default function PedidoPendentePage({ params }) {
   const { id } = use(params);
-  const codigo = `#${id.slice(0, 8).toUpperCase()}`;
+  const [order, setOrder] = useState(null);
+
+  useEffect(() => {
+    api.get(`/orders/${id}`).then(r => setOrder(r.data)).catch(() => {});
+  }, [id]);
+
+  const codigo = order?.orderNumber ? `#${order.orderNumber}` : `#${id.slice(0, 8).toUpperCase()}`;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -21,7 +28,7 @@ export default function PedidoPendentePage({ params }) {
         </p>
 
         <div className="flex flex-col gap-3 justify-center">
-          <WhatsAppOrderButton orderId={id} className="w-full" />
+          <WhatsAppOrderButton orderId={id} orderNumber={order?.orderNumber} total={order?.total} className="w-full" />
           <Link href="/minha-conta/pedidos" className="btn-primary">Acompanhar pedido</Link>
           <Link href="/" className="btn-outline">Voltar à loja</Link>
         </div>

@@ -82,7 +82,7 @@ export default function PedidosPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <p className="font-semibold text-sm font-mono">#{order.id.slice(0, 8).toUpperCase()}</p>
+                      <p className="font-semibold text-sm font-mono">#{order.orderNumber ?? order.id.slice(0, 8).toUpperCase()}</p>
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${s.color}`}>{s.label}</span>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">

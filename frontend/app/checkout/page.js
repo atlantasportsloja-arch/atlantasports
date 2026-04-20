@@ -65,8 +65,8 @@ export default function CheckoutPage() {
     if (val.length === 8) fetchCep(val);
   }
 
-  function buildWhatsappUrl(orderId) {
-    const codigo = `#${orderId.slice(0, 8).toUpperCase()}`;
+  function buildWhatsappUrl(orderId, orderNumber) {
+    const codigo = orderNumber ? `#${orderNumber}` : `#${orderId.slice(0, 8).toUpperCase()}`;
     const totalFormatado = `R$ ${finalTotal.toFixed(2).replace('.', ',')}`;
     const mensagem = [
       'Olá, Atlanta Sports! 🏆',
@@ -94,7 +94,7 @@ export default function CheckoutPage() {
       });
       clearCart();
       if (paymentMethod === 'whatsapp') {
-        window.open(buildWhatsappUrl(order.id), '_blank');
+        window.open(buildWhatsappUrl(order.id, order.orderNumber), '_blank');
         router.push(`/pedido/${order.id}/sucesso`);
       } else {
         const { data: payment } = await api.post('/payment/create', { orderId: order.id });

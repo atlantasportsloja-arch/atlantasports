@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 
-export default function WhatsAppOrderButton({ orderId, total, className = '' }) {
+export default function WhatsAppOrderButton({ orderId, orderNumber, total, className = '' }) {
   const [whatsapp, setWhatsapp] = useState('');
 
   useEffect(() => {
@@ -11,7 +11,7 @@ export default function WhatsAppOrderButton({ orderId, total, className = '' }) 
 
   if (!whatsapp) return null;
 
-  const codigo = orderId ? `#${orderId.slice(0, 8).toUpperCase()}` : '';
+  const codigo = orderNumber ? `#${orderNumber}` : orderId ? `#${orderId.slice(0, 8).toUpperCase()}` : '';
   const totalFormatado = total ? `R$ ${Number(total).toFixed(2).replace('.', ',')}` : '';
 
   const mensagem = [

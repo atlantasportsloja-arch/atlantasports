@@ -41,8 +41,12 @@ router.post('/', authMiddleware, async (req, res) => {
     const subtotal = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
     const total = subtotal - discount + Number(shippingCost);
 
+    const lastOrder = await prisma.order.findFirst({ orderBy: { orderNumber: 'desc' }, select: { orderNumber: true } });
+    const orderNumber = (lastOrder?.orderNumber ?? 999) + 1;
+
     const order = await prisma.order.create({
       data: {
+        orderNumber,
         userId: req.user.id,
         total,
         shippingAddress,
@@ -80,7 +84,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const orders = await prisma.order.findMany({
       where: { userId: req.user.id },
       include: { items: { include: { product: true } } },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { orderNumber: 'asc' },
     });
     res.json(orders);
   } catch {
@@ -111,7 +115,7 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
       prisma.order.findMany({
         where,
         include: { user: { select: { name: true, email: true } }, items: { include: { product: { select: { name: true } } } } },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { orderNumber: 'asc' },
         skip,
         take: Number(limit),
       }),

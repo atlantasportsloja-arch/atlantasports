@@ -31,7 +31,7 @@ function TrackingModal({ order, onClose, onSave }) {
           <h3 className="font-black">Código de rastreio</h3>
         </div>
         <p className="text-sm text-gray-500 mb-4">
-          Pedido <span className="font-mono font-bold">#{order.id.slice(0, 8).toUpperCase()}</span>
+          Pedido <span className="font-mono font-bold">#{order.orderNumber ?? order.id.slice(0, 8).toUpperCase()}</span>
         </p>
         <input
           autoFocus
@@ -135,7 +135,7 @@ function AdminPedidosInner() {
                 {orders.map(o => (
                   <React.Fragment key={o.id}>
                     <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setExpanded(expanded === o.id ? null : o.id)}>
-                      <td className="px-4 py-3 font-mono text-xs font-bold">#{o.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="px-4 py-3 font-mono text-xs font-bold">#{o.orderNumber ?? o.id.slice(0, 8).toUpperCase()}</td>
                       <td className="px-4 py-3">
                         <p className="font-medium">{o.user.name}</p>
                         <p className="text-gray-400 text-xs">{o.user.email}</p>
@@ -193,7 +193,7 @@ function AdminPedidosInner() {
               <div key={o.id} className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-mono text-xs font-bold">#{o.id.slice(0, 8).toUpperCase()}</p>
+                    <p className="font-mono text-xs font-bold">#{o.orderNumber ?? o.id.slice(0, 8).toUpperCase()}</p>
                     <p className="font-medium text-sm">{o.user.name}</p>
                     <p className="text-xs text-gray-400">{new Date(o.createdAt).toLocaleDateString('pt-BR')}</p>
                   </div>
