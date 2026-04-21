@@ -89,14 +89,6 @@ export default function HomePage() {
                 <span className="text-primary-500">{config.heroTitle?.split(' ').slice(-2).join(' ')}</span>
               </h1>
               <p className="text-gray-300 text-lg max-w-md leading-relaxed">{config.heroSubtitle}</p>
-              <div className="flex gap-4 flex-wrap pt-2">
-                <Link href={config.heroBtnPrimaryLink || '/'} className="btn-primary shadow-lg shadow-primary-500/30">
-                  {config.heroBtnPrimary}
-                </Link>
-                <Link href={config.heroBtnSecondaryLink || '/'} className="btn-outline border-white/30 text-white hover:bg-white/10">
-                  {config.heroBtnSecondary}
-                </Link>
-              </div>
             </div>
             <div className="text-[140px] select-none drop-shadow-2xl">⚽</div>
           </div>
