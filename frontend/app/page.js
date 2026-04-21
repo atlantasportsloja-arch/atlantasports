@@ -84,9 +84,6 @@ export default function HomePage() {
           <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
           <div className="max-w-7xl mx-auto px-4 py-20 md:py-28 flex flex-col md:flex-row items-center gap-10 relative">
             <div className="flex-1 space-y-6">
-              <span className="inline-block bg-primary-500/20 text-primary-400 font-semibold uppercase tracking-widest text-xs px-3 py-1.5 rounded-full border border-primary-500/30">
-                {config.heroBadge}
-              </span>
               <h1 className="text-5xl md:text-6xl font-black leading-tight">
                 {config.heroTitle?.split(' ').slice(0, -2).join(' ')}{' '}
                 <span className="text-primary-500">{config.heroTitle?.split(' ').slice(-2).join(' ')}</span>
