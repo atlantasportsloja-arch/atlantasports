@@ -263,9 +263,7 @@ export default function ProdutoPage({ params }) {
                 De R$ {product.comparePrice.toFixed(2).replace('.', ',')}
               </p>
             )}
-            <p className="text-sm text-gray-500">
-              ou 12x de R$ {(product.price / 12).toFixed(2).replace('.', ',')} sem juros
-            </p>
+
             {pixPrice(product.price, pixDiscount) && (
               <div className="mt-2 pt-2 border-t border-gray-200 flex items-center gap-2">
                 <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">PIX</span>
