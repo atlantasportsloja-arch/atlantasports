@@ -22,7 +22,7 @@ export default function CheckoutPage() {
   const [cepLoading, setCepLoading] = useState(false);
   const [step, setStep] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('mercadopago');
-  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [storeConfig, setStoreConfig] = useState({});
   const [address, setAddress] = useState({
     zip: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '',
   });
@@ -30,11 +30,19 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!token) { router.push('/login'); return; }
     api.get('/cart').then(r => setCart(r.data.items, r.data.total));
-    api.get('/config').then(r => setWhatsappNumber(r.data?.whatsapp || '')).catch(() => {});
+    api.get('/config').then(r => setStoreConfig(r.data || {})).catch(() => {});
   }, [token]);
 
+  const whatsappNumber = storeConfig.whatsapp || '';
+  const pixDiscount = Number(storeConfig.pixDiscount || 0);
+  const pixKey = storeConfig.pixKey || '';
+
   const shippingCost = total >= 299 ? 0 : 19.9;
-  const finalTotal = total - discount + shippingCost;
+  const subtotalWithCoupon = total - discount;
+  const pixDiscountAmount = paymentMethod === 'pix' && pixDiscount > 0
+    ? subtotalWithCoupon * (pixDiscount / 100)
+    : 0;
+  const finalTotal = subtotalWithCoupon - pixDiscountAmount + shippingCost;
 
   async function fetchCep(cep) {
     const digits = cep.replace(/\D/g, '');
@@ -79,6 +87,8 @@ export default function CheckoutPage() {
       clearCart();
       if (paymentMethod === 'whatsapp') {
         router.push(`/pedido/${order.id}/sucesso?via=whatsapp`);
+      } else if (paymentMethod === 'pix') {
+        router.push(`/pedido/${order.id}/sucesso?via=pix`);
       } else {
         const { data: payment } = await api.post('/payment/create', { orderId: order.id });
         window.location.href = payment.initPoint;
@@ -194,6 +204,44 @@ export default function CheckoutPage() {
                 )}
               </label>
 
+              {pixKey && (
+                <label
+                  className={`flex flex-col gap-2 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
+                    paymentMethod === 'pix'
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="pix"
+                    checked={paymentMethod === 'pix'}
+                    onChange={() => setPaymentMethod('pix')}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">⚡</span>
+                    <div className="flex-1">
+                      <p className="font-semibold">PIX</p>
+                      <p className="text-xs text-gray-500">
+                        Pagamento instantâneo
+                        {pixDiscount > 0 && <span className="text-green-600 font-bold"> — {pixDiscount}% de desconto!</span>}
+                      </p>
+                    </div>
+                    {paymentMethod === 'pix' && (
+                      <CheckCircle size={20} className="text-green-500 shrink-0" />
+                    )}
+                  </div>
+                  {paymentMethod === 'pix' && (
+                    <div className="bg-white border border-green-200 rounded-lg p-3 text-sm mt-1">
+                      <p className="text-gray-500 text-xs mb-1">Chave PIX:</p>
+                      <p className="font-mono font-bold text-gray-800 break-all">{pixKey}</p>
+                    </div>
+                  )}
+                </label>
+              )}
+
               {whatsappNumber && (
                 <label
                   className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
@@ -226,7 +274,7 @@ export default function CheckoutPage() {
           <button
             type="submit"
             className={`w-full flex items-center justify-center gap-2 text-base py-4 font-semibold rounded-xl transition-colors ${
-              paymentMethod === 'whatsapp'
+              paymentMethod === 'whatsapp' || paymentMethod === 'pix'
                 ? 'bg-green-500 hover:bg-green-600 text-white'
                 : 'btn-primary'
             }`}
@@ -236,6 +284,8 @@ export default function CheckoutPage() {
               <><Loader2 size={20} className="animate-spin" /> Processando...</>
             ) : paymentMethod === 'whatsapp' ? (
               <>{WHATSAPP_ICON} Finalizar e abrir WhatsApp</>
+            ) : paymentMethod === 'pix' ? (
+              '⚡ Confirmar pedido via PIX'
             ) : (
               '🔒 Ir para pagamento'
             )}
@@ -263,6 +313,12 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-green-600">
                   <span>Cupom ({couponCode})</span>
                   <span>− R$ {discount.toFixed(2).replace('.', ',')}</span>
+                </div>
+              )}
+              {pixDiscountAmount > 0 && (
+                <div className="flex justify-between text-green-600 font-semibold">
+                  <span>⚡ Desconto PIX ({pixDiscount}%)</span>
+                  <span>− R$ {pixDiscountAmount.toFixed(2).replace('.', ',')}</span>
                 </div>
               )}
               <div className="flex justify-between">

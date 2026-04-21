@@ -16,6 +16,7 @@ const DEFAULT = {
   sectionCategories: 'Categorias', sectionFeatured: 'Produtos em destaque',
   whatsapp: '', footerEmail: 'atlantasportsloja@gmail.com',
   footerHours: 'Seg–Sex 9h–18h', footerDesc: 'Equipamentos e moda esportiva de alta performance.',
+  pixDiscount: 0, pixKey: '',
   banners: [],
 };
 
@@ -172,6 +173,42 @@ export default function ConfiguracoesPage() {
           </button>
           <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={uploadBanner} />
         </div>
+      </Section>
+
+      {/* PIX */}
+      <Section title="⚡ Pagamento PIX">
+        <p className="text-xs text-gray-400 -mt-2">
+          Configure a chave PIX e o desconto. O desconto aparece nos produtos e é aplicado automaticamente no checkout.
+        </p>
+        <div>
+          <label className="block text-sm font-medium mb-1">Chave PIX</label>
+          <input
+            className="input"
+            value={config.pixKey || ''}
+            onChange={e => setConfig(c => ({ ...c, pixKey: e.target.value }))}
+            placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+          />
+          <p className="text-xs text-gray-400 mt-1">Deixe em branco para não exibir a opção PIX no checkout.</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Desconto PIX (%)</label>
+          <input
+            className="input"
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            value={config.pixDiscount ?? 0}
+            onChange={e => setConfig(c => ({ ...c, pixDiscount: Number(e.target.value) }))}
+            placeholder="Ex: 10 para 10% de desconto"
+          />
+          <p className="text-xs text-gray-400 mt-1">0 = sem desconto. O valor é descontado do subtotal do pedido.</p>
+        </div>
+        {config.pixKey && config.pixDiscount > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700">
+            ⚡ Os produtos vão exibir: <strong>PIX R$ X ({config.pixDiscount}% off)</strong>
+          </div>
+        )}
       </Section>
 
       {/* CONTATO */}

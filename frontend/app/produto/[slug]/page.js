@@ -6,6 +6,7 @@ import { ShoppingCart, Star, Truck, RotateCcw, Shield, ChevronRight, Loader2, He
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
+import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
 
 function ProductSkeleton() {
   return (
@@ -111,6 +112,7 @@ function ReviewForm({ productId, onReviewSaved }) {
 export default function ProdutoPage({ params }) {
   const { token } = useAuthStore();
   const { setCart } = useCartStore();
+  const { pixDiscount } = useConfig();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
@@ -261,9 +263,20 @@ export default function ProdutoPage({ params }) {
                 De R$ {product.comparePrice.toFixed(2).replace('.', ',')}
               </p>
             )}
-            <p className="text-sm text-green-600 font-medium">
+            <p className="text-sm text-gray-500">
               ou 12x de R$ {(product.price / 12).toFixed(2).replace('.', ',')} sem juros
             </p>
+            {pixPrice(product.price, pixDiscount) && (
+              <div className="mt-2 pt-2 border-t border-gray-200 flex items-center gap-2">
+                <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">PIX</span>
+                <span className="text-green-700 font-black text-xl">
+                  R$ {fmt(pixPrice(product.price, pixDiscount))}
+                </span>
+                <span className="text-green-600 text-xs font-semibold">
+                  ({pixDiscount}% off)
+                </span>
+              </div>
+            )}
           </div>
 
           <p className="text-gray-600 leading-relaxed">{product.description}</p>

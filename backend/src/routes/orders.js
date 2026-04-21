@@ -39,7 +39,15 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     const subtotal = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
-    const total = subtotal - discount + Number(shippingCost);
+
+    let pixDiscountAmount = 0;
+    if (paymentMethod === 'pix') {
+      const [cfg] = await prisma.$queryRaw`SELECT "pixDiscount" FROM store_config WHERE id = 'default' LIMIT 1`;
+      const pct = Number(cfg?.pixDiscount || 0);
+      if (pct > 0) pixDiscountAmount = (subtotal - discount) * (pct / 100);
+    }
+
+    const total = subtotal - discount - pixDiscountAmount + Number(shippingCost);
 
     const order = await prisma.order.create({
       data: {

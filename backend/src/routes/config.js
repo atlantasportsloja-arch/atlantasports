@@ -36,6 +36,7 @@ router.put('/', adminMiddleware, async (req, res) => {
     benefit1, benefit2, benefit3, benefit4,
     sectionCategories, sectionFeatured,
     whatsapp, footerEmail, footerHours, footerDesc,
+    pixDiscount, pixKey,
   } = req.body;
 
   try {
@@ -60,6 +61,8 @@ router.put('/', adminMiddleware, async (req, res) => {
         "footerEmail" = ${footerEmail},
         "footerHours" = ${footerHours},
         "footerDesc" = ${footerDesc},
+        "pixDiscount" = ${Number(pixDiscount) || 0},
+        "pixKey" = ${pixKey || ''},
         "updatedAt" = NOW()
       WHERE id = 'default'
     `;

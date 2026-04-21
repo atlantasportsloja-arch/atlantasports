@@ -6,8 +6,10 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
+import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
 
 export default function ProductCard({ product }) {
+  const { pixDiscount } = useConfig();
   const { token } = useAuthStore();
   const { setCart } = useCartStore();
   const [adding, setAdding] = useState(false);
@@ -92,6 +94,11 @@ export default function ProductCard({ product }) {
             {product.comparePrice && (
               <p className="text-xs text-gray-400 line-through">
                 R$ {product.comparePrice.toFixed(2).replace('.', ',')}
+              </p>
+            )}
+            {pixPrice(product.price, pixDiscount) && (
+              <p className="text-xs text-green-600 font-semibold">
+                PIX R$ {fmt(pixPrice(product.price, pixDiscount))}
               </p>
             )}
           </div>
