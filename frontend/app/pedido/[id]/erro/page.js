@@ -1,12 +1,12 @@
 'use client';
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { XCircle } from 'lucide-react';
 import WhatsAppOrderButton from '@/components/WhatsAppOrderButton';
 import api from '@/lib/api';
 
 export default function PedidoErroPage({ params }) {
-  const { id } = use(params);
+  const { id } = params;
   const [order, setOrder] = useState(null);
 
   useEffect(() => {

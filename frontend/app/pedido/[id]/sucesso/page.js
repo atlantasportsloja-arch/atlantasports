@@ -1,5 +1,5 @@
 'use client';
-import { use, useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -53,7 +53,7 @@ function SucessoContent({ id }) {
 }
 
 export default function PedidoSucessoPage({ params }) {
-  const { id } = use(params);
+  const { id } = params;
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">Carregando...</div>}>
       <SucessoContent id={id} />

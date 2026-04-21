@@ -1,12 +1,12 @@
 'use client';
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Clock } from 'lucide-react';
 import WhatsAppOrderButton from '@/components/WhatsAppOrderButton';
 import api from '@/lib/api';
 
 export default function PedidoPendentePage({ params }) {
-  const { id } = use(params);
+  const { id } = params;
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
