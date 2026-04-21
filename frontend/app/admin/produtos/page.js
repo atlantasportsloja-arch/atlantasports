@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 
-const EMPTY = { name: '', description: '', price: '', comparePrice: '', stock: '', categoryId: '', images: [] };
+const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', stock: '', categoryId: '', images: [] };
 
 function DeleteConfirm({ name, onConfirm, onCancel }) {
   return (
@@ -53,6 +53,7 @@ export default function AdminProdutos() {
       price: Number(form.price),
       stock: Number(form.stock),
       comparePrice: form.comparePrice ? Number(form.comparePrice) : null,
+      costPrice: form.costPrice ? Number(form.costPrice) : null,
     };
     try {
       if (editing) {
@@ -83,7 +84,7 @@ export default function AdminProdutos() {
   }
 
   function edit(p) {
-    setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', stock: p.stock, categoryId: p.categoryId, images: p.images || [] });
+    setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', stock: p.stock, categoryId: p.categoryId, images: p.images || [] });
     setEditing(p.id);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -127,6 +128,13 @@ export default function AdminProdutos() {
             <div>
               <label className="block text-sm font-medium mb-1">Preço original <span className="text-gray-400 font-normal">(opcional)</span></label>
               <input className="input" type="number" step="0.01" min="0" value={form.comparePrice} onChange={e => setForm({ ...form, comparePrice: e.target.value })} placeholder="129.90" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Preço de custo (R$)
+                <span className="ml-2 text-xs font-normal text-orange-500 bg-orange-50 px-2 py-0.5 rounded">🔒 Só admin</span>
+              </label>
+              <input className="input border-orange-200 focus:ring-orange-400" type="number" step="0.01" min="0" value={form.costPrice} onChange={e => setForm({ ...form, costPrice: e.target.value })} placeholder="0.00" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Estoque</label>

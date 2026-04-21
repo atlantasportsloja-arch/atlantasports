@@ -49,6 +49,7 @@ model Product {
   description String
   price       Float
   comparePrice Float?
+  costPrice   Float?
   stock       Int      @default(0)
   images      String[]
   categoryId  String

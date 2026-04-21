@@ -25,7 +25,13 @@ router.get('/', async (req, res) => {
         orderBy,
         skip,
         take: Number(limit),
-        include: { category: true },
+        select: {
+          id: true, name: true, slug: true, description: true,
+          price: true, comparePrice: true, stock: true, images: true,
+          active: true, createdAt: true,
+          category: true,
+          reviews: { select: { rating: true } },
+        },
       }),
       prisma.product.count({ where }),
     ]);
@@ -40,7 +46,10 @@ router.get('/:slug', async (req, res) => {
   try {
     const product = await prisma.product.findUnique({
       where: { slug: req.params.slug },
-      include: {
+      select: {
+        id: true, name: true, slug: true, description: true,
+        price: true, comparePrice: true, stock: true, images: true,
+        active: true, createdAt: true,
         category: true,
         reviews: { include: { user: { select: { name: true } } } },
       },
@@ -49,6 +58,41 @@ router.get('/:slug', async (req, res) => {
     res.json(product);
   } catch {
     res.status(500).json({ error: 'Erro ao buscar produto' });
+  }
+});
+
+router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      where: { active: true },
+      select: {
+        id: true, name: true, price: true, costPrice: true,
+        stock: true, images: true,
+        category: { select: { name: true } },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    const data = products.map(p => {
+      const lucro = p.costPrice != null ? p.price - p.costPrice : null;
+      const margem = p.costPrice != null && p.costPrice > 0
+        ? ((lucro / p.price) * 100).toFixed(1)
+        : null;
+      return { ...p, lucro, margem: margem ? Number(margem) : null };
+    });
+
+    const totalProdutos = data.length;
+    const comCusto = data.filter(p => p.costPrice != null);
+    const totalCusto = comCusto.reduce((s, p) => s + p.costPrice * p.stock, 0);
+    const totalReceita = comCusto.reduce((s, p) => s + p.price * p.stock, 0);
+    const totalLucro = totalReceita - totalCusto;
+    const margemMedia = comCusto.length > 0
+      ? (comCusto.reduce((s, p) => s + p.margem, 0) / comCusto.length).toFixed(1)
+      : null;
+
+    res.json({ products: data, totalProdutos, totalCusto, totalReceita, totalLucro, margemMedia });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar dados financeiros' });
   }
 });
 
