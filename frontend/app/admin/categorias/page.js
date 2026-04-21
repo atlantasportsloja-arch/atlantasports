@@ -5,14 +5,14 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
 const SUGESTOES = [
-  { name: 'Camisas', emoji: '👕' },
-  { name: 'Tênis', emoji: '👟' },
-  { name: 'Chuteiras', emoji: '⚽' },
-  { name: 'Shorts', emoji: '🩳' },
-  { name: 'Meias', emoji: '🧦' },
-  { name: 'Acessórios', emoji: '🎽' },
-  { name: 'Fitness', emoji: '🏋️' },
-  { name: 'Bonés', emoji: '🧢' },
+  { name: 'Masculino',     emoji: '👨' },
+  { name: 'Feminino',      emoji: '👩' },
+  { name: 'Infantil',      emoji: '👦' },
+  { name: 'Calçados',      emoji: '👟' },
+  { name: 'Esporte',       emoji: '⚽' },
+  { name: 'Acessório',     emoji: '🎒' },
+  { name: 'Promoção',      emoji: '🏷️' },
+  { name: 'Atlanta Sports', emoji: '🏆' },
 ];
 
 const EMPTY = { name: '', image: '' };

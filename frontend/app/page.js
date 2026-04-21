@@ -16,7 +16,10 @@ const DEFAULT_CONFIG = {
   banners: [],
 };
 
-const CATEGORY_ICON = { camisas: '👕', tenis: '👟', fitness: '🏋️', acessorios: '🎽' };
+const CATEGORY_ICON = {
+  masculino: '👨', feminino: '👩', infantil: '👦', calcados: '👟',
+  esporte: '⚽', acessorio: '🎒', promocao: '🏷️', 'atlanta-sports': '🏆',
+};
 
 function SkeletonCard() {
   return (
