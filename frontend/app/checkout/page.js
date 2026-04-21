@@ -21,7 +21,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [step, setStep] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('mercadopago');
+  const [paymentMethod, setPaymentMethod] = useState('pix');
   const [storeConfig, setStoreConfig] = useState({});
   const [address, setAddress] = useState({
     zip: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '',
@@ -90,8 +90,7 @@ export default function CheckoutPage() {
       } else if (paymentMethod === 'pix') {
         router.push(`/pedido/${order.id}/sucesso?via=pix`);
       } else {
-        const { data: payment } = await api.post('/payment/create', { orderId: order.id });
-        window.location.href = payment.initPoint;
+        router.push(`/pedido/${order.id}/sucesso?via=whatsapp`);
       }
     } catch (err) {
       toast.error(err.response?.data?.error || 'Erro ao processar pedido');
@@ -179,31 +178,6 @@ export default function CheckoutPage() {
           <div className="card p-6">
             <h2 className="font-black mb-4">Forma de pagamento</h2>
             <div className="space-y-3">
-              <label
-                className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
-                  paymentMethod === 'mercadopago'
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  value="mercadopago"
-                  checked={paymentMethod === 'mercadopago'}
-                  onChange={() => setPaymentMethod('mercadopago')}
-                  className="sr-only"
-                />
-                <span className="text-2xl">💳</span>
-                <div className="flex-1">
-                  <p className="font-semibold">Mercado Pago</p>
-                  <p className="text-xs text-gray-500">PIX, cartão ou boleto — 12x sem juros</p>
-                </div>
-                {paymentMethod === 'mercadopago' && (
-                  <CheckCircle size={20} className="text-primary-500 shrink-0" />
-                )}
-              </label>
-
               {pixKey && (
                 <label
                   className={`flex flex-col gap-2 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
@@ -273,21 +247,15 @@ export default function CheckoutPage() {
 
           <button
             type="submit"
-            className={`w-full flex items-center justify-center gap-2 text-base py-4 font-semibold rounded-xl transition-colors ${
-              paymentMethod === 'whatsapp' || paymentMethod === 'pix'
-                ? 'bg-green-500 hover:bg-green-600 text-white'
-                : 'btn-primary'
-            }`}
+            className="w-full flex items-center justify-center gap-2 text-base py-4 font-semibold rounded-xl transition-colors bg-green-500 hover:bg-green-600 text-white"
             disabled={loading}
           >
             {loading ? (
               <><Loader2 size={20} className="animate-spin" /> Processando...</>
             ) : paymentMethod === 'whatsapp' ? (
               <>{WHATSAPP_ICON} Finalizar e abrir WhatsApp</>
-            ) : paymentMethod === 'pix' ? (
-              '⚡ Confirmar pedido via PIX'
             ) : (
-              '🔒 Ir para pagamento'
+              '⚡ Confirmar pedido via PIX'
             )}
           </button>
         </form>
