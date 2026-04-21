@@ -41,12 +41,8 @@ router.post('/', authMiddleware, async (req, res) => {
     const subtotal = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
     const total = subtotal - discount + Number(shippingCost);
 
-    const [{ next }] = await prisma.$queryRaw`SELECT COALESCE(MAX("orderNumber"), 999) + 1 AS next FROM orders`;
-    const orderNumber = Number(next);
-
     const order = await prisma.order.create({
       data: {
-        orderNumber,
         userId: req.user.id,
         total,
         shippingAddress,
@@ -62,6 +58,12 @@ router.post('/', authMiddleware, async (req, res) => {
       },
       include: { items: { include: { product: true } } },
     });
+
+    // Atribuir número sequencial via SQL (independente do Prisma client)
+    const [{ next }] = await prisma.$queryRaw`SELECT COALESCE(MAX("orderNumber"), 999) + 1 AS next FROM orders WHERE id != ${order.id}`;
+    const orderNumber = Number(next);
+    await prisma.$executeRaw`UPDATE orders SET "orderNumber" = ${orderNumber} WHERE id = ${order.id}`;
+    order.orderNumber = orderNumber;
 
     for (const item of cartItems) {
       await prisma.product.update({
