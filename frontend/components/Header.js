@@ -82,8 +82,8 @@ export default function Header() {
                   <p className="font-semibold text-sm truncate">{user.name}</p>
                   <p className="text-xs text-gray-400 truncate">{user.email}</p>
                 </div>
-                <Link href="/minha-conta" className="block px-4 py-2.5 hover:bg-gray-50 text-sm">Minha Conta</Link>
-                <Link href="/minha-conta/pedidos" className="block px-4 py-2.5 hover:bg-gray-50 text-sm">Meus Pedidos</Link>
+                <Link href="/minha-conta" className="block px-4 py-2.5 hover:bg-gray-50 text-sm">👤 Minha Conta</Link>
+                <Link href="/minha-conta/pedidos" className="block px-4 py-2.5 hover:bg-gray-50 text-sm">🛒 Meus Pedidos</Link>
                 <Link href="/lista-desejos" className="block px-4 py-2.5 hover:bg-gray-50 text-sm">❤️ Lista de Desejos</Link>
                 {user.role === 'ADMIN' && (
                   <Link href="/admin" className="block px-4 py-2.5 hover:bg-gray-50 text-sm text-primary-500 font-semibold">Painel Admin</Link>
@@ -132,8 +132,8 @@ export default function Header() {
           <div className="border-t border-gray-700 mt-2 pt-2">
             {user ? (
               <>
-                <Link href="/minha-conta" onClick={() => setMenuOpen(false)} className="block py-2 hover:text-primary-400">Minha Conta</Link>
-                <Link href="/minha-conta/pedidos" onClick={() => setMenuOpen(false)} className="block py-2 hover:text-primary-400">Meus Pedidos</Link>
+                <Link href="/minha-conta" onClick={() => setMenuOpen(false)} className="block py-2 hover:text-primary-400">👤 Minha Conta</Link>
+                <Link href="/minha-conta/pedidos" onClick={() => setMenuOpen(false)} className="block py-2 hover:text-primary-400">🛒 Meus Pedidos</Link>
                 <Link href="/lista-desejos" onClick={() => setMenuOpen(false)} className="block py-2 hover:text-primary-400">❤️ Lista de Desejos</Link>
                 {user.role === 'ADMIN' && (
                   <Link href="/admin" onClick={() => setMenuOpen(false)} className="block py-2 text-primary-400 font-semibold">Painel Admin</Link>
