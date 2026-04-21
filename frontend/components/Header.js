@@ -49,6 +49,11 @@ export default function Header() {
           </div>
         </form>
 
+        <nav className="hidden md:flex items-center">
+          <Link href="/depoimentos" className="text-sm font-medium text-gray-300 hover:text-primary-500 transition-colors whitespace-nowrap">
+            💬 Depoimentos
+          </Link>
+        </nav>
 
         <div className="flex items-center gap-3">
           {/* Busca mobile */}
@@ -129,6 +134,7 @@ export default function Header() {
       {/* Menu mobile */}
       {menuOpen && (
         <div className="md:hidden bg-gray-800 px-4 py-4 flex flex-col gap-1 text-sm font-medium">
+          <Link href="/depoimentos" onClick={() => setMenuOpen(false)} className="py-2 hover:text-primary-400 transition-colors">💬 Depoimentos</Link>
           <div className="border-t border-gray-700 mt-2 pt-2">
             {user ? (
               <>

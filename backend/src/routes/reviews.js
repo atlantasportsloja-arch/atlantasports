@@ -4,6 +4,21 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
+router.get('/', async (req, res) => {
+  try {
+    const reviews = await prisma.review.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true } },
+        product: { select: { name: true } },
+      },
+    });
+    res.json(reviews);
+  } catch {
+    res.status(500).json({ error: 'Erro ao buscar avaliações' });
+  }
+});
+
 router.post('/', authMiddleware, async (req, res) => {
   const { productId, rating, comment } = req.body;
 
