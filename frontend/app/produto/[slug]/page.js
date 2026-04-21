@@ -235,10 +235,14 @@ export default function ProdutoPage({ params }) {
         {/* INFO */}
         <div className="space-y-5">
           <div>
-            {product.category && (
-              <Link href={`/categoria/${product.category.slug}`} className="text-sm text-primary-500 font-semibold uppercase hover:underline">
-                {product.category.name}
-              </Link>
+            {product.categories?.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {product.categories.map(c => (
+                  <Link key={c.id} href={`/categoria/${c.slug}`} className="text-xs text-primary-500 font-semibold uppercase hover:underline bg-primary-50 px-2 py-0.5 rounded">
+                    {c.name}
+                  </Link>
+                ))}
+              </div>
             )}
             <h1 className="text-3xl font-black mt-1 leading-tight">{product.name}</h1>
           </div>

@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 
-const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', stock: '', categoryId: '', images: [] };
+const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', stock: '', categoryIds: [], images: [] };
 
 function DeleteConfirm({ name, onConfirm, onCancel }) {
   return (
@@ -49,11 +49,14 @@ export default function AdminProdutos() {
     e.preventDefault();
     setSaving(true);
     const payload = {
-      ...form,
+      name: form.name,
+      description: form.description,
       price: Number(form.price),
       stock: Number(form.stock),
       comparePrice: form.comparePrice ? Number(form.comparePrice) : null,
       costPrice: form.costPrice ? Number(form.costPrice) : null,
+      images: form.images,
+      categoryIds: form.categoryIds,
     };
     try {
       if (editing) {
@@ -84,7 +87,7 @@ export default function AdminProdutos() {
   }
 
   function edit(p) {
-    setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', stock: p.stock, categoryId: p.categoryId, images: p.images || [] });
+    setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', stock: p.stock, categoryIds: (p.categories || []).map(c => c.id), images: p.images || [] });
     setEditing(p.id);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -140,12 +143,42 @@ export default function AdminProdutos() {
               <label className="block text-sm font-medium mb-1">Estoque</label>
               <input className="input" type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} required placeholder="0" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Categoria</label>
-              <select className="input" value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} required>
-                <option value="">Selecione...</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-2">
+                Categorias <span className="text-gray-400 font-normal text-xs">(selecione quantas quiser)</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {categories.map(c => {
+                  const checked = form.categoryIds.includes(c.id);
+                  return (
+                    <label
+                      key={c.id}
+                      className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-colors text-sm font-medium ${
+                        checked ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={checked}
+                        onChange={() => {
+                          const ids = checked
+                            ? form.categoryIds.filter(id => id !== c.id)
+                            : [...form.categoryIds, c.id];
+                          setForm({ ...form, categoryIds: ids });
+                        }}
+                      />
+                      <span className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${checked ? 'border-primary-500 bg-primary-500' : 'border-gray-300'}`}>
+                        {checked && <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </span>
+                      {c.name}
+                    </label>
+                  );
+                })}
+              </div>
+              {form.categoryIds.length === 0 && (
+                <p className="text-xs text-orange-500 mt-1">Selecione ao menos uma categoria</p>
+              )}
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2">Imagens</label>
@@ -204,7 +237,7 @@ export default function AdminProdutos() {
                       </div>
                     </td>
                     <td className="px-4 py-3 font-medium max-w-[200px] truncate">{p.name}</td>
-                    <td className="px-4 py-3 text-gray-500">{p.category?.name}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">{(p.categories || []).map(c => c.name).join(', ') || '—'}</td>
                     <td className="px-4 py-3 font-bold text-primary-500 whitespace-nowrap">R$ {p.price.toFixed(2).replace('.', ',')}</td>
                     <td className="px-4 py-3">
                       <span className={`font-semibold ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-orange-500' : 'text-green-600'}`}>
