@@ -49,12 +49,6 @@ export default function Header() {
           </div>
         </form>
 
-        {/* Nav desktop */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          <Link href="/categoria/camisas" className="hover:text-primary-500 transition-colors">Camisas</Link>
-          <Link href="/categoria/tenis" className="hover:text-primary-500 transition-colors">Tênis</Link>
-          <Link href="/categoria/acessorios" className="hover:text-primary-500 transition-colors">Acessórios</Link>
-        </nav>
 
         <div className="flex items-center gap-3">
           {/* Busca mobile */}
@@ -135,9 +129,6 @@ export default function Header() {
       {/* Menu mobile */}
       {menuOpen && (
         <div className="md:hidden bg-gray-800 px-4 py-4 flex flex-col gap-1 text-sm font-medium">
-          <Link href="/categoria/camisas" onClick={() => setMenuOpen(false)} className="py-2 hover:text-primary-400 transition-colors">👕 Camisas</Link>
-          <Link href="/categoria/tenis" onClick={() => setMenuOpen(false)} className="py-2 hover:text-primary-400 transition-colors">👟 Tênis</Link>
-          <Link href="/categoria/acessorios" onClick={() => setMenuOpen(false)} className="py-2 hover:text-primary-400 transition-colors">🎽 Acessórios</Link>
           <div className="border-t border-gray-700 mt-2 pt-2">
             {user ? (
               <>
