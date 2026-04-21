@@ -64,10 +64,10 @@ export default function HomePage() {
     <div>
       {/* BANNER / HERO */}
       {config.banners?.length > 0 ? (
-        <section className="relative w-full overflow-hidden bg-gray-900 h-24 sm:h-40 md:h-56 lg:h-[355px]">
+        <section className="relative w-full bg-gray-900" style={{ aspectRatio: '1280/355' }}>
           {config.banners.map((url, i) => (
             <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === activeBanner ? 'opacity-100' : 'opacity-0'}`}>
-              <Image src={url} alt={`Banner ${i + 1}`} fill className="object-cover object-center" priority={i === 0} sizes="100vw" />
+              <Image src={url} alt={`Banner ${i + 1}`} fill className="object-fill" priority={i === 0} sizes="100vw" />
             </div>
           ))}
           {config.banners.length > 1 && (
