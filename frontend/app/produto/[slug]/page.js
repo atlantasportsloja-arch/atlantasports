@@ -296,14 +296,6 @@ export default function ProdutoPage({ params }) {
                   onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
                 >+</button>
               </div>
-              <div>
-                {lowStock && (
-                  <p className="text-xs text-orange-500 font-semibold">⚠️ Apenas {product.stock} em estoque</p>
-                )}
-                {!lowStock && (
-                  <p className="text-sm text-gray-400">{product.stock} disponíveis</p>
-                )}
-              </div>
             </div>
           )}
 
