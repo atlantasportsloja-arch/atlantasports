@@ -1,14 +1,14 @@
 'use client';
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import WhatsAppOrderButton from '@/components/WhatsAppOrderButton';
 import api from '@/lib/api';
 
-export default function PedidoSucessoPage({ params, searchParams }) {
-  const { id } = use(params);
-  const sp = use(searchParams);
-  const viaWhatsApp = sp?.via === 'whatsapp';
+function SucessoContent({ id }) {
+  const searchParams = useSearchParams();
+  const viaWhatsApp = searchParams?.get('via') === 'whatsapp';
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function PedidoSucessoPage({ params, searchParams }) {
 
         {viaWhatsApp ? (
           <p className="text-gray-500 mb-2">
-            Seu pedido foi criado. Agora clique abaixo para falar com a gente no WhatsApp e fechar a compra.
+            Seu pedido foi criado. Clique abaixo para falar com a gente no WhatsApp e fechar a compra.
           </p>
         ) : (
           <p className="text-gray-500 mb-2">
@@ -49,5 +49,14 @@ export default function PedidoSucessoPage({ params, searchParams }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PedidoSucessoPage({ params }) {
+  const { id } = use(params);
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">Carregando...</div>}>
+      <SucessoContent id={id} />
+    </Suspense>
   );
 }

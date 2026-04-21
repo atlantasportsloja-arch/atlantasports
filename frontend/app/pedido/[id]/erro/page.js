@@ -24,7 +24,6 @@ export default function PedidoErroPage({ params }) {
         <p className="text-sm text-gray-500 mb-8">
           Prefere finalizar pelo WhatsApp? Fale com a gente:
         </p>
-
         <div className="flex flex-col gap-3 justify-center">
           <WhatsAppOrderButton orderId={id} orderNumber={order?.orderNumber} total={order?.total} className="w-full" />
           <Link href="/carrinho" className="btn-primary">Tentar novamente</Link>

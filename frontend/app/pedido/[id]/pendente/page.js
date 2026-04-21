@@ -26,7 +26,6 @@ export default function PedidoPendentePage({ params }) {
         <p className="text-sm text-gray-400 mb-8">
           Pedido: <span className="font-mono font-bold">{codigo}</span>
         </p>
-
         <div className="flex flex-col gap-3 justify-center">
           <WhatsAppOrderButton orderId={id} orderNumber={order?.orderNumber} total={order?.total} className="w-full" />
           <Link href="/minha-conta/pedidos" className="btn-primary">Acompanhar pedido</Link>
