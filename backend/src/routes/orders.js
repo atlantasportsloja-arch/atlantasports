@@ -41,8 +41,8 @@ router.post('/', authMiddleware, async (req, res) => {
     const subtotal = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
     const total = subtotal - discount + Number(shippingCost);
 
-    const lastOrder = await prisma.order.findFirst({ orderBy: { orderNumber: 'desc' }, select: { orderNumber: true } });
-    const orderNumber = (lastOrder?.orderNumber ?? 999) + 1;
+    const [{ next }] = await prisma.$queryRaw`SELECT COALESCE(MAX("orderNumber"), 999) + 1 AS next FROM orders`;
+    const orderNumber = Number(next);
 
     const order = await prisma.order.create({
       data: {
@@ -74,8 +74,8 @@ router.post('/', authMiddleware, async (req, res) => {
 
     res.status(201).json(order);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao criar pedido' });
+    console.error('Erro ao criar pedido:', err?.message || err);
+    res.status(500).json({ error: err?.message || 'Erro ao criar pedido' });
   }
 });
 
