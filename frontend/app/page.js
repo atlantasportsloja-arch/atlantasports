@@ -64,7 +64,7 @@ export default function HomePage() {
     <div>
       {/* BANNER / HERO */}
       {config.banners?.length > 0 ? (
-        <section className="relative w-full overflow-hidden bg-gray-900 h-48 sm:h-64 md:h-80 lg:h-[420px]">
+        <section className="relative w-full overflow-hidden bg-gray-900 h-36 sm:h-52 md:h-72 lg:h-[420px]">
           {config.banners.map((url, i) => (
             <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === activeBanner ? 'opacity-100' : 'opacity-0'}`}>
               <Image src={url} alt={`Banner ${i + 1}`} fill className="object-cover object-center" priority={i === 0} sizes="100vw" />
