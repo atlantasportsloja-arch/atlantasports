@@ -2,12 +2,13 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Users, Tag, Settings, Menu, X, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Tag, Settings, Menu, X, ChevronRight, FolderOpen } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 
 const links = [
   { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
   { href: '/admin/produtos', label: 'Produtos', icon: <Package size={18} /> },
+  { href: '/admin/categorias', label: 'Categorias', icon: <FolderOpen size={18} /> },
   { href: '/admin/pedidos', label: 'Pedidos', icon: <ShoppingBag size={18} /> },
   { href: '/admin/usuarios', label: 'Usuários', icon: <Users size={18} /> },
   { href: '/admin/cupons', label: 'Cupons', icon: <Tag size={18} /> },
