@@ -1,12 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Search, X, Loader2, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Loader2, AlertTriangle, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 
-const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', stock: '', categoryIds: [], images: [] };
+const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', stock: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [] };
 
 function DeleteConfirm({ name, onConfirm, onCancel }) {
   return (
@@ -57,6 +57,9 @@ export default function AdminProdutos() {
       costPrice: form.costPrice ? Number(form.costPrice) : null,
       images: form.images,
       categoryIds: form.categoryIds,
+      availability: form.availability,
+      keywords: form.keywords,
+      active: form.active,
     };
     try {
       if (editing) {
@@ -75,6 +78,16 @@ export default function AdminProdutos() {
     }
   }
 
+  async function duplicate(p) {
+    try {
+      await api.post(`/products/${p.id}/duplicate`);
+      toast.success(`"Cópia de ${p.name}" criada (inativa)`);
+      load();
+    } catch {
+      toast.error('Erro ao duplicar');
+    }
+  }
+
   async function remove(id) {
     try {
       await api.delete(`/products/${id}`);
@@ -87,7 +100,7 @@ export default function AdminProdutos() {
   }
 
   function edit(p) {
-    setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', stock: p.stock, categoryIds: (p.categories || []).map(c => c.id), images: p.images || [] });
+    setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', stock: p.stock, availability: p.availability || 'pronta_entrega', keywords: p.keywords || '', active: p.active !== false, categoryIds: (p.categories || []).map(c => c.id), images: p.images || [] });
     setEditing(p.id);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -143,6 +156,28 @@ export default function AdminProdutos() {
               <label className="block text-sm font-medium mb-1">Estoque</label>
               <input className="input" type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} required placeholder="0" />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Disponibilidade</label>
+              <div className="flex gap-3">
+                {[{ value: 'pronta_entrega', label: '✅ Pronta Entrega' }, { value: 'encomenda', label: '🕐 Encomenda' }].map(op => (
+                  <label key={op.value} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 cursor-pointer text-sm font-medium transition-colors ${form.availability === op.value ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input type="radio" name="availability" value={op.value} checked={form.availability === op.value} onChange={() => setForm({ ...form, availability: op.value })} className="sr-only" />
+                    {op.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Status</label>
+              <label className={`inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 cursor-pointer text-sm font-medium transition-colors ${form.active ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500'}`}>
+                <div className={`w-10 h-5 rounded-full transition-colors relative ${form.active ? 'bg-green-500' : 'bg-gray-300'}`} onClick={() => setForm({ ...form, active: !form.active })}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </div>
+                {form.active ? 'Produto ativo (visível na loja)' : 'Produto inativo (oculto)'}
+              </label>
+            </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2">
                 Categorias <span className="text-gray-400 font-normal text-xs">(selecione quantas quiser)</span>
@@ -180,6 +215,12 @@ export default function AdminProdutos() {
                 <p className="text-xs text-orange-500 mt-1">Selecione ao menos uma categoria</p>
               )}
             </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">Palavras-chave <span className="text-gray-400 font-normal text-xs">(para busca)</span></label>
+              <input className="input" value={form.keywords} onChange={e => setForm({ ...form, keywords: e.target.value })} placeholder="Ex: camisa flamengo vermelha time futebol" />
+              <p className="text-xs text-gray-400 mt-1">Separe por espaço. Ajudam o cliente a encontrar o produto.</p>
+            </div>
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2">Imagens</label>
               <ImageUpload images={form.images} onChange={imgs => setForm({ ...form, images: imgs })} maxImages={6} />
@@ -219,7 +260,7 @@ export default function AdminProdutos() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  {['', 'Produto', 'Categoria', 'Preço', 'Estoque', 'Ações'].map(h => (
+                  {['', 'Produto', 'Categorias', 'Disponib.', 'Status', 'Preço', 'Estoque', 'Ações'].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -238,6 +279,16 @@ export default function AdminProdutos() {
                     </td>
                     <td className="px-4 py-3 font-medium max-w-[200px] truncate">{p.name}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{(p.categories || []).map(c => c.name).join(', ') || '—'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.availability === 'encomenda' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                        {p.availability === 'encomenda' ? '🕐 Encomenda' : '✅ Pronta'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.active ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {p.active ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 font-bold text-primary-500 whitespace-nowrap">R$ {p.price.toFixed(2).replace('.', ',')}</td>
                     <td className="px-4 py-3">
                       <span className={`font-semibold ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-orange-500' : 'text-green-600'}`}>
@@ -253,9 +304,10 @@ export default function AdminProdutos() {
                           onCancel={() => setConfirmDelete(null)}
                         />
                       ) : (
-                        <div className="flex gap-2">
-                          <button onClick={() => edit(p)} className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50"><Edit size={16} /></button>
-                          <button onClick={() => setConfirmDelete(p.id)} className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50"><Trash2 size={16} /></button>
+                        <div className="flex gap-1">
+                          <button onClick={() => edit(p)} title="Editar" className="text-blue-500 hover:text-blue-700 p-1.5 rounded hover:bg-blue-50"><Edit size={15} /></button>
+                          <button onClick={() => duplicate(p)} title="Duplicar" className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-100"><Copy size={15} /></button>
+                          <button onClick={() => setConfirmDelete(p.id)} title="Desativar" className="text-red-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50"><Trash2 size={15} /></button>
                         </div>
                       )}
                     </td>

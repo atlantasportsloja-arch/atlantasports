@@ -51,9 +51,11 @@ model Product {
   comparePrice Float?
   costPrice   Float?
   stock       Int      @default(0)
-  images      String[]
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  images       String[]
+  availability String   @default("pronta_entrega")
+  keywords     String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   categories Category[]

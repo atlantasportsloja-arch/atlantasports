@@ -258,6 +258,13 @@ export default function ProdutoPage({ params }) {
             </div>
           )}
 
+          {product.availability && (
+            <div>
+              <span className={`inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full ${product.availability === 'encomenda' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                {product.availability === 'encomenda' ? '🕐 Sob Encomenda' : '✅ Pronta Entrega'}
+              </span>
+            </div>
+          )}
           <div className="bg-gray-50 rounded-xl p-4 space-y-1">
             <p className="text-4xl font-black text-gray-900">
               R$ {product.price.toFixed(2).replace('.', ',')}

@@ -11,7 +11,10 @@ router.get('/', async (req, res) => {
 
   const where = { active: true };
   if (category) where.categories = { some: { slug: category } };
-  if (search) where.name = { contains: search, mode: 'insensitive' };
+  if (search) where.OR = [
+    { name: { contains: search, mode: 'insensitive' } },
+    { keywords: { contains: search, mode: 'insensitive' } },
+  ];
 
   let orderBy = { createdAt: 'desc' };
   if (sort === 'price_asc') orderBy = { price: 'asc' };
@@ -25,7 +28,7 @@ router.get('/', async (req, res) => {
         select: {
           id: true, name: true, slug: true, description: true,
           price: true, comparePrice: true, stock: true, images: true,
-          active: true, createdAt: true,
+          availability: true, active: true, createdAt: true,
           categories: true,
           reviews: { select: { rating: true } },
         },
@@ -89,7 +92,7 @@ router.get('/:slug', async (req, res) => {
       select: {
         id: true, name: true, slug: true, description: true,
         price: true, comparePrice: true, stock: true, images: true,
-        active: true, createdAt: true,
+        availability: true, keywords: true, active: true, createdAt: true,
         categories: true,
         reviews: { include: { user: { select: { name: true } } } },
       },
@@ -109,13 +112,13 @@ router.post('/', adminMiddleware, [
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { name, description, price, comparePrice, costPrice, stock, images, categoryIds = [] } = req.body;
+  const { name, description, price, comparePrice, costPrice, stock, images, categoryIds = [], availability = 'pronta_entrega', keywords = '' } = req.body;
 
   try {
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const product = await prisma.product.create({
       data: {
-        name, description, slug,
+        name, description, slug, availability, keywords,
         price: Number(price),
         comparePrice: comparePrice ? Number(comparePrice) : null,
         costPrice: costPrice ? Number(costPrice) : null,
@@ -135,7 +138,7 @@ router.post('/', adminMiddleware, [
 });
 
 router.put('/:id', adminMiddleware, async (req, res) => {
-  const { name, description, price, comparePrice, costPrice, stock, images, active, categoryIds } = req.body;
+  const { name, description, price, comparePrice, costPrice, stock, images, active, availability, keywords, categoryIds } = req.body;
 
   try {
     const data = {};
@@ -147,6 +150,8 @@ router.put('/:id', adminMiddleware, async (req, res) => {
     if (stock !== undefined) data.stock = Number(stock);
     if (images !== undefined) data.images = images;
     if (active !== undefined) data.active = active;
+    if (availability !== undefined) data.availability = availability;
+    if (keywords !== undefined) data.keywords = keywords;
     if (categoryIds !== undefined) {
       data.categories = { set: categoryIds.map(id => ({ id })) };
     }
@@ -159,6 +164,35 @@ router.put('/:id', adminMiddleware, async (req, res) => {
     res.json(product);
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar produto' });
+  }
+});
+
+router.post('/:id/duplicate', adminMiddleware, async (req, res) => {
+  try {
+    const original = await prisma.product.findUnique({
+      where: { id: req.params.id },
+      include: { categories: true },
+    });
+    if (!original) return res.status(404).json({ error: 'Produto não encontrado' });
+
+    const newName = `Cópia de ${original.name}`;
+    const baseSlug = newName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = `${baseSlug}-${Date.now()}`;
+
+    const copy = await prisma.product.create({
+      data: {
+        name: newName, slug, description: original.description,
+        price: original.price, comparePrice: original.comparePrice,
+        costPrice: original.costPrice, stock: original.stock,
+        images: original.images, availability: original.availability,
+        keywords: original.keywords, active: false,
+        categories: { connect: original.categories.map(c => ({ id: c.id })) },
+      },
+      include: { categories: true },
+    });
+    res.status(201).json(copy);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao duplicar produto' });
   }
 });
 
