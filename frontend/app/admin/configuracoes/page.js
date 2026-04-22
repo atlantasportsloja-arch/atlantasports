@@ -148,7 +148,7 @@ export default function ConfiguracoesPage() {
 
       {/* BANNERS */}
       <Section title="🖼️ Banners de Promoção">
-        <p className="text-xs text-gray-400 -mt-2">Aparecem em carrossel automático na home. Tamanho ideal: <span className="font-semibold text-gray-600">1500 × 700px</span></p>
+        <p className="text-xs text-gray-400 -mt-2">Aparecem em carrossel automático na home. Tamanho ideal: <span className="font-semibold text-gray-600">1400 × 500px</span></p>
         <div className="space-y-3">
           {config.banners?.map((url, i) => (
             <div key={i} className="relative rounded-xl overflow-hidden border border-gray-200 group">
