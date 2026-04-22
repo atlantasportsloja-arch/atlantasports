@@ -119,6 +119,8 @@ export default function ProdutoPage({ params }) {
   const [loading, setLoading] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
 
   useEffect(() => {
     api.get(`/products/${params.slug}`).then(r => setProduct(r.data)).catch(() => {});
@@ -131,11 +133,26 @@ export default function ProdutoPage({ params }) {
       .catch(() => {});
   }, [token, product?.id]);
 
+  const sizes = product ? [...new Set(product.variants?.filter(v => v.size).map(v => v.size))] : [];
+  const colors = product ? [...new Set(product.variants?.filter(v => v.color).map(v => v.color))] : [];
+  const hasVariants = sizes.length > 0 || colors.length > 0;
+
+  const selectedVariant = product?.variants?.find(v =>
+    (!sizes.length || v.size === selectedSize) &&
+    (!colors.length || v.color === selectedColor)
+  ) || null;
+
+  const effectiveStock = hasVariants
+    ? (selectedVariant?.stock ?? 0)
+    : product?.stock ?? 0;
+
   async function addToCart() {
     if (!token) { toast.error('Faça login para continuar'); return; }
+    if (hasVariants && sizes.length > 0 && !selectedSize) { toast.error('Selecione um tamanho'); return; }
+    if (hasVariants && colors.length > 0 && !selectedColor) { toast.error('Selecione uma cor'); return; }
     setLoading(true);
     try {
-      await api.post('/cart', { productId: product.id, quantity });
+      await api.post('/cart', { productId: product.id, variantId: selectedVariant?.id || null, quantity });
       const { data } = await api.get('/cart');
       setCart(data.items, data.total);
       toast.success('Adicionado ao carrinho!');
@@ -175,8 +192,8 @@ export default function ProdutoPage({ params }) {
     ? (product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length).toFixed(1)
     : null;
 
-  const outOfStock = product.stock === 0;
-  const lowStock = product.stock > 0 && product.stock <= 5;
+  const outOfStock = effectiveStock === 0;
+  const lowStock = effectiveStock > 0 && effectiveStock <= 5;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -290,6 +307,64 @@ export default function ProdutoPage({ params }) {
 
           <p className="text-gray-600 leading-relaxed">{product.description}</p>
 
+          {sizes.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold mb-2">Tamanho</p>
+              <div className="flex flex-wrap gap-2">
+                {sizes.map(s => {
+                  const variant = product.variants.find(v => v.size === s && (!selectedColor || v.color === selectedColor));
+                  const unavailable = variant?.stock === 0;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      disabled={unavailable}
+                      onClick={() => setSelectedSize(s === selectedSize ? null : s)}
+                      className={`px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-colors ${
+                        selectedSize === s
+                          ? 'border-primary-500 bg-primary-50 text-primary-700'
+                          : unavailable
+                          ? 'border-gray-200 text-gray-300 cursor-not-allowed line-through'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {colors.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold mb-2">Cor</p>
+              <div className="flex flex-wrap gap-2">
+                {colors.map(c => {
+                  const variant = product.variants.find(v => v.color === c && (!selectedSize || v.size === selectedSize));
+                  const unavailable = variant?.stock === 0;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      disabled={unavailable}
+                      onClick={() => setSelectedColor(c === selectedColor ? null : c)}
+                      className={`px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-colors ${
+                        selectedColor === c
+                          ? 'border-primary-500 bg-primary-50 text-primary-700'
+                          : unavailable
+                          ? 'border-gray-200 text-gray-300 cursor-not-allowed line-through'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {!outOfStock && (
             <div className="flex items-center gap-4">
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
@@ -300,9 +375,10 @@ export default function ProdutoPage({ params }) {
                 <span className="px-5 font-semibold">{quantity}</span>
                 <button
                   className="px-3 py-3 hover:bg-gray-100 transition-colors font-bold text-lg"
-                  onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+                  onClick={() => setQuantity(q => Math.min(effectiveStock, q + 1))}
                 >+</button>
               </div>
+              {lowStock && <span className="text-xs text-orange-500 font-semibold">⚠️ Apenas {effectiveStock} em estoque</span>}
             </div>
           )}
 

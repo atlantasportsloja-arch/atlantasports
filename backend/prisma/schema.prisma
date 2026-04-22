@@ -63,8 +63,25 @@ model Product {
   cartItems  Cart[]
   reviews    Review[]
   wishlist   Wishlist[]
+  variants   ProductVariant[]
 
   @@map("products")
+}
+
+model ProductVariant {
+  id        String  @id @default(uuid())
+  productId String
+  size      String?
+  color     String?
+  stock     Int     @default(0)
+  price     Float?
+  active    Boolean @default(true)
+
+  product    Product     @relation(fields: [productId], references: [id])
+  cartItems  Cart[]
+  orderItems OrderItem[]
+
+  @@map("product_variants")
 }
 
 model Wishlist {
@@ -114,11 +131,13 @@ model OrderItem {
   id        String  @id @default(uuid())
   orderId   String
   productId String
+  variantId String?
   quantity  Int
   price     Float
 
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  order   Order          @relation(fields: [orderId], references: [id])
+  product Product        @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@map("order_items")
 }
@@ -127,12 +146,13 @@ model Cart {
   id        String  @id @default(uuid())
   userId    String
   productId String
+  variantId String?
   quantity  Int
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user    User            @relation(fields: [userId], references: [id])
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
 
-  @@unique([userId, productId])
   @@map("cart")
 }
 

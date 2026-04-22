@@ -18,17 +18,17 @@ export default function CarrinhoPage() {
     api.get('/cart').then(r => setCart(r.data.items, r.data.total));
   }, [token]);
 
-  async function updateQty(productId, quantity) {
+  async function updateQty(id, quantity) {
     try {
-      await api.put(`/cart/${productId}`, { quantity });
+      await api.put(`/cart/${id}`, { quantity });
       const { data } = await api.get('/cart');
       setCart(data.items, data.total);
     } catch { toast.error('Erro ao atualizar'); }
   }
 
-  async function removeItem(productId) {
+  async function removeItem(id) {
     try {
-      await api.delete(`/cart/${productId}`);
+      await api.delete(`/cart/${id}`);
       const { data } = await api.get('/cart');
       setCart(data.items, data.total);
       toast.success('Item removido');
@@ -83,22 +83,28 @@ export default function CarrinhoPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{item.product.name}</p>
+                {item.variant && (
+                  <div className="flex gap-1.5 mt-0.5">
+                    {item.variant.size && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{item.variant.size}</span>}
+                    {item.variant.color && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{item.variant.color}</span>}
+                  </div>
+                )}
                 <p className="text-primary-500 font-bold mt-1">
-                  R$ {item.product.price.toFixed(2).replace('.', ',')}
+                  R$ {(item.variant?.price ?? item.product.price).toFixed(2).replace('.', ',')}
                 </p>
                 <div className="flex items-center gap-3 mt-2">
                   <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden text-sm">
-                    <button className="px-2 py-1 hover:bg-gray-100" onClick={() => updateQty(item.productId, Math.max(1, item.quantity - 1))}>−</button>
+                    <button className="px-2 py-1 hover:bg-gray-100" onClick={() => updateQty(item.id, Math.max(1, item.quantity - 1))}>−</button>
                     <span className="px-3">{item.quantity}</span>
-                    <button className="px-2 py-1 hover:bg-gray-100" onClick={() => updateQty(item.productId, item.quantity + 1)}>+</button>
+                    <button className="px-2 py-1 hover:bg-gray-100" onClick={() => updateQty(item.id, item.quantity + 1)}>+</button>
                   </div>
-                  <button onClick={() => removeItem(item.productId)} className="text-red-400 hover:text-red-600 transition-colors">
+                  <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600 transition-colors">
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="font-black">R$ {(item.product.price * item.quantity).toFixed(2).replace('.', ',')}</p>
+                <p className="font-black">R$ {((item.variant?.price ?? item.product.price) * item.quantity).toFixed(2).replace('.', ',')}</p>
               </div>
             </div>
           ))}

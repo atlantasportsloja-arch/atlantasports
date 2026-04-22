@@ -45,7 +45,7 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
   try {
     const products = await prisma.product.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { categories: true },
+      include: { categories: true, variants: { where: { active: true }, orderBy: [{ size: 'asc' }, { color: 'asc' }] } },
     });
     res.json({ products });
   } catch {
@@ -95,12 +95,60 @@ router.get('/:slug', async (req, res) => {
         availability: true, keywords: true, active: true, createdAt: true,
         categories: true,
         reviews: { include: { user: { select: { name: true } } } },
+        variants: { where: { active: true }, orderBy: [{ size: 'asc' }, { color: 'asc' }] },
       },
     });
     if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
     res.json(product);
   } catch {
     res.status(500).json({ error: 'Erro ao buscar produto' });
+  }
+});
+
+router.post('/:id/variants', adminMiddleware, async (req, res) => {
+  const { size, color, stock, price } = req.body;
+  if (!size && !color) return res.status(400).json({ error: 'Informe tamanho ou cor' });
+  try {
+    const variant = await prisma.productVariant.create({
+      data: {
+        productId: req.params.id,
+        size: size || null,
+        color: color || null,
+        stock: Number(stock) || 0,
+        price: price ? Number(price) : null,
+      },
+    });
+    res.status(201).json(variant);
+  } catch {
+    res.status(500).json({ error: 'Erro ao criar variante' });
+  }
+});
+
+router.put('/:id/variants/:variantId', adminMiddleware, async (req, res) => {
+  const { size, color, stock, price, active } = req.body;
+  try {
+    const variant = await prisma.productVariant.update({
+      where: { id: req.params.variantId },
+      data: {
+        ...(size !== undefined && { size }),
+        ...(color !== undefined && { color }),
+        ...(stock !== undefined && { stock: Number(stock) }),
+        ...(price !== undefined && { price: price ? Number(price) : null }),
+        ...(active !== undefined && { active }),
+      },
+    });
+    res.json(variant);
+  } catch {
+    res.status(500).json({ error: 'Erro ao atualizar variante' });
+  }
+});
+
+router.delete('/:id/variants/:variantId', adminMiddleware, async (req, res) => {
+  try {
+    await prisma.productVariant.delete({ where: { id: req.params.variantId } });
+    res.json({ message: 'Variante removida' });
+  } catch {
+    res.status(500).json({ error: 'Erro ao remover variante' });
   }
 });
 

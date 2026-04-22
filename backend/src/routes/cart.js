@@ -10,9 +10,15 @@ router.get('/', async (req, res) => {
   try {
     const items = await prisma.cart.findMany({
       where: { userId: req.user.id },
-      include: { product: { include: { category: true } } },
+      include: {
+        product: true,
+        variant: true,
+      },
     });
-    const total = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+    const total = items.reduce((sum, i) => {
+      const price = i.variant?.price ?? i.product.price;
+      return sum + price * i.quantity;
+    }, 0);
     res.json({ items, total });
   } catch {
     res.status(500).json({ error: 'Erro ao buscar carrinho' });
@@ -20,20 +26,38 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { productId, quantity = 1 } = req.body;
+  const { productId, variantId, quantity = 1 } = req.body;
   if (!productId) return res.status(400).json({ error: 'productId obrigatório' });
 
   try {
     const product = await prisma.product.findUnique({ where: { id: productId } });
     if (!product || !product.active) return res.status(404).json({ error: 'Produto não encontrado' });
-    if (product.stock < quantity) return res.status(400).json({ error: 'Estoque insuficiente' });
 
-    const item = await prisma.cart.upsert({
-      where: { userId_productId: { userId: req.user.id, productId } },
-      update: { quantity: { increment: quantity } },
-      create: { userId: req.user.id, productId, quantity },
-      include: { product: true },
+    if (variantId) {
+      const variant = await prisma.productVariant.findUnique({ where: { id: variantId } });
+      if (!variant || !variant.active) return res.status(404).json({ error: 'Variante não encontrada' });
+      if (variant.stock < quantity) return res.status(400).json({ error: 'Estoque insuficiente para esta variante' });
+    } else {
+      if (product.stock < quantity) return res.status(400).json({ error: 'Estoque insuficiente' });
+    }
+
+    const existing = await prisma.cart.findFirst({
+      where: { userId: req.user.id, productId, variantId: variantId || null },
     });
+
+    let item;
+    if (existing) {
+      item = await prisma.cart.update({
+        where: { id: existing.id },
+        data: { quantity: existing.quantity + quantity },
+        include: { product: true, variant: true },
+      });
+    } else {
+      item = await prisma.cart.create({
+        data: { userId: req.user.id, productId, variantId: variantId || null, quantity },
+        include: { product: true, variant: true },
+      });
+    }
 
     res.json(item);
   } catch {
@@ -41,15 +65,15 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:productId', async (req, res) => {
+router.put('/:id', async (req, res) => {
   const { quantity } = req.body;
   if (!quantity || quantity < 1) return res.status(400).json({ error: 'Quantidade inválida' });
 
   try {
     const item = await prisma.cart.update({
-      where: { userId_productId: { userId: req.user.id, productId: req.params.productId } },
+      where: { id: req.params.id },
       data: { quantity },
-      include: { product: true },
+      include: { product: true, variant: true },
     });
     res.json(item);
   } catch {
@@ -57,11 +81,9 @@ router.put('/:productId', async (req, res) => {
   }
 });
 
-router.delete('/:productId', async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    await prisma.cart.delete({
-      where: { userId_productId: { userId: req.user.id, productId: req.params.productId } },
-    });
+    await prisma.cart.delete({ where: { id: req.params.id } });
     res.json({ message: 'Item removido' });
   } catch {
     res.status(500).json({ error: 'Erro ao remover item' });

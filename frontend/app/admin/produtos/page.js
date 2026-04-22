@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 
 const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', stock: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [] };
+const EMPTY_VARIANT = { size: '', color: '', stock: '', price: '' };
 
 function DeleteConfirm({ name, onConfirm, onCancel }) {
   return (
@@ -29,6 +30,9 @@ export default function AdminProdutos() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [variantForm, setVariantForm] = useState(EMPTY_VARIANT);
+  const [savingVariant, setSavingVariant] = useState(false);
+  const [editingVariants, setEditingVariants] = useState([]);
 
   useEffect(() => {
     load();
@@ -38,7 +42,7 @@ export default function AdminProdutos() {
   async function load() {
     setLoading(true);
     try {
-      const { data } = await api.get('/products', { params: { limit: 100 } });
+      const { data } = await api.get('/products/admin/all');
       setProducts(data.products);
     } finally {
       setLoading(false);
@@ -102,8 +106,41 @@ export default function AdminProdutos() {
   function edit(p) {
     setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', stock: p.stock, availability: p.availability || 'pronta_entrega', keywords: p.keywords || '', active: p.active !== false, categoryIds: (p.categories || []).map(c => c.id), images: p.images || [] });
     setEditing(p.id);
+    setEditingVariants(p.variants || []);
+    setVariantForm(EMPTY_VARIANT);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function addVariant(e) {
+    e.preventDefault();
+    if (!variantForm.size && !variantForm.color) { toast.error('Informe tamanho ou cor'); return; }
+    setSavingVariant(true);
+    try {
+      const { data } = await api.post(`/products/${editing}/variants`, {
+        size: variantForm.size || null,
+        color: variantForm.color || null,
+        stock: Number(variantForm.stock) || 0,
+        price: variantForm.price ? Number(variantForm.price) : null,
+      });
+      setEditingVariants(v => [...v, data]);
+      setVariantForm(EMPTY_VARIANT);
+      toast.success('Variante adicionada');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao adicionar variante');
+    } finally {
+      setSavingVariant(false);
+    }
+  }
+
+  async function removeVariant(variantId) {
+    try {
+      await api.delete(`/products/${editing}/variants/${variantId}`);
+      setEditingVariants(v => v.filter(x => x.id !== variantId));
+      toast.success('Variante removida');
+    } catch {
+      toast.error('Erro ao remover variante');
+    }
   }
 
   const filtered = products.filter(p =>
@@ -225,6 +262,41 @@ export default function AdminProdutos() {
               <label className="block text-sm font-medium mb-2">Imagens</label>
               <ImageUpload images={form.images} onChange={imgs => setForm({ ...form, images: imgs })} maxImages={6} />
             </div>
+
+            {editing && (
+              <div className="md:col-span-2 border border-gray-200 rounded-xl p-4 space-y-3">
+                <h3 className="font-semibold text-sm">Variações (tamanho / cor)</h3>
+
+                {editingVariants.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {editingVariants.map(v => (
+                      <div key={v.id} className="flex items-center gap-1.5 bg-gray-100 rounded-lg px-3 py-1.5 text-sm">
+                        {v.size && <span className="font-semibold">{v.size}</span>}
+                        {v.size && v.color && <span className="text-gray-400">/</span>}
+                        {v.color && <span className="font-semibold">{v.color}</span>}
+                        <span className="text-gray-500 text-xs">· {v.stock} un.</span>
+                        {v.price && <span className="text-primary-500 text-xs font-semibold">· R$ {v.price.toFixed(2).replace('.', ',')}</span>}
+                        <button type="button" onClick={() => removeVariant(v.id)} className="text-red-400 hover:text-red-600 ml-1">
+                          <X size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <form onSubmit={addVariant} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <input className="input text-sm py-2" placeholder="Tamanho (ex: M)" value={variantForm.size} onChange={e => setVariantForm({ ...variantForm, size: e.target.value })} />
+                  <input className="input text-sm py-2" placeholder="Cor (ex: Vermelho)" value={variantForm.color} onChange={e => setVariantForm({ ...variantForm, color: e.target.value })} />
+                  <input className="input text-sm py-2" type="number" min="0" placeholder="Estoque" value={variantForm.stock} onChange={e => setVariantForm({ ...variantForm, stock: e.target.value })} />
+                  <input className="input text-sm py-2" type="number" step="0.01" min="0" placeholder="Preço (opcional)" value={variantForm.price} onChange={e => setVariantForm({ ...variantForm, price: e.target.value })} />
+                  <button type="submit" disabled={savingVariant} className="sm:col-span-4 btn-outline text-sm py-2 flex items-center justify-center gap-2">
+                    {savingVariant ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                    Adicionar variação
+                  </button>
+                </form>
+              </div>
+            )}
+
             <div className="md:col-span-2 flex gap-3">
               <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
                 {saving && <Loader2 size={16} className="animate-spin" />}
