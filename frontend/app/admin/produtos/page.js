@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, Search, X, Loader2, AlertTriangle, Copy } from 'luc
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
+import { sortVariants } from '@/lib/sortSizes';
 
 const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', stock: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [] };
 const EMPTY_VARIANT = { size: '', stock: '' };
@@ -210,7 +211,7 @@ export default function AdminProdutos() {
                 <>
                   {editingVariants.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {editingVariants.map(v => (
+                      {sortVariants(editingVariants).map(v => (
                         <div key={v.id} className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-sm">
                           <span className="font-bold text-gray-800">{v.size}</span>
                           <span className="text-gray-400">|</span>

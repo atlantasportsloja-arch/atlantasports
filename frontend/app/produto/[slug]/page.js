@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
 import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
+import { sortSizes } from '@/lib/sortSizes';
 
 function ProductSkeleton() {
   return (
@@ -132,7 +133,7 @@ export default function ProdutoPage({ params }) {
       .catch(() => {});
   }, [token, product?.id]);
 
-  const sizes = product ? [...new Set(product.variants?.filter(v => v.size && v.active !== false).map(v => v.size))] : [];
+  const sizes = product ? sortSizes([...new Set(product.variants?.filter(v => v.size && v.active !== false).map(v => v.size))]) : [];
   const hasVariants = sizes.length > 0;
 
   const selectedVariant = product?.variants?.find(v => v.size === selectedSize) || null;
