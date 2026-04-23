@@ -1,16 +1,17 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Copy } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import WhatsAppOrderButton from '@/components/WhatsAppOrderButton';
 import api from '@/lib/api';
+import toast from 'react-hot-toast';
 
 function SucessoContent({ id }) {
   const searchParams = useSearchParams();
   const via = searchParams?.get('via');
-  const viaWhatsApp = via === 'whatsapp';
   const viaPix = via === 'pix';
+  const viaParcelado = via === 'parcelado';
   const [order, setOrder] = useState(null);
   const [pixKey, setPixKey] = useState('');
 
@@ -22,53 +23,64 @@ function SucessoContent({ id }) {
   }, [id, viaPix]);
 
   const codigo = order?.orderNumber ? `#${order.orderNumber}` : `#${id.slice(0, 8).toUpperCase()}`;
+  const fmt = (v) => `R$ ${Number(v).toFixed(2).replace('.', ',')}`;
+
+  function copyPix() {
+    navigator.clipboard.writeText(pixKey).then(() => toast.success('Chave PIX copiada!'));
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="text-center max-w-md w-full">
-        <CheckCircle size={64} className="mx-auto text-green-500 mb-6" />
-        <h1 className="text-3xl font-black mb-2">Pedido registrado!</h1>
-        <p className="text-sm text-gray-400 mb-6">
+        <CheckCircle size={64} className="mx-auto text-green-500 mb-4" />
+        <h1 className="text-3xl font-black mb-1">Pedido registrado!</h1>
+        <p className="text-sm text-gray-400 mb-8">
           Pedido: <span className="font-mono font-bold">{codigo}</span>
         </p>
 
+        {/* PIX */}
         {viaPix && order && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-5 mb-6 text-left">
-            <p className="font-black text-green-800 mb-3 text-center">⚡ Instruções de pagamento PIX</p>
-            <div className="space-y-2 text-sm">
-              <p className="text-gray-600">Faça o PIX no valor de:</p>
-              <p className="text-2xl font-black text-green-700">
-                R$ {order.total.toFixed(2).replace('.', ',')}
-              </p>
-              <p className="text-gray-600 mt-3">Chave PIX:</p>
-              <div className="bg-white border border-green-200 rounded-lg p-3">
-                <p className="font-mono font-bold text-gray-800 break-all text-sm">{pixKey || '—'}</p>
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6 text-left">
+            <p className="font-black text-green-800 mb-4 text-center text-lg">⚡ Pague agora via PIX</p>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between bg-white rounded-xl border border-green-200 px-4 py-3">
+                <span className="text-gray-500">Valor a pagar</span>
+                <span className="text-2xl font-black text-green-700">{fmt(order.total)}</span>
               </div>
-              <p className="text-xs text-gray-400 mt-2">
-                Após o pagamento, envie o comprovante pelo WhatsApp para agilizar a confirmação.
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Chave PIX:</p>
+                <div className="flex items-center gap-2 bg-white border border-green-200 rounded-xl p-3">
+                  <p className="font-mono font-bold text-gray-800 break-all text-sm flex-1">{pixKey || '—'}</p>
+                  {pixKey && (
+                    <button type="button" onClick={copyPix} className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-semibold border border-green-300 rounded-lg px-2 py-1 shrink-0">
+                      <Copy size={11} /> Copiar
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 text-center">
+                Após pagar, envie o comprovante pelo WhatsApp para confirmar seu pedido.
               </p>
             </div>
           </div>
         )}
 
-        {viaWhatsApp && (
-          <p className="text-gray-500 mb-6">
-            Seu pedido foi criado. Clique abaixo para falar com a gente no WhatsApp e fechar a compra.
-          </p>
+        {/* Parcelado */}
+        {viaParcelado && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6 text-left">
+            <p className="font-black text-green-800 mb-2 text-center text-lg">Combine o parcelamento</p>
+            <p className="text-sm text-gray-600 text-center">
+              Clique no botão abaixo para falar com a loja no WhatsApp e acertar as condições de parcelamento.
+            </p>
+          </div>
         )}
 
-        {!viaPix && !viaWhatsApp && (
-          <p className="text-gray-500 mb-6">
-            Seu pagamento foi aprovado. Você receberá um e-mail de confirmação em breve.
-          </p>
-        )}
-
-        <div className="flex flex-col gap-3 justify-center">
+        <div className="flex flex-col gap-3">
           <WhatsAppOrderButton
             orderId={id}
             orderNumber={order?.orderNumber}
             total={order?.total}
-            className={`w-full ${viaWhatsApp || viaPix ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
+            className={`w-full ${viaPix || viaParcelado ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
           />
           <Link href="/minha-conta/pedidos" className="btn-primary">Ver meus pedidos</Link>
           <Link href="/" className="btn-outline">Continuar comprando</Link>
