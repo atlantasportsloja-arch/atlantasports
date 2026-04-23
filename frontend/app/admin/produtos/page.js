@@ -52,6 +52,10 @@ export default function AdminProdutos() {
 
   async function submit(e) {
     e.preventDefault();
+    // auto-salva tamanho pendente antes de fechar
+    if (editing && variantSize.trim()) {
+      await addVariant();
+    }
     setSaving(true);
     const payload = {
       name: form.name,
