@@ -268,7 +268,7 @@ export default function CheckoutPage() {
               {items.map(item => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <span className="truncate max-w-[65%] text-gray-600">{item.product.name} ×{item.quantity}</span>
-                  <span className="font-semibold">R$ {(item.product.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                  <span className="font-semibold">R$ {((item.variant?.price ?? item.product.price) * item.quantity).toFixed(2).replace('.', ',')}</span>
                 </div>
               ))}
             </div>

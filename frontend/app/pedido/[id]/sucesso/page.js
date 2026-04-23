@@ -12,10 +12,14 @@ function SucessoContent({ id }) {
   const viaWhatsApp = via === 'whatsapp';
   const viaPix = via === 'pix';
   const [order, setOrder] = useState(null);
+  const [pixKey, setPixKey] = useState('');
 
   useEffect(() => {
     api.get(`/orders/${id}`).then(r => setOrder(r.data)).catch(() => {});
-  }, [id]);
+    if (viaPix) {
+      api.get('/config').then(r => setPixKey(r.data?.pixKey || '')).catch(() => {});
+    }
+  }, [id, viaPix]);
 
   const codigo = order?.orderNumber ? `#${order.orderNumber}` : `#${id.slice(0, 8).toUpperCase()}`;
 
@@ -38,7 +42,7 @@ function SucessoContent({ id }) {
               </p>
               <p className="text-gray-600 mt-3">Chave PIX:</p>
               <div className="bg-white border border-green-200 rounded-lg p-3">
-                <p className="font-mono font-bold text-gray-800 break-all text-sm">{order.pixKey || '—'}</p>
+                <p className="font-mono font-bold text-gray-800 break-all text-sm">{pixKey || '—'}</p>
               </div>
               <p className="text-xs text-gray-400 mt-2">
                 Após o pagamento, envie o comprovante pelo WhatsApp para agilizar a confirmação.

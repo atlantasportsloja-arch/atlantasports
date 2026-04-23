@@ -106,20 +106,19 @@ router.get('/:slug', async (req, res) => {
 });
 
 router.post('/:id/variants', adminMiddleware, async (req, res) => {
-  const { size, color, stock, price } = req.body;
-  if (!size && !color) return res.status(400).json({ error: 'Informe tamanho ou cor' });
+  const { size, stock } = req.body;
+  if (!size) return res.status(400).json({ error: 'Informe o tamanho' });
   try {
     const variant = await prisma.productVariant.create({
       data: {
         productId: req.params.id,
-        size: size || null,
-        color: color || null,
+        size: size.toString().toUpperCase(),
         stock: Number(stock) || 0,
-        price: price ? Number(price) : null,
       },
     });
     res.status(201).json(variant);
-  } catch {
+  } catch (err) {
+    console.error('Erro ao criar variante:', err?.message);
     res.status(500).json({ error: 'Erro ao criar variante' });
   }
 });

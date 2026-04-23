@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 
 const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', stock: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [] };
-const EMPTY_VARIANT = { size: '', color: '', stock: '', price: '' };
+const EMPTY_VARIANT = { size: '', stock: '' };
 
 function DeleteConfirm({ name, onConfirm, onCancel }) {
   return (
@@ -30,7 +30,8 @@ export default function AdminProdutos() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [variantForm, setVariantForm] = useState(EMPTY_VARIANT);
+  const [variantSize, setVariantSize] = useState('');
+  const [variantStock, setVariantStock] = useState('');
   const [savingVariant, setSavingVariant] = useState(false);
   const [editingVariants, setEditingVariants] = useState([]);
 
@@ -107,27 +108,26 @@ export default function AdminProdutos() {
     setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', stock: p.stock, availability: p.availability || 'pronta_entrega', keywords: p.keywords || '', active: p.active !== false, categoryIds: (p.categories || []).map(c => c.id), images: p.images || [] });
     setEditing(p.id);
     setEditingVariants(p.variants || []);
-    setVariantForm(EMPTY_VARIANT);
+    setVariantSize('');
+    setVariantStock('');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  async function addVariant(e) {
-    e.preventDefault();
-    if (!variantForm.size && !variantForm.color) { toast.error('Informe tamanho ou cor'); return; }
+  async function addVariant() {
+    if (!variantSize.trim()) { toast.error('Informe o tamanho'); return; }
     setSavingVariant(true);
     try {
       const { data } = await api.post(`/products/${editing}/variants`, {
-        size: variantForm.size || null,
-        color: variantForm.color || null,
-        stock: Number(variantForm.stock) || 0,
-        price: variantForm.price ? Number(variantForm.price) : null,
+        size: variantSize.trim().toUpperCase(),
+        stock: Number(variantStock) || 0,
       });
       setEditingVariants(v => [...v, data]);
-      setVariantForm(EMPTY_VARIANT);
-      toast.success('Variante adicionada');
+      setVariantSize('');
+      setVariantStock('');
+      toast.success('Tamanho adicionado');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao adicionar variante');
+      toast.error(err.response?.data?.error || 'Erro ao adicionar tamanho');
     } finally {
       setSavingVariant(false);
     }
@@ -137,14 +137,14 @@ export default function AdminProdutos() {
     try {
       await api.delete(`/products/${editing}/variants/${variantId}`);
       setEditingVariants(v => v.filter(x => x.id !== variantId));
-      toast.success('Variante removida');
+      toast.success('Tamanho removido');
     } catch {
-      toast.error('Erro ao remover variante');
+      toast.error('Erro ao remover tamanho');
     }
   }
 
   const filtered = products.filter(p =>
-    !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.category?.name.toLowerCase().includes(search.toLowerCase())
+    !search || p.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -190,8 +190,73 @@ export default function AdminProdutos() {
               <input className="input border-orange-200 focus:ring-orange-400" type="number" step="0.01" min="0" value={form.costPrice} onChange={e => setForm({ ...form, costPrice: e.target.value })} placeholder="0.00" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Estoque</label>
+              <label className="block text-sm font-medium mb-1">Estoque geral</label>
               <input className="input" type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} required placeholder="0" />
+            </div>
+
+            {/* VARIAÇÕES DE TAMANHO */}
+            <div className="md:col-span-2 bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+              <h3 className="font-bold text-sm text-gray-700">Tamanhos disponíveis</h3>
+
+              {!editing && (
+                <p className="text-xs text-gray-400">Salve o produto primeiro para adicionar tamanhos.</p>
+              )}
+
+              {editing && (
+                <>
+                  {editingVariants.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {editingVariants.map(v => (
+                        <div key={v.id} className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-sm">
+                          <span className="font-bold text-gray-800">{v.size}</span>
+                          <span className="text-gray-400">|</span>
+                          <span className="text-gray-600">{v.stock} un.</span>
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(v.id)}
+                            className="text-red-400 hover:text-red-600 ml-1"
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {editingVariants.length === 0 && (
+                    <p className="text-xs text-gray-400">Nenhum tamanho adicionado ainda.</p>
+                  )}
+
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      className="input text-sm py-2 w-32"
+                      placeholder="Tamanho (P, M, G...)"
+                      value={variantSize}
+                      onChange={e => setVariantSize(e.target.value.toUpperCase())}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVariant(); } }}
+                    />
+                    <input
+                      type="number"
+                      className="input text-sm py-2 w-24"
+                      placeholder="Estoque"
+                      min="0"
+                      value={variantStock}
+                      onChange={e => setVariantStock(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVariant(); } }}
+                    />
+                    <button
+                      type="button"
+                      onClick={addVariant}
+                      disabled={savingVariant}
+                      className="btn-primary text-sm py-2 px-4 flex items-center gap-1"
+                    >
+                      {savingVariant ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                      Adicionar
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             <div>
@@ -215,6 +280,7 @@ export default function AdminProdutos() {
                 {form.active ? 'Produto ativo (visível na loja)' : 'Produto inativo (oculto)'}
               </label>
             </div>
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2">
                 Categorias <span className="text-gray-400 font-normal text-xs">(selecione quantas quiser)</span>
@@ -252,50 +318,16 @@ export default function AdminProdutos() {
                 <p className="text-xs text-orange-500 mt-1">Selecione ao menos uma categoria</p>
               )}
             </div>
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Palavras-chave <span className="text-gray-400 font-normal text-xs">(para busca)</span></label>
               <input className="input" value={form.keywords} onChange={e => setForm({ ...form, keywords: e.target.value })} placeholder="Ex: camisa flamengo vermelha time futebol" />
-              <p className="text-xs text-gray-400 mt-1">Separe por espaço. Ajudam o cliente a encontrar o produto.</p>
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2">Imagens</label>
               <ImageUpload images={form.images} onChange={imgs => setForm({ ...form, images: imgs })} maxImages={6} />
             </div>
-
-            {editing && (
-              <div className="md:col-span-2 border border-gray-200 rounded-xl p-4 space-y-3">
-                <h3 className="font-semibold text-sm">Variações (tamanho / cor)</h3>
-
-                {editingVariants.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {editingVariants.map(v => (
-                      <div key={v.id} className="flex items-center gap-1.5 bg-gray-100 rounded-lg px-3 py-1.5 text-sm">
-                        {v.size && <span className="font-semibold">{v.size}</span>}
-                        {v.size && v.color && <span className="text-gray-400">/</span>}
-                        {v.color && <span className="font-semibold">{v.color}</span>}
-                        <span className="text-gray-500 text-xs">· {v.stock} un.</span>
-                        {v.price && <span className="text-primary-500 text-xs font-semibold">· R$ {v.price.toFixed(2).replace('.', ',')}</span>}
-                        <button type="button" onClick={() => removeVariant(v.id)} className="text-red-400 hover:text-red-600 ml-1">
-                          <X size={13} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <form onSubmit={addVariant} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <input className="input text-sm py-2" placeholder="Tamanho (ex: M)" value={variantForm.size} onChange={e => setVariantForm({ ...variantForm, size: e.target.value })} />
-                  <input className="input text-sm py-2" placeholder="Cor (ex: Vermelho)" value={variantForm.color} onChange={e => setVariantForm({ ...variantForm, color: e.target.value })} />
-                  <input className="input text-sm py-2" type="number" min="0" placeholder="Estoque" value={variantForm.stock} onChange={e => setVariantForm({ ...variantForm, stock: e.target.value })} />
-                  <input className="input text-sm py-2" type="number" step="0.01" min="0" placeholder="Preço (opcional)" value={variantForm.price} onChange={e => setVariantForm({ ...variantForm, price: e.target.value })} />
-                  <button type="submit" disabled={savingVariant} className="sm:col-span-4 btn-outline text-sm py-2 flex items-center justify-center gap-2">
-                    {savingVariant ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Adicionar variação
-                  </button>
-                </form>
-              </div>
-            )}
 
             <div className="md:col-span-2 flex gap-3">
               <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
@@ -313,7 +345,7 @@ export default function AdminProdutos() {
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           className="input pl-9 max-w-sm"
-          placeholder="Buscar por nome ou categoria..."
+          placeholder="Buscar produto..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -349,7 +381,12 @@ export default function AdminProdutos() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-medium max-w-[200px] truncate">{p.name}</td>
+                    <td className="px-4 py-3 font-medium max-w-[200px]">
+                      <p className="truncate">{p.name}</p>
+                      {p.variants?.length > 0 && (
+                        <p className="text-xs text-gray-400 mt-0.5">{p.variants.length} tamanho{p.variants.length > 1 ? 's' : ''}</p>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{(p.categories || []).map(c => c.name).join(', ') || '—'}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.availability === 'encomenda' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
@@ -387,7 +424,7 @@ export default function AdminProdutos() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-gray-400">
+                    <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
                       {search ? `Nenhum produto encontrado para "${search}"` : 'Nenhum produto cadastrado'}
                     </td>
                   </tr>

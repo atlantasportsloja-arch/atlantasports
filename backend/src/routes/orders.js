@@ -13,22 +13,25 @@ router.post('/', authMiddleware, async (req, res) => {
   try {
     const cartItems = await prisma.cart.findMany({
       where: { userId: req.user.id },
-      include: { product: true },
+      include: { product: true, variant: true },
     });
 
     if (cartItems.length === 0) return res.status(400).json({ error: 'Carrinho vazio' });
 
     for (const item of cartItems) {
-      if (item.product.stock < item.quantity) {
+      const availableStock = item.variant ? item.variant.stock : item.product.stock;
+      if (availableStock < item.quantity) {
         return res.status(400).json({ error: `Estoque insuficiente: ${item.product.name}` });
       }
     }
+
+    const itemPrice = (i) => i.variant?.price ?? i.product.price;
 
     let discount = 0;
     if (couponCode) {
       const coupon = await prisma.coupon.findUnique({ where: { code: couponCode } });
       if (coupon && coupon.active) {
-        const subtotal = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
+        const subtotal = cartItems.reduce((s, i) => s + itemPrice(i) * i.quantity, 0);
         if (subtotal >= coupon.minValue) {
           discount = coupon.type === 'percentage'
             ? subtotal * (coupon.discount / 100)
@@ -38,7 +41,7 @@ router.post('/', authMiddleware, async (req, res) => {
       }
     }
 
-    const subtotal = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
+    const subtotal = cartItems.reduce((s, i) => s + itemPrice(i) * i.quantity, 0);
 
     let pixDiscountAmount = 0;
     if (paymentMethod === 'pix') {
@@ -59,8 +62,9 @@ router.post('/', authMiddleware, async (req, res) => {
         items: {
           create: cartItems.map(i => ({
             productId: i.productId,
+            variantId: i.variantId || undefined,
             quantity: i.quantity,
-            price: i.product.price,
+            price: itemPrice(i),
           })),
         },
       },
@@ -74,10 +78,17 @@ router.post('/', authMiddleware, async (req, res) => {
     order.orderNumber = orderNumber;
 
     for (const item of cartItems) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } },
-      });
+      if (item.variantId) {
+        await prisma.productVariant.update({
+          where: { id: item.variantId },
+          data: { stock: { decrement: item.quantity } },
+        });
+      } else {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        });
+      }
     }
 
     await prisma.cart.deleteMany({ where: { userId: req.user.id } });
@@ -93,7 +104,7 @@ router.get('/', authMiddleware, async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: { userId: req.user.id },
-      include: { items: { include: { product: true } } },
+      include: { items: { include: { product: true, variant: true } } },
       orderBy: { orderNumber: 'asc' },
     });
     res.json(orders);
@@ -106,7 +117,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const order = await prisma.order.findFirst({
       where: { id: req.params.id, userId: req.user.id },
-      include: { items: { include: { product: true } } },
+      include: { items: { include: { product: true, variant: true } } },
     });
     if (!order) return res.status(404).json({ error: 'Pedido não encontrado' });
     res.json(order);
@@ -124,7 +135,7 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
         where,
-        include: { user: { select: { name: true, email: true } }, items: { include: { product: { select: { name: true } } } } },
+        include: { user: { select: { name: true, email: true } }, items: { include: { product: { select: { name: true } }, variant: { select: { size: true, color: true } } } } },
         orderBy: { orderNumber: 'asc' },
         skip,
         take: Number(limit),

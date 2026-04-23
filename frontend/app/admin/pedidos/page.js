@@ -167,7 +167,15 @@ function AdminPedidosInner() {
                           <div className="space-y-1">
                             {o.items.map(item => (
                               <div key={item.id} className="flex justify-between text-sm">
-                                <span className="text-gray-700">{item.product?.name || '—'} × {item.quantity}</span>
+                                <span className="text-gray-700">
+                                  {item.product?.name || '—'}
+                                  {(item.variant?.size || item.variant?.color) && (
+                                    <span className="text-gray-400 ml-1">
+                                      ({[item.variant.size, item.variant.color].filter(Boolean).join(' / ')})
+                                    </span>
+                                  )}
+                                  {' '}× {item.quantity}
+                                </span>
                                 <span className="font-semibold">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
                               </div>
                             ))}

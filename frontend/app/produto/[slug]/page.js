@@ -120,7 +120,6 @@ export default function ProdutoPage({ params }) {
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [selectedSize, setSelectedSize] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(null);
 
   useEffect(() => {
     api.get(`/products/${params.slug}`).then(r => setProduct(r.data)).catch(() => {});
@@ -133,14 +132,10 @@ export default function ProdutoPage({ params }) {
       .catch(() => {});
   }, [token, product?.id]);
 
-  const sizes = product ? [...new Set(product.variants?.filter(v => v.size).map(v => v.size))] : [];
-  const colors = product ? [...new Set(product.variants?.filter(v => v.color).map(v => v.color))] : [];
-  const hasVariants = sizes.length > 0 || colors.length > 0;
+  const sizes = product ? [...new Set(product.variants?.filter(v => v.size && v.active !== false).map(v => v.size))] : [];
+  const hasVariants = sizes.length > 0;
 
-  const selectedVariant = product?.variants?.find(v =>
-    (!sizes.length || v.size === selectedSize) &&
-    (!colors.length || v.color === selectedColor)
-  ) || null;
+  const selectedVariant = product?.variants?.find(v => v.size === selectedSize) || null;
 
   const effectiveStock = hasVariants
     ? (selectedVariant?.stock ?? 0)
@@ -148,8 +143,7 @@ export default function ProdutoPage({ params }) {
 
   async function addToCart() {
     if (!token) { toast.error('Faça login para continuar'); return; }
-    if (hasVariants && sizes.length > 0 && !selectedSize) { toast.error('Selecione um tamanho'); return; }
-    if (hasVariants && colors.length > 0 && !selectedColor) { toast.error('Selecione uma cor'); return; }
+    if (hasVariants && !selectedSize) { toast.error('Selecione um tamanho'); return; }
     setLoading(true);
     try {
       await api.post('/cart', { productId: product.id, variantId: selectedVariant?.id || null, quantity });
@@ -312,7 +306,7 @@ export default function ProdutoPage({ params }) {
               <p className="text-sm font-semibold mb-2">Tamanho</p>
               <div className="flex flex-wrap gap-2">
                 {sizes.map(s => {
-                  const variant = product.variants.find(v => v.size === s && (!selectedColor || v.color === selectedColor));
+                  const variant = product.variants.find(v => v.size === s);
                   const unavailable = variant?.stock === 0;
                   return (
                     <button
@@ -329,35 +323,6 @@ export default function ProdutoPage({ params }) {
                       }`}
                     >
                       {s}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {colors.length > 0 && (
-            <div>
-              <p className="text-sm font-semibold mb-2">Cor</p>
-              <div className="flex flex-wrap gap-2">
-                {colors.map(c => {
-                  const variant = product.variants.find(v => v.color === c && (!selectedSize || v.size === selectedSize));
-                  const unavailable = variant?.stock === 0;
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      disabled={unavailable}
-                      onClick={() => setSelectedColor(c === selectedColor ? null : c)}
-                      className={`px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-colors ${
-                        selectedColor === c
-                          ? 'border-primary-500 bg-primary-50 text-primary-700'
-                          : unavailable
-                          ? 'border-gray-200 text-gray-300 cursor-not-allowed line-through'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      {c}
                     </button>
                   );
                 })}

@@ -83,10 +83,9 @@ export default function CarrinhoPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{item.product.name}</p>
-                {item.variant && (
+                {item.variant?.size && (
                   <div className="flex gap-1.5 mt-0.5">
-                    {item.variant.size && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{item.variant.size}</span>}
-                    {item.variant.color && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{item.variant.color}</span>}
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{item.variant.size}</span>
                   </div>
                 )}
                 <p className="text-primary-500 font-bold mt-1">
