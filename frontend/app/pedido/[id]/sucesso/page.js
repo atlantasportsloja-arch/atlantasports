@@ -26,7 +26,7 @@ function SucessoContent({ id }) {
   const fmt = (v) => `R$ ${Number(v).toFixed(2).replace('.', ',')}`;
 
   function copyPix() {
-    navigator.clipboard.writeText(pixKey).then(() => toast.success('Chave PIX copiada!'));
+    navigator.clipboard.writeText(pixKey).then(() => toast.success('Chave PIX copiada!')).catch(() => toast.error('Não foi possível copiar'));
   }
 
   return (
@@ -35,40 +35,47 @@ function SucessoContent({ id }) {
         <CheckCircle size={64} className="mx-auto text-green-500 mb-4" />
         <h1 className="text-3xl font-black mb-1">Pedido registrado!</h1>
         <p className="text-sm text-gray-400 mb-8">
-          Pedido: <span className="font-mono font-bold">{codigo}</span>
+          Código: <span className="font-mono font-bold text-gray-700">{codigo}</span>
         </p>
 
         {/* PIX */}
         {viaPix && order && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6 text-left">
-            <p className="font-black text-green-800 mb-4 text-center text-lg">⚡ Pague agora via PIX</p>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between bg-white rounded-xl border border-green-200 px-4 py-3">
-                <span className="text-gray-500">Valor a pagar</span>
-                <span className="text-2xl font-black text-green-700">{fmt(order.total)}</span>
-              </div>
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6 text-left space-y-4">
+            <p className="font-black text-green-800 text-center text-lg">⚡ Pague agora via PIX</p>
+
+            {/* Valor */}
+            <div className="bg-white rounded-xl border border-green-200 px-4 py-3 flex items-center justify-between">
+              <span className="text-sm text-gray-500">Valor a pagar</span>
+              <span className="text-2xl font-black text-green-700">{fmt(order.total)}</span>
+            </div>
+
+            {/* Chave PIX + Copiar */}
+            {pixKey && (
               <div>
-                <p className="text-gray-500 text-xs mb-1">Chave PIX:</p>
-                <div className="flex items-center gap-2 bg-white border border-green-200 rounded-xl p-3">
-                  <p className="font-mono font-bold text-gray-800 break-all text-sm flex-1">{pixKey || '—'}</p>
-                  {pixKey && (
-                    <button type="button" onClick={copyPix} className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-semibold border border-green-300 rounded-lg px-2 py-1 shrink-0">
-                      <Copy size={11} /> Copiar
-                    </button>
-                  )}
+                <p className="text-xs text-gray-500 mb-1">Chave PIX:</p>
+                <div className="bg-white border border-green-200 rounded-xl p-3 flex items-center gap-2">
+                  <p className="font-mono font-bold text-gray-800 break-all text-sm flex-1">{pixKey}</p>
+                  <button
+                    type="button"
+                    onClick={copyPix}
+                    className="flex items-center gap-1 text-xs bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-3 py-1.5 shrink-0 transition-colors"
+                  >
+                    <Copy size={12} /> Copiar
+                  </button>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 text-center">
-                Após pagar, envie o comprovante pelo WhatsApp para confirmar seu pedido.
-              </p>
-            </div>
+            )}
+
+            <p className="text-xs text-gray-500 text-center">
+              Após realizar o pagamento, clique no botão abaixo para enviar o comprovante pelo WhatsApp.
+            </p>
           </div>
         )}
 
         {/* Parcelado */}
         {viaParcelado && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6 text-left">
-            <p className="font-black text-green-800 mb-2 text-center text-lg">Combine o parcelamento</p>
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6">
+            <p className="font-black text-green-800 text-center text-lg mb-2">Combine o parcelamento</p>
             <p className="text-sm text-gray-600 text-center">
               Clique no botão abaixo para falar com a loja no WhatsApp e acertar as condições de parcelamento.
             </p>
@@ -80,7 +87,8 @@ function SucessoContent({ id }) {
             orderId={id}
             orderNumber={order?.orderNumber}
             total={order?.total}
-            className={`w-full ${viaPix || viaParcelado ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
+            via={viaPix ? 'pix' : 'parcelado'}
+            className="w-full ring-2 ring-green-400 ring-offset-2"
           />
           <Link href="/minha-conta/pedidos" className="btn-primary">Ver meus pedidos</Link>
           <Link href="/" className="btn-outline">Continuar comprando</Link>
