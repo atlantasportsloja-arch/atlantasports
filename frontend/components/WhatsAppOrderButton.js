@@ -8,43 +8,31 @@ const WA_ICON = (
   </svg>
 );
 
+const DEFAULT_PIX = `Olá Atlanta Sports 🏆, acabei de finalizar meu pedido na loja e estou enviando o comprovante de pagamento logo abaixo.\n\n*Código do pedido:* {codigo}\n*Valor total:* {total}\n*Forma de pagamento:* PIX`;
+const DEFAULT_PARCELADO = `Olá Atlanta Sports 🏆!\nAcabei de finalizar um pedido na loja e gostaria de combinar o parcelamento pelo WhatsApp.\n\n*Código do pedido:* {codigo}\n*Valor total:* {total}\n*Forma de pagamento:* Parcelado\n\nPodem me ajudar a fechar a compra?`;
+
 export default function WhatsAppOrderButton({ orderId, orderNumber, total, via = 'parcelado', className = '' }) {
-  const [whatsapp, setWhatsapp] = useState('');
+  const [config, setConfig] = useState({ whatsapp: '', pixMessage: '', parceladoMessage: '' });
 
   useEffect(() => {
-    api.get('/config').then(r => setWhatsapp(r.data?.whatsapp || '')).catch(() => {});
+    api.get('/config').then(r => setConfig(r.data || {})).catch(() => {});
   }, []);
 
-  if (!whatsapp) return null;
+  if (!config.whatsapp) return null;
 
   const codigo = orderNumber ? `#${orderNumber}` : orderId ? `#${orderId.slice(0, 8).toUpperCase()}` : '';
   const totalFormatado = total ? `R$ ${Number(total).toFixed(2).replace('.', ',')}` : '';
-  const numero = whatsapp.replace(/\D/g, '');
+  const numero = config.whatsapp.replace(/\D/g, '');
 
-  let mensagem, label;
+  const template = via === 'pix'
+    ? (config.pixMessage || DEFAULT_PIX)
+    : (config.parceladoMessage || DEFAULT_PARCELADO);
 
-  if (via === 'pix') {
-    mensagem = [
-      'Olá Atlanta Sports 🏆, acabei de finalizar meu pedido na loja e estou enviando o comprovante de pagamento logo abaixo.',
-      '',
-      codigo         && `*Código do pedido:* ${codigo}`,
-      totalFormatado && `*Valor total:* ${totalFormatado}`,
-      '*Forma de pagamento:* PIX',
-    ].filter(Boolean).join('\n');
-    label = 'Enviar comprovante pelo WhatsApp';
-  } else {
-    mensagem = [
-      'Olá Atlanta Sports 🏆!',
-      'Acabei de finalizar um pedido na loja e gostaria de combinar o parcelamento pelo WhatsApp.',
-      '',
-      codigo         && `*Código do pedido:* ${codigo}`,
-      totalFormatado && `*Valor total:* ${totalFormatado}`,
-      '*Forma de pagamento:* Parcelado',
-      '',
-      'Podem me ajudar a fechar a compra?',
-    ].filter(Boolean).join('\n');
-    label = 'Combinar parcelamento pelo WhatsApp';
-  }
+  const mensagem = template
+    .replace(/\{codigo\}/g, codigo)
+    .replace(/\{total\}/g, totalFormatado);
+
+  const label = via === 'pix' ? 'Enviar comprovante pelo WhatsApp' : 'Combinar parcelamento pelo WhatsApp';
 
   const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
 

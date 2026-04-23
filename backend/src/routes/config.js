@@ -36,7 +36,7 @@ router.put('/', adminMiddleware, async (req, res) => {
     benefit1, benefit2, benefit3, benefit4,
     sectionCategories, sectionFeatured,
     whatsapp, footerEmail, footerHours, footerDesc,
-    pixDiscount, pixKey,
+    pixDiscount, pixKey, pixMessage, parceladoMessage,
   } = req.body;
 
   try {
@@ -63,6 +63,8 @@ router.put('/', adminMiddleware, async (req, res) => {
         "footerDesc" = ${footerDesc},
         "pixDiscount" = ${Number(pixDiscount) || 0},
         "pixKey" = ${pixKey || ''},
+        "pixMessage" = ${pixMessage || ''},
+        "parceladoMessage" = ${parceladoMessage || ''},
         "updatedAt" = NOW()
       WHERE id = 'default'
     `;
