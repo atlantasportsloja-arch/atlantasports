@@ -221,11 +221,6 @@ export default function ProdutoPage({ params }) {
             ) : (
               <div className="w-full h-full flex items-center justify-center text-8xl">👕</div>
             )}
-            {outOfStock && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <span className="bg-white text-gray-700 font-bold px-4 py-2 rounded-full">Sem estoque</span>
-              </div>
-            )}
           </div>
           {product.images?.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -331,33 +326,29 @@ export default function ProdutoPage({ params }) {
             </div>
           )}
 
-          {!outOfStock && (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                <button
-                  className="px-3 py-3 hover:bg-gray-100 transition-colors font-bold text-lg"
-                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                >−</button>
-                <span className="px-5 font-semibold">{quantity}</span>
-                <button
-                  className="px-3 py-3 hover:bg-gray-100 transition-colors font-bold text-lg"
-                  onClick={() => setQuantity(q => Math.min(effectiveStock, q + 1))}
-                >+</button>
-              </div>
-              {lowStock && <span className="text-xs text-orange-500 font-semibold">⚠️ Apenas {effectiveStock} em estoque</span>}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+              <button
+                className="px-3 py-3 hover:bg-gray-100 transition-colors font-bold text-lg"
+                onClick={() => setQuantity(q => Math.max(1, q - 1))}
+              >−</button>
+              <span className="px-5 font-semibold">{quantity}</span>
+              <button
+                className="px-3 py-3 hover:bg-gray-100 transition-colors font-bold text-lg"
+                onClick={() => setQuantity(q => Math.min(Math.max(effectiveStock, 1), q + 1))}
+              >+</button>
             </div>
-          )}
+            {lowStock && <span className="text-xs text-orange-500 font-semibold">⚠️ Apenas {effectiveStock} em estoque</span>}
+          </div>
 
           <div className="flex gap-3">
             <button
               onClick={addToCart}
-              disabled={loading || outOfStock}
+              disabled={loading}
               className="btn-primary flex-1 flex items-center justify-center gap-2 py-4 text-base"
             >
               {loading
                 ? <><Loader2 size={20} className="animate-spin" /> Adicionando...</>
-                : outOfStock
-                ? 'Produto indisponível'
                 : <><ShoppingCart size={20} /> Adicionar ao carrinho</>
               }
             </button>

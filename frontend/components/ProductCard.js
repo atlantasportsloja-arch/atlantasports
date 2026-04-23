@@ -14,11 +14,8 @@ export default function ProductCard({ product }) {
   const { setCart } = useCartStore();
   const [adding, setAdding] = useState(false);
 
-  const outOfStock = product.stock === 0;
-
   async function addToCart(e) {
     e.preventDefault();
-    if (outOfStock) return;
     if (!token) { toast.error('Faça login para adicionar ao carrinho'); return; }
     setAdding(true);
     try {
@@ -49,25 +46,19 @@ export default function ProductCard({ product }) {
             src={product.images[0]}
             alt={product.name}
             fill
-            className={`object-cover transition-transform duration-300 ${outOfStock ? 'opacity-60' : 'group-hover:scale-105'}`}
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">👕</div>
         )}
 
-        {outOfStock && (
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <span className="bg-white text-gray-700 text-xs font-bold px-3 py-1 rounded-full">Sem estoque</span>
-          </div>
-        )}
-
-        {!outOfStock && discount && (
+        {discount && (
           <span className="absolute top-2 left-2 bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded">
             -{discount}%
           </span>
         )}
 
-        {product.isNew && !outOfStock && (
+        {product.isNew && (
           <span className="absolute top-2 right-2 bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded">
             NOVO
           </span>
@@ -104,18 +95,11 @@ export default function ProductCard({ product }) {
           </div>
           <button
             onClick={addToCart}
-            disabled={outOfStock || adding}
-            className={`p-2.5 rounded-lg transition-all flex-shrink-0 ${
-              outOfStock
-                ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                : 'bg-primary-500 hover:bg-primary-600 text-white hover:scale-105 active:scale-95'
-            }`}
-            title={outOfStock ? 'Sem estoque' : 'Adicionar ao carrinho'}
+            disabled={adding}
+            className="p-2.5 rounded-lg transition-all flex-shrink-0 bg-primary-500 hover:bg-primary-600 text-white hover:scale-105 active:scale-95"
+            title="Adicionar ao carrinho"
           >
-            {adding
-              ? <Loader2 size={18} className="animate-spin" />
-              : <ShoppingCart size={18} />
-            }
+            {adding ? <Loader2 size={18} className="animate-spin" /> : <ShoppingCart size={18} />}
           </button>
         </div>
       </div>

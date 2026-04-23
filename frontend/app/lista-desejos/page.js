@@ -78,11 +78,6 @@ export default function ListaDesejosPage() {
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-4xl">👕</div>
               )}
-              {product.stock === 0 && (
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <span className="bg-white text-gray-700 text-xs font-bold px-2 py-1 rounded-full">Sem estoque</span>
-                </div>
-              )}
             </Link>
 
             <div className="p-3 flex flex-col flex-1 gap-2">
