@@ -290,13 +290,10 @@ router.patch('/:id/toggle', adminMiddleware, async (req, res) => {
 
 router.delete('/:id', adminMiddleware, async (req, res) => {
   try {
-    const hasOrders = await prisma.orderItem.count({ where: { productId: req.params.id } });
-    if (hasOrders > 0) {
-      return res.status(400).json({ error: `Este produto possui ${hasOrders} venda(s) registrada(s) e não pode ser excluído. Desative-o em vez disso.` });
-    }
     await prisma.cart.deleteMany({ where: { productId: req.params.id } });
     await prisma.wishlist.deleteMany({ where: { productId: req.params.id } });
     await prisma.review.deleteMany({ where: { productId: req.params.id } });
+    await prisma.orderItem.deleteMany({ where: { productId: req.params.id } });
     await prisma.productVariant.deleteMany({ where: { productId: req.params.id } });
     await prisma.product.delete({ where: { id: req.params.id } });
     res.json({ message: 'Produto excluído' });
