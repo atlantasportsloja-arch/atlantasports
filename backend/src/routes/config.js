@@ -37,9 +37,11 @@ router.put('/', adminMiddleware, async (req, res) => {
     sectionCategories, sectionFeatured,
     whatsapp, footerEmail, footerHours, footerDesc,
     pixDiscount, pixKey, pixMessage, parceladoMessage,
+    freeShippingThreshold, shippingZones,
   } = req.body;
 
   try {
+    const zonesJson = JSON.stringify(Array.isArray(shippingZones) ? shippingZones : []);
     await prisma.$executeRaw`
       UPDATE "store_config" SET
         "storeName" = ${storeName},
@@ -65,6 +67,8 @@ router.put('/', adminMiddleware, async (req, res) => {
         "pixKey" = ${pixKey || ''},
         "pixMessage" = ${pixMessage || ''},
         "parceladoMessage" = ${parceladoMessage || ''},
+        "freeShippingThreshold" = ${Number(freeShippingThreshold) || 299},
+        "shippingZones" = ${zonesJson}::jsonb,
         "updatedAt" = NOW()
       WHERE id = 'default'
     `;

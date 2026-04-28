@@ -1,73 +1,58 @@
 const express = require('express');
+const prisma = require('../lib/prisma');
+
 const router = express.Router();
 
-// Cálculo de frete simplificado por CEP
-// Para produção: integrar Melhor Envio API (https://melhorenvio.com.br)
-router.post('/calcular', async (req, res) => {
-  const { cep, peso = 0.5 } = req.body;
+const DEFAULT_ZONES = [
+  { label: 'SP Capital',  cepStart: '01', cepEnd: '09', pacPrice: 12.9, pacDays: 4, sedexPrice: 23.22, sedexDays: 2 },
+  { label: 'SP Interior', cepStart: '10', cepEnd: '19', pacPrice: 15.9, pacDays: 5, sedexPrice: 28.62, sedexDays: 2 },
+  { label: 'RJ',          cepStart: '20', cepEnd: '28', pacPrice: 17.9, pacDays: 5, sedexPrice: 32.22, sedexDays: 2 },
+  { label: 'MG',          cepStart: '30', cepEnd: '39', pacPrice: 19.9, pacDays: 6, sedexPrice: 35.82, sedexDays: 3 },
+  { label: 'BA',          cepStart: '40', cepEnd: '48', pacPrice: 22.9, pacDays: 7, sedexPrice: 41.22, sedexDays: 3 },
+  { label: 'CE',          cepStart: '60', cepEnd: '63', pacPrice: 24.9, pacDays: 8, sedexPrice: 44.82, sedexDays: 4 },
+  { label: 'DF',          cepStart: '70', cepEnd: '73', pacPrice: 19.9, pacDays: 6, sedexPrice: 35.82, sedexDays: 3 },
+  { label: 'PR',          cepStart: '80', cepEnd: '87', pacPrice: 18.9, pacDays: 6, sedexPrice: 34.02, sedexDays: 3 },
+  { label: 'SC',          cepStart: '88', cepEnd: '89', pacPrice: 19.9, pacDays: 6, sedexPrice: 35.82, sedexDays: 3 },
+  { label: 'RS',          cepStart: '90', cepEnd: '99', pacPrice: 21.9, pacDays: 7, sedexPrice: 39.42, sedexDays: 4 },
+  { label: 'Demais regiões', cepStart: '00', cepEnd: '99', pacPrice: 27.9, pacDays: 10, sedexPrice: 50.22, sedexDays: 5 },
+];
 
+router.post('/calcular', async (req, res) => {
+  const { cep } = req.body;
   if (!cep) return res.status(400).json({ error: 'CEP obrigatório' });
 
   const cepNum = cep.replace(/\D/g, '');
   if (cepNum.length !== 8) return res.status(400).json({ error: 'CEP inválido' });
 
-  // Lógica de frete por região (simplificado)
-  const regiao = cepNum.substring(0, 2);
-  const regiaoNum = parseInt(regiao);
+  try {
+    const [cfg] = await prisma.$queryRaw`SELECT "shippingZones", "freeShippingThreshold" FROM "store_config" WHERE id = 'default' LIMIT 1`;
+    const zones = (cfg?.shippingZones && cfg.shippingZones.length > 0) ? cfg.shippingZones : DEFAULT_ZONES;
+    const freeThreshold = Number(cfg?.freeShippingThreshold || 299);
 
-  let prazo, preco;
+    const prefix = cepNum.substring(0, 2);
+    const zone = zones.find(z => prefix >= z.cepStart && prefix <= z.cepEnd) || zones[zones.length - 1];
 
-  if (regiaoNum >= 1 && regiaoNum <= 9) {
-    // SP capital
-    prazo = 2; preco = 12.9;
-  } else if (regiaoNum >= 10 && regiaoNum <= 19) {
-    // SP interior
-    prazo = 3; preco = 15.9;
-  } else if (regiaoNum >= 20 && regiaoNum <= 28) {
-    // RJ
-    prazo = 3; preco = 17.9;
-  } else if (regiaoNum >= 30 && regiaoNum <= 39) {
-    // MG
-    prazo = 4; preco = 19.9;
-  } else if (regiaoNum >= 40 && regiaoNum <= 48) {
-    // BA
-    prazo = 5; preco = 22.9;
-  } else if (regiaoNum >= 60 && regiaoNum <= 63) {
-    // CE
-    prazo = 6; preco = 24.9;
-  } else if (regiaoNum >= 70 && regiaoNum <= 73) {
-    // DF
-    prazo = 4; preco = 19.9;
-  } else if (regiaoNum >= 80 && regiaoNum <= 87) {
-    // PR
-    prazo = 4; preco = 18.9;
-  } else if (regiaoNum >= 88 && regiaoNum <= 89) {
-    // SC
-    prazo = 4; preco = 19.9;
-  } else if (regiaoNum >= 90 && regiaoNum <= 99) {
-    // RS
-    prazo = 5; preco = 21.9;
-  } else {
-    prazo = 7; preco = 27.9;
+    res.json({
+      freeShippingThreshold: freeThreshold,
+      opcoes: [
+        {
+          id: 'pac',
+          servico: 'PAC',
+          prazo: `${zone.pacDays} dias úteis`,
+          preco: Number(Number(zone.pacPrice).toFixed(2)),
+        },
+        {
+          id: 'sedex',
+          servico: 'SEDEX',
+          prazo: `${zone.sedexDays} dias úteis`,
+          preco: Number(Number(zone.sedexPrice).toFixed(2)),
+        },
+      ],
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao calcular frete' });
   }
-
-  // Ajuste por peso
-  if (peso > 1) preco += (peso - 1) * 3;
-
-  res.json({
-    opcoes: [
-      {
-        servico: 'PAC',
-        prazo: `${prazo + 2} dias úteis`,
-        preco: Number(preco.toFixed(2)),
-      },
-      {
-        servico: 'SEDEX',
-        prazo: `${prazo} dias úteis`,
-        preco: Number((preco * 1.8).toFixed(2)),
-      },
-    ],
-  });
 });
 
 module.exports = router;

@@ -9,6 +9,8 @@ async function migrate() {
   try {
     await prisma.$executeRaw`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "pixMessage" TEXT DEFAULT ''`;
     await prisma.$executeRaw`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "parceladoMessage" TEXT DEFAULT ''`;
+    await prisma.$executeRaw`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "freeShippingThreshold" FLOAT DEFAULT 299`;
+    await prisma.$executeRaw`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "shippingZones" JSONB DEFAULT '[]'::jsonb`;
   } catch (e) {
     console.warn('migrate:', e.message);
   }

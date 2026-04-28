@@ -41,13 +41,14 @@ export default function FinanceiroPage() {
   if (loading) return <div className="text-gray-400 animate-pulse p-8">Carregando...</div>;
   if (!data) return <div className="text-red-500 p-8">Erro ao carregar dados.</div>;
 
-  const { products, totalCusto, totalReceita, totalLucro, margemMedia } = data;
+  const { products, totalCusto, totalReceita, totalLucro, margemMedia, totalReceitaReal, totalLucroReal } = data;
   const semCusto = products.filter(p => p.costPrice == null).length;
 
   const sorted = [...products].sort((a, b) => {
     if (sort === 'lucro') return (b.lucro ?? -Infinity) - (a.lucro ?? -Infinity);
     if (sort === 'margem') return (b.margem ?? -Infinity) - (a.margem ?? -Infinity);
     if (sort === 'preco') return b.price - a.price;
+    if (sort === 'vendas') return (b.qtdVendida ?? 0) - (a.qtdVendida ?? 0);
     return a.name.localeCompare(b.name);
   });
 
@@ -63,7 +64,13 @@ export default function FinanceiroPage() {
         )}
       </div>
 
-      {/* Cards resumo */}
+      {/* Receita real */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card icon={<DollarSign size={20} />} label="Receita real (pedidos pagos)" value={`R$ ${fmt(totalReceitaReal)}`} sub="vendas confirmadas" color="text-green-600" />
+        <Card icon={<TrendingUp size={20} />} label="Lucro real estimado" value={semCusto > 0 ? `R$ ${fmt(totalLucroReal)}` : '—'} sub={semCusto > 0 ? `${semCusto} prod. sem custo` : 'baseado nos custos cadastrados'} color="text-primary-500" />
+      </div>
+
+      {/* Cards potencial de estoque */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card icon={<DollarSign size={20} />} label="Custo total em estoque" value={`R$ ${fmt(totalCusto)}`} sub="valor investido" color="text-red-500" />
         <Card icon={<DollarSign size={20} />} label="Receita potencial" value={`R$ ${fmt(totalReceita)}`} sub="se vender tudo" color="text-blue-500" />
@@ -81,6 +88,7 @@ export default function FinanceiroPage() {
               <option value="lucro">Maior lucro</option>
               <option value="margem">Maior margem</option>
               <option value="preco">Maior preço</option>
+              <option value="vendas">Mais vendidos</option>
               <option value="nome">Nome A–Z</option>
             </select>
           </div>
@@ -90,7 +98,7 @@ export default function FinanceiroPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {['Produto', 'Categoria', 'Preço venda', 'Preço custo', 'Lucro unit.', 'Margem', 'Estoque', 'Lucro total'].map(h => (
+                {['Produto', 'Categoria', 'Preço venda', 'Preço custo', 'Lucro unit.', 'Margem', 'Estoque', 'Lucro total', 'Qtd vendida', 'Receita vendas'].map(h => (
                   <th key={h} className="text-left px-4 py-3 font-semibold text-gray-500 whitespace-nowrap text-xs">{h}</th>
                 ))}
               </tr>
@@ -111,6 +119,10 @@ export default function FinanceiroPage() {
                   <td className="px-4 py-3 text-gray-500">{p.stock}</td>
                   <td className="px-4 py-3 font-black text-green-700">
                     {p.lucro != null ? `R$ ${fmt(p.lucro * p.stock)}` : <span className="text-gray-300 text-xs">—</span>}
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-gray-700">{p.qtdVendida ?? 0} un.</td>
+                  <td className="px-4 py-3 font-bold text-primary-600">
+                    {p.receitaVendas > 0 ? `R$ ${fmt(p.receitaVendas)}` : <span className="text-gray-300 text-xs">—</span>}
                   </td>
                 </tr>
               ))}

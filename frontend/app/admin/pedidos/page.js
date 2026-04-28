@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Truck, Loader2 } from 'lucide-react';
+import { Truck, Loader2, Search, X, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -56,6 +56,7 @@ function AdminPedidosInner() {
   const searchParams = useSearchParams();
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState(searchParams.get('status') || '');
+  const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [trackingModal, setTrackingModal] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +85,15 @@ function AdminPedidosInner() {
     }
   }
 
+  async function resendEmail(id) {
+    try {
+      await api.post(`/orders/admin/${id}/resend-confirmation`);
+      toast.success('E-mail de confirmação reenviado!');
+    } catch {
+      toast.error('Erro ao reenviar e-mail');
+    }
+  }
+
   function handleStatusChange(order, newStatus) {
     if (newStatus === 'SHIPPED') {
       setTrackingModal(order);
@@ -91,6 +101,19 @@ function AdminPedidosInner() {
     }
     updateStatus(order.id, newStatus);
   }
+
+  const filtered = search.trim()
+    ? orders.filter(o => {
+        const q = search.toLowerCase();
+        const num = String(o.orderNumber || '');
+        return (
+          o.user.name.toLowerCase().includes(q) ||
+          o.user.email.toLowerCase().includes(q) ||
+          num.includes(q) ||
+          o.id.toLowerCase().includes(q)
+        );
+      })
+    : orders;
 
   return (
     <div className="space-y-6">
@@ -104,7 +127,21 @@ function AdminPedidosInner() {
 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-black">Pedidos</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              className="border border-gray-300 rounded-lg pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-52"
+              placeholder="Buscar cliente ou nº pedido"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <X size={13} />
+              </button>
+            )}
+          </div>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             value={filter}
@@ -113,14 +150,16 @@ function AdminPedidosInner() {
             <option value="">Todos os status</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
           </select>
-          <span className="text-sm text-gray-400">{orders.length} pedidos</span>
+          <span className="text-sm text-gray-400">{filtered.length} pedidos</span>
         </div>
       </div>
 
       {loading ? (
         <div className="card p-12 text-center text-gray-400 animate-pulse">Carregando...</div>
-      ) : orders.length === 0 ? (
-        <div className="card p-12 text-center text-gray-400">Nenhum pedido encontrado</div>
+      ) : filtered.length === 0 ? (
+        <div className="card p-12 text-center text-gray-400">
+          {search ? `Nenhum pedido encontrado para "${search}"` : 'Nenhum pedido encontrado'}
+        </div>
       ) : (
         <div className="card overflow-hidden">
           {/* Desktop table */}
@@ -132,7 +171,7 @@ function AdminPedidosInner() {
                 ))}</tr>
               </thead>
               <tbody className="divide-y">
-                {orders.map(o => (
+                {filtered.map(o => (
                   <React.Fragment key={o.id}>
                     <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setExpanded(expanded === o.id ? null : o.id)}>
                       <td className="px-4 py-3 font-mono text-xs font-bold">#{o.orderNumber ?? o.id.slice(0, 8).toUpperCase()}</td>
@@ -186,6 +225,14 @@ function AdminPedidosInner() {
                               {o.shippingAddress.street}, {o.shippingAddress.number} — {o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}
                             </div>
                           )}
+                          <div className="mt-3 pt-3 border-t">
+                            <button
+                              onClick={e => { e.stopPropagation(); resendEmail(o.id); }}
+                              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary-600 transition-colors"
+                            >
+                              <Mail size={13} /> Reenviar e-mail de confirmação
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -197,7 +244,7 @@ function AdminPedidosInner() {
 
           {/* Mobile cards */}
           <div className="md:hidden divide-y">
-            {orders.map(o => (
+            {filtered.map(o => (
               <div key={o.id} className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>

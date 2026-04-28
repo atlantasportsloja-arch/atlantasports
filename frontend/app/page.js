@@ -138,7 +138,7 @@ export default function HomePage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {loadingProducts
             ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
-            : featured.map(p => <ProductCard key={p.id} product={p} />)
+            : featured.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)
           }
         </div>
       </section>

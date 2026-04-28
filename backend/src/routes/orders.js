@@ -2,6 +2,8 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/auth');
 const adminMiddleware = require('../middleware/admin');
+const { sendMail } = require('../lib/mailer');
+const { orderConfirmationHtml, orderShippedHtml } = require('../lib/emails');
 
 const router = express.Router();
 
@@ -71,10 +73,14 @@ router.post('/', authMiddleware, async (req, res) => {
       include: { items: { include: { product: true } } },
     });
 
-    // Atribuir número sequencial via SQL (independente do Prisma client)
-    const [{ next }] = await prisma.$queryRaw`SELECT COALESCE(MAX("orderNumber"), 999) + 1 AS next FROM orders WHERE id != ${order.id}`;
-    const orderNumber = Number(next);
-    await prisma.$executeRaw`UPDATE orders SET "orderNumber" = ${orderNumber} WHERE id = ${order.id}`;
+    // Atribuir número sequencial com advisory lock para evitar duplicatas em pedidos simultâneos
+    let orderNumber;
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(20250428)`;
+      const [{ next }] = await tx.$queryRaw`SELECT COALESCE(MAX("orderNumber"), 999) + 1 AS next FROM orders WHERE id != ${order.id}`;
+      orderNumber = Number(next);
+      await tx.$executeRaw`UPDATE orders SET "orderNumber" = ${orderNumber} WHERE id = ${order.id}`;
+    });
     order.orderNumber = orderNumber;
 
     for (const item of cartItems) {
@@ -94,6 +100,14 @@ router.post('/', authMiddleware, async (req, res) => {
     await prisma.cart.deleteMany({ where: { userId: req.user.id } });
 
     res.status(201).json(order);
+
+    // E-mail de confirmação (não bloqueia a resposta)
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { name: true, email: true } });
+    sendMail({
+      to: user.email,
+      subject: `Pedido confirmado — #${orderNumber} ✅`,
+      html: orderConfirmationHtml({ userName: user.name.split(' ')[0], order }),
+    }).catch(err => console.error('[OrderMail] Erro ao enviar confirmação:', err.message));
   } catch (err) {
     console.error('Erro ao criar pedido:', err?.message || err);
     res.status(500).json({ error: err?.message || 'Erro ao criar pedido' });
@@ -154,10 +168,44 @@ router.put('/admin/:id/status', adminMiddleware, async (req, res) => {
     const order = await prisma.order.update({
       where: { id: req.params.id },
       data: { status, ...(trackingCode && { trackingCode }) },
+      include: { user: true, items: { include: { product: true, variant: true } } },
     });
     res.json(order);
+
+    // E-mail de envio com rastreio
+    if (status === 'SHIPPED' && trackingCode && order.user) {
+      sendMail({
+        to: order.user.email,
+        subject: `Seu pedido foi enviado! 📦 Rastreie agora`,
+        html: orderShippedHtml({
+          userName: order.user.name.split(' ')[0],
+          order,
+          trackingCode,
+        }),
+      }).catch(err => console.error('[ShippedMail] Erro ao enviar:', err.message));
+    }
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar pedido' });
+  }
+});
+
+router.post('/admin/:id/resend-confirmation', adminMiddleware, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: req.params.id },
+      include: { user: true, items: { include: { product: true, variant: true } } },
+    });
+    if (!order) return res.status(404).json({ error: 'Pedido não encontrado' });
+
+    await sendMail({
+      to: order.user.email,
+      subject: `Confirmação do pedido #${order.orderNumber ?? order.id.slice(0, 8).toUpperCase()} ✅`,
+      html: orderConfirmationHtml({ userName: order.user.name.split(' ')[0], order }),
+    });
+    res.json({ message: 'E-mail reenviado' });
+  } catch (err) {
+    console.error('[ResendMail] Erro:', err.message);
+    res.status(500).json({ error: 'Erro ao reenviar e-mail' });
   }
 });
 

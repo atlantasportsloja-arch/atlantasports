@@ -55,21 +55,44 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
 
 router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
   try {
-    const products = await prisma.product.findMany({
-      where: { active: true },
-      select: {
-        id: true, name: true, price: true, costPrice: true,
-        stock: true, images: true,
-        categories: { select: { name: true } },
-      },
-      orderBy: { name: 'asc' },
-    });
+    const [products, salesData, ordersRevenue] = await Promise.all([
+      prisma.product.findMany({
+        where: { active: true },
+        select: {
+          id: true, name: true, price: true, costPrice: true,
+          stock: true, images: true,
+          categories: { select: { name: true } },
+        },
+        orderBy: { name: 'asc' },
+      }),
+      prisma.orderItem.groupBy({
+        by: ['productId'],
+        _sum: { quantity: true, price: true },
+        where: { order: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } } },
+      }),
+      prisma.order.aggregate({
+        _sum: { total: true },
+        where: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } },
+      }),
+    ]);
+
+    const salesMap = {};
+    for (const s of salesData) {
+      salesMap[s.productId] = { qtdVendida: s._sum.quantity || 0, receitaVendas: s._sum.price || 0 };
+    }
 
     const data = products.map(p => {
       const lucro = p.costPrice != null ? p.price - p.costPrice : null;
       const margem = p.costPrice != null && p.costPrice > 0
         ? ((lucro / p.price) * 100).toFixed(1) : null;
-      return { ...p, lucro, margem: margem ? Number(margem) : null };
+      const sale = salesMap[p.id] || { qtdVendida: 0, receitaVendas: 0 };
+      const lucroVendas = p.costPrice != null ? sale.receitaVendas - p.costPrice * sale.qtdVendida : null;
+      return {
+        ...p, lucro, margem: margem ? Number(margem) : null,
+        qtdVendida: sale.qtdVendida,
+        receitaVendas: sale.receitaVendas,
+        lucroVendas,
+      };
     });
 
     const comCusto = data.filter(p => p.costPrice != null);
@@ -78,8 +101,15 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
     const totalLucro = totalReceita - totalCusto;
     const margemMedia = comCusto.length > 0
       ? (comCusto.reduce((s, p) => s + p.margem, 0) / comCusto.length).toFixed(1) : null;
+    const totalReceitaReal = ordersRevenue._sum.total || 0;
+    const totalLucroReal = comCusto.reduce((s, p) => s + (p.lucroVendas ?? 0), 0);
 
-    res.json({ products: data, totalProdutos: data.length, totalCusto, totalReceita, totalLucro, margemMedia });
+    res.json({
+      products: data,
+      totalProdutos: data.length,
+      totalCusto, totalReceita, totalLucro, margemMedia,
+      totalReceitaReal, totalLucroReal,
+    });
   } catch {
     res.status(500).json({ error: 'Erro ao buscar dados financeiros' });
   }
@@ -243,12 +273,36 @@ router.post('/:id/duplicate', adminMiddleware, async (req, res) => {
   }
 });
 
+router.patch('/:id/toggle', adminMiddleware, async (req, res) => {
+  try {
+    const product = await prisma.product.findUnique({ where: { id: req.params.id }, select: { active: true } });
+    if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+    const updated = await prisma.product.update({
+      where: { id: req.params.id },
+      data: { active: !product.active },
+      select: { id: true, active: true },
+    });
+    res.json(updated);
+  } catch {
+    res.status(500).json({ error: 'Erro ao atualizar produto' });
+  }
+});
+
 router.delete('/:id', adminMiddleware, async (req, res) => {
   try {
-    await prisma.product.update({ where: { id: req.params.id }, data: { active: false } });
-    res.json({ message: 'Produto desativado' });
-  } catch {
-    res.status(500).json({ error: 'Erro ao deletar produto' });
+    const hasOrders = await prisma.orderItem.count({ where: { productId: req.params.id } });
+    if (hasOrders > 0) {
+      return res.status(400).json({ error: `Este produto possui ${hasOrders} venda(s) registrada(s) e não pode ser excluído. Desative-o em vez disso.` });
+    }
+    await prisma.cart.deleteMany({ where: { productId: req.params.id } });
+    await prisma.wishlist.deleteMany({ where: { productId: req.params.id } });
+    await prisma.review.deleteMany({ where: { productId: req.params.id } });
+    await prisma.productVariant.deleteMany({ where: { productId: req.params.id } });
+    await prisma.product.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Produto excluído' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao excluir produto' });
   }
 });
 

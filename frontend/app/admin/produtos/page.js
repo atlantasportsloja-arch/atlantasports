@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Search, X, Loader2, AlertTriangle, Copy } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Loader2, AlertTriangle, Copy, EyeOff, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
@@ -14,7 +14,7 @@ function DeleteConfirm({ name, onConfirm, onCancel }) {
   return (
     <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm">
       <AlertTriangle size={14} className="text-red-500 flex-shrink-0" />
-      <span className="text-red-700 text-xs">Desativar "{name}"?</span>
+      <span className="text-red-700 text-xs">Excluir "{name}"?</span>
       <button onClick={onConfirm} className="bg-red-500 text-white text-xs px-2 py-0.5 rounded font-semibold hover:bg-red-600">Sim</button>
       <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
     </div>
@@ -79,6 +79,7 @@ export default function AdminProdutos() {
         await api.post('/products', payload);
         toast.success('Produto criado');
       }
+      api.clearCache('/products');
       setForm(EMPTY); setEditing(null); setShowForm(false);
       load();
     } catch (err) {
@@ -101,11 +102,22 @@ export default function AdminProdutos() {
   async function remove(id) {
     try {
       await api.delete(`/products/${id}`);
-      toast.success('Produto desativado');
+      toast.success('Produto excluído');
       setConfirmDelete(null);
       load();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao excluir');
+      setConfirmDelete(null);
+    }
+  }
+
+  async function toggleActive(p) {
+    try {
+      await api.patch(`/products/${p.id}/toggle`);
+      toast.success(p.active ? 'Produto desativado' : 'Produto ativado');
+      load();
     } catch {
-      toast.error('Erro ao desativar');
+      toast.error('Erro ao atualizar produto');
     }
   }
 
@@ -405,9 +417,8 @@ export default function AdminProdutos() {
                     </td>
                     <td className="px-4 py-3 font-bold text-primary-500 whitespace-nowrap">R$ {p.price.toFixed(2).replace('.', ',')}</td>
                     <td className="px-4 py-3">
-                      <span className={`font-semibold ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-orange-500' : 'text-green-600'}`}>
+                      <span className={`font-semibold ${p.stock === 0 ? 'text-red-500' : 'text-gray-700'}`}>
                         {p.stock}
-                        {p.stock <= 5 && p.stock > 0 && <span className="text-xs ml-1">⚠️</span>}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -421,7 +432,10 @@ export default function AdminProdutos() {
                         <div className="flex gap-1">
                           <button onClick={() => edit(p)} title="Editar" className="text-blue-500 hover:text-blue-700 p-1.5 rounded hover:bg-blue-50"><Edit size={15} /></button>
                           <button onClick={() => duplicate(p)} title="Duplicar" className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-100"><Copy size={15} /></button>
-                          <button onClick={() => setConfirmDelete(p.id)} title="Desativar" className="text-red-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50"><Trash2 size={15} /></button>
+                          <button onClick={() => toggleActive(p)} title={p.active ? 'Desativar' : 'Ativar'} className={`p-1.5 rounded ${p.active ? 'text-orange-400 hover:text-orange-600 hover:bg-orange-50' : 'text-green-500 hover:text-green-700 hover:bg-green-50'}`}>
+                            {p.active ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
+                          <button onClick={() => setConfirmDelete(p.id)} title="Excluir" className="text-red-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50"><Trash2 size={15} /></button>
                         </div>
                       )}
                     </td>

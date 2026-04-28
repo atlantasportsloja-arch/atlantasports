@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Users, Tag, Settings, Menu, X, ChevronRight, FolderOpen, TrendingUp, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Tag, Settings, Menu, X, ChevronRight, FolderOpen, TrendingUp, MessageSquare, Truck } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 
 const links = [
@@ -13,6 +13,7 @@ const links = [
   { href: '/admin/financeiro', label: 'Financeiro', icon: <TrendingUp size={18} /> },
   { href: '/admin/usuarios', label: 'Usuários', icon: <Users size={18} /> },
   { href: '/admin/cupons', label: 'Cupons', icon: <Tag size={18} /> },
+  { href: '/admin/frete', label: 'Frete', icon: <Truck size={18} /> },
   { href: '/admin/mensagens', label: 'Mensagens', icon: <MessageSquare size={18} /> },
   { href: '/admin/configuracoes', label: 'Configurações', icon: <Settings size={18} /> },
 ];

@@ -8,11 +8,12 @@ import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
 import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, priority = false }) {
   const { pixDiscount } = useConfig();
   const { token } = useAuthStore();
   const { setCart } = useCartStore();
   const [adding, setAdding] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   async function addToCart(e) {
     e.preventDefault();
@@ -41,12 +42,15 @@ export default function ProductCard({ product }) {
   return (
     <Link href={`/produto/${product.slug}`} className="card group overflow-hidden flex flex-col hover:shadow-md transition-all duration-200">
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
-        {product.images?.[0] ? (
+        {product.images?.[0] && !imgError ? (
           <Image
             src={product.images[0]}
             alt={product.name}
             fill
+            sizes="(max-width: 768px) 50vw, 25vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            priority={priority}
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">👕</div>

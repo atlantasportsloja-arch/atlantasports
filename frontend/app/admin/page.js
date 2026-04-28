@@ -1,8 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { ShoppingBag, Package, Users, DollarSign, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
+import { ShoppingBag, Package, Users, DollarSign, Clock, Calendar, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import api from '@/lib/api';
 
 const STATUS_COLOR = {
@@ -50,35 +49,17 @@ export default function AdminDashboard() {
       </div>
 
       {/* Alertas */}
-      {(data.pendingOrders > 0 || data.lowStockProducts?.length > 0) && (
-        <div className="space-y-3">
-          {data.pendingOrders > 0 && (
-            <Link href="/admin/pedidos?status=PENDING" className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4 hover:bg-yellow-100 transition-colors">
-              <Clock size={20} className="text-yellow-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-semibold text-yellow-800 text-sm">
-                  {data.pendingOrders} {data.pendingOrders === 1 ? 'pedido aguardando' : 'pedidos aguardando'} pagamento
-                </p>
-                <p className="text-xs text-yellow-600">Clique para ver os pedidos pendentes</p>
-              </div>
-              <span className="text-yellow-600 text-xs font-semibold">Ver →</span>
-            </Link>
-          )}
-          {data.lowStockProducts?.length > 0 && (
-            <Link href="/admin/produtos" className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl p-4 hover:bg-red-100 transition-colors">
-              <AlertTriangle size={20} className="text-red-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-semibold text-red-800 text-sm">
-                  {data.lowStockProducts.length} {data.lowStockProducts.length === 1 ? 'produto com estoque baixo' : 'produtos com estoque baixo'}
-                </p>
-                <p className="text-xs text-red-600">
-                  {data.lowStockProducts.slice(0, 3).map(p => p.name).join(', ')}{data.lowStockProducts.length > 3 ? '...' : ''}
-                </p>
-              </div>
-              <span className="text-red-600 text-xs font-semibold">Ver →</span>
-            </Link>
-          )}
-        </div>
+      {data.pendingOrders > 0 && (
+        <Link href="/admin/pedidos?status=PENDING" className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4 hover:bg-yellow-100 transition-colors">
+          <Clock size={20} className="text-yellow-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-yellow-800 text-sm">
+              {data.pendingOrders} {data.pendingOrders === 1 ? 'pedido aguardando' : 'pedidos aguardando'} pagamento
+            </p>
+            <p className="text-xs text-yellow-600">Clique para ver os pedidos pendentes</p>
+          </div>
+          <span className="text-yellow-600 text-xs font-semibold">Ver →</span>
+        </Link>
       )}
 
       {/* Métricas */}
@@ -99,89 +80,76 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Pedidos recentes */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-black">Pedidos recentes</h2>
-            <Link href="/admin/pedidos" className="text-xs text-primary-500 hover:underline font-semibold">Ver todos →</Link>
-          </div>
-          <div className="space-y-3">
-            {data.recentOrders.map(o => (
-              <div key={o.id} className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-sm font-mono">#{o.id.slice(0, 8).toUpperCase()}</p>
-                  <p className="text-gray-400 text-xs truncate max-w-[150px]">{o.user.name}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-sm">R$ {o.total.toFixed(2).replace('.', ',')}</p>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status]}`}>
-                    {STATUS_LABEL[o.status]}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {data.recentOrders.length === 0 && (
-              <p className="text-gray-400 text-sm text-center py-4">Nenhum pedido ainda</p>
-            )}
-          </div>
+      {/* Métricas do mês */}
+      <div className="card p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Calendar size={18} className="text-primary-500" />
+          <h2 className="font-black">Este mês</h2>
+          <span className="text-xs text-gray-400 ml-auto">
+            {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          </span>
         </div>
-
-        {/* Produtos mais vendidos */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-black">Mais vendidos</h2>
-            <TrendingUp size={16} className="text-green-500" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <p className="text-xs text-gray-400 mb-1">Pedidos hoje</p>
+            <p className="text-2xl font-black">{data.ordersToday}</p>
           </div>
-          <div className="space-y-3">
-            {data.topProducts.map((tp, i) => (
-              <div key={tp.productId} className="flex items-center gap-3">
-                <span className="text-gray-400 font-bold w-5 text-sm">{i + 1}</span>
-                <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                  {tp.product?.images?.[0] ? (
-                    <Image src={tp.product.images[0]} alt={tp.product.name} fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sm">📦</div>
-                  )}
-                </div>
-                <p className="flex-1 text-sm truncate">{tp.product?.name || 'Produto'}</p>
-                <span className="font-bold text-primary-500 text-sm flex-shrink-0">{tp._sum.quantity} un.</span>
-              </div>
-            ))}
-            {data.topProducts.length === 0 && (
-              <p className="text-gray-400 text-sm text-center py-4">Sem dados de vendas</p>
-            )}
+          <div className="text-center">
+            <p className="text-xs text-gray-400 mb-1">Receita hoje</p>
+            <p className="text-2xl font-black text-green-600">
+              R$ {(data.revenueToday || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-400 mb-1">Pedidos no mês</p>
+            <p className="text-2xl font-black">{data.ordersThisMonth}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-400 mb-1">Receita no mês</p>
+            <p className="text-2xl font-black text-green-600">
+              R$ {(data.revenueThisMonth || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+            {data.revenueLastMonth > 0 && (() => {
+              const diff = data.revenueThisMonth - data.revenueLastMonth;
+              const pct = Math.abs((diff / data.revenueLastMonth) * 100).toFixed(0);
+              return (
+                <p className={`text-xs font-semibold flex items-center justify-center gap-0.5 mt-0.5 ${diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {diff > 0 ? <ArrowUp size={11} /> : diff < 0 ? <ArrowDown size={11} /> : <Minus size={11} />}
+                  {diff !== 0 ? `${pct}% vs mês anterior` : 'igual ao mês anterior'}
+                </p>
+              );
+            })()}
           </div>
         </div>
       </div>
 
-      {/* Estoque baixo */}
-      {data.lowStockProducts?.length > 0 && (
-        <div className="card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle size={18} className="text-red-500" />
-            <h2 className="font-black">Estoque baixo</h2>
-            <span className="ml-auto text-xs text-gray-400">≤ 5 unidades</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {data.lowStockProducts.map(p => (
-              <div key={p.id} className="text-center">
-                <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2">
-                  {p.images?.[0] ? (
-                    <Image src={p.images[0]} alt={p.name} fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
-                  )}
-                </div>
-                <p className="text-xs font-medium truncate">{p.name}</p>
-                <p className={`text-sm font-black ${p.stock === 0 ? 'text-red-600' : 'text-orange-500'}`}>
-                  {p.stock === 0 ? 'Esgotado' : `${p.stock} restantes`}
-                </p>
-              </div>
-            ))}
-          </div>
+      {/* Pedidos recentes */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-black">Pedidos recentes</h2>
+          <Link href="/admin/pedidos" className="text-xs text-primary-500 hover:underline font-semibold">Ver todos →</Link>
         </div>
-      )}
+        <div className="space-y-3">
+          {data.recentOrders.map(o => (
+            <div key={o.id} className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-sm font-mono">#{o.id.slice(0, 8).toUpperCase()}</p>
+                <p className="text-gray-400 text-xs truncate max-w-[150px]">{o.user.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-sm">R$ {o.total.toFixed(2).replace('.', ',')}</p>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status]}`}>
+                  {STATUS_LABEL[o.status]}
+                </span>
+              </div>
+            </div>
+          ))}
+          {data.recentOrders.length === 0 && (
+            <p className="text-gray-400 text-sm text-center py-4">Nenhum pedido ainda</p>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }

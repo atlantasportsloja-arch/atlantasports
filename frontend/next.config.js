@@ -8,6 +8,22 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.amazonaws.com' },
     ],
     unoptimized: true,
+    minimumCacheTTL: 3600,
+  },
+  async headers() {
+    return [
+      {
+        source: '/_next/static/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/:path*.ico',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+      },
+    ];
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 };
 

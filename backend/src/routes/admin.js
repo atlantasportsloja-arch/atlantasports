@@ -8,6 +8,13 @@ router.use(adminMiddleware);
 
 router.get('/dashboard', async (req, res) => {
   try {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    const paidStatuses = ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
+
     const [
       totalOrders,
       totalRevenue,
@@ -17,9 +24,14 @@ router.get('/dashboard', async (req, res) => {
       recentOrders,
       topProducts,
       lowStockProducts,
+      ordersToday,
+      revenueToday,
+      ordersThisMonth,
+      revenueThisMonth,
+      revenueLastMonth,
     ] = await Promise.all([
       prisma.order.count(),
-      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } } }),
+      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: paidStatuses } } }),
       prisma.product.count({ where: { active: true } }),
       prisma.user.count({ where: { role: 'CUSTOMER' } }),
       prisma.order.count({ where: { status: 'PENDING' } }),
@@ -40,6 +52,11 @@ router.get('/dashboard', async (req, res) => {
         orderBy: { stock: 'asc' },
         take: 10,
       }),
+      prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
+      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfToday } } }),
+      prisma.order.count({ where: { createdAt: { gte: startOfMonth } } }),
+      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfMonth } } }),
+      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } } }),
     ]);
 
     const topProductIds = topProducts.map(p => p.productId);
@@ -62,6 +79,11 @@ router.get('/dashboard', async (req, res) => {
       recentOrders,
       topProducts: topProductsWithDetails,
       lowStockProducts,
+      ordersToday,
+      revenueToday: revenueToday._sum.total || 0,
+      ordersThisMonth,
+      revenueThisMonth: revenueThisMonth._sum.total || 0,
+      revenueLastMonth: revenueLastMonth._sum.total || 0,
     });
   } catch (err) {
     console.error(err);
