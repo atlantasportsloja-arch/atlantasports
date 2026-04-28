@@ -83,7 +83,7 @@ export default function ProductCard({ product, priority = false }) {
         <div className="mt-auto flex items-center justify-between gap-2">
           <div className="min-w-0">
             {product.comparePrice && (
-              <p className="text-xs text-gray-400 line-through">
+              <p className="text-base font-black text-gray-400 line-through">
                 R$ {product.comparePrice.toFixed(2).replace('.', ',')}
               </p>
             )}
@@ -92,7 +92,7 @@ export default function ProductCard({ product, priority = false }) {
             </p>
             {pixPrice(product.price, pixDiscount) && (
               <p className="text-sm font-black text-green-600">
-                PIX R$ {fmt(pixPrice(product.price, pixDiscount))}
+                R$ {fmt(pixPrice(product.price, pixDiscount))} PIX
               </p>
             )}
           </div>
