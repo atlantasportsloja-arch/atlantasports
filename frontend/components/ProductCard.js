@@ -82,6 +82,11 @@ export default function ProductCard({ product, priority = false }) {
 
         <div className="mt-auto flex items-center justify-between gap-2">
           <div className="min-w-0">
+            {product.comparePrice && (
+              <p className="text-xs text-gray-400 line-through">
+                R$ {product.comparePrice.toFixed(2).replace('.', ',')}
+              </p>
+            )}
             <div className="flex items-baseline gap-2 flex-wrap">
               <p className="text-base font-black text-gray-900 whitespace-nowrap">
                 R$ {product.price.toFixed(2).replace('.', ',')}
@@ -92,11 +97,6 @@ export default function ProductCard({ product, priority = false }) {
                 </p>
               )}
             </div>
-            {product.comparePrice && (
-              <p className="text-xs text-gray-400 line-through">
-                R$ {product.comparePrice.toFixed(2).replace('.', ',')}
-              </p>
-            )}
           </div>
           <button
             onClick={addToCart}
