@@ -1,15 +1,10 @@
-'use client';
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import ProductCard from '@/components/ProductCard';
-import api from '@/lib/api';
+import BannerSlider from '@/components/BannerSlider';
 
 const DEFAULT_CONFIG = {
   storeName: 'Atlanta Sports', heroBadge: 'Nova coleção 2025',
   heroTitle: 'Veste quem joga de verdade', heroSubtitle: 'Camisas oficiais, tênis e acessórios fitness.',
-  heroBtnPrimary: 'Ver coleção', heroBtnPrimaryLink: '/categoria/camisas',
-  heroBtnSecondary: 'Ver tênis', heroBtnSecondaryLink: '/categoria/tenis',
   benefit1: '🚚 Frete grátis acima de R$ 299', benefit2: '🔒 Pagamento 100% seguro',
   benefit3: '↩️ Troca em 30 dias', benefit4: '⭐ +5.000 clientes satisfeitos',
   sectionCategories: 'Categorias', sectionFeatured: 'Produtos em destaque',
@@ -21,64 +16,37 @@ const CATEGORY_ICON = {
   esporte: '⚽', acessorio: '🎒', promocao: '🏷️', 'atlanta-sports': '🏆',
 };
 
-function SkeletonCard() {
-  return (
-    <div className="card overflow-hidden animate-pulse">
-      <div className="aspect-square bg-gray-200" />
-      <div className="p-4 space-y-2">
-        <div className="h-3 bg-gray-200 rounded w-1/3" />
-        <div className="h-4 bg-gray-200 rounded w-3/4" />
-        <div className="h-4 bg-gray-200 rounded w-1/2" />
-        <div className="flex justify-between items-center mt-2">
-          <div className="h-6 bg-gray-200 rounded w-1/3" />
-          <div className="h-8 w-8 bg-gray-200 rounded-lg" />
-        </div>
-      </div>
-    </div>
-  );
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+async function getData() {
+  const [configRes, productsRes, categoriesRes] = await Promise.allSettled([
+    fetch(`${API}/config`, { next: { revalidate: 300 } }),
+    fetch(`${API}/products?limit=8`, { next: { revalidate: 60 } }),
+    fetch(`${API}/categories`, { next: { revalidate: 300 } }),
+  ]);
+
+  const config = configRes.status === 'fulfilled' && configRes.value.ok
+    ? await configRes.value.json() : {};
+  const productsData = productsRes.status === 'fulfilled' && productsRes.value.ok
+    ? await productsRes.value.json() : {};
+  const categories = categoriesRes.status === 'fulfilled' && categoriesRes.value.ok
+    ? await categoriesRes.value.json() : [];
+
+  return {
+    config: { ...DEFAULT_CONFIG, ...config },
+    products: productsData.products || [],
+    categories: Array.isArray(categories) ? categories : [],
+  };
 }
 
-export default function HomePage() {
-  const [config, setConfig] = useState(DEFAULT_CONFIG);
-  const [featured, setFeatured] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [activeBanner, setActiveBanner] = useState(0);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-
-  useEffect(() => {
-    api.get('/config').then(r => setConfig({ ...DEFAULT_CONFIG, ...r.data })).catch(() => {});
-    api.get('/products', { params: { limit: 8 } })
-      .then(r => setFeatured(r.data.products))
-      .catch(() => {})
-      .finally(() => setLoadingProducts(false));
-    api.get('/categories').then(r => setCategories(r.data)).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!config.banners?.length || config.banners.length <= 1) return;
-    const interval = setInterval(() => setActiveBanner(i => (i + 1) % config.banners.length), 4000);
-    return () => clearInterval(interval);
-  }, [config.banners]);
+export default async function HomePage() {
+  const { config, products, categories } = await getData();
 
   return (
     <div>
       {/* BANNER / HERO */}
       {config.banners?.length > 0 ? (
-        <section className="relative w-full bg-gray-900" style={{ aspectRatio: '1400/500' }}>
-          {config.banners.map((url, i) => (
-            <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === activeBanner ? 'opacity-100' : 'opacity-0'}`}>
-              <Image src={url} alt={`Banner ${i + 1}`} fill className="object-fill" priority={i === 0} sizes="100vw" />
-            </div>
-          ))}
-          {config.banners.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {config.banners.map((_, i) => (
-                <button key={i} onClick={() => setActiveBanner(i)}
-                  className={`w-2.5 h-2.5 rounded-full transition-colors ${i === activeBanner ? 'bg-white' : 'bg-white/40'}`} />
-              ))}
-            </div>
-          )}
-        </section>
+        <BannerSlider banners={config.banners} />
       ) : (
         <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden relative">
           <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
@@ -116,9 +84,7 @@ export default function HomePage() {
                 href={`/categoria/${cat.slug}`}
                 className="card p-6 text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
               >
-                <div className="text-4xl mb-3">
-                  {CATEGORY_ICON[cat.slug] || '🏆'}
-                </div>
+                <div className="text-4xl mb-3">{CATEGORY_ICON[cat.slug] || '🏆'}</div>
                 <p className="font-semibold group-hover:text-primary-500 transition-colors">{cat.name}</p>
                 <p className="text-xs text-gray-400 mt-1">{cat._count?.products || 0} produtos</p>
               </Link>
@@ -131,15 +97,10 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 py-8 pb-16">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-black">{config.sectionFeatured}</h2>
-          <Link href="/busca" className="text-primary-500 text-sm font-semibold hover:underline">
-            Ver todos →
-          </Link>
+          <Link href="/busca" className="text-primary-500 text-sm font-semibold hover:underline">Ver todos →</Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {loadingProducts
-            ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
-            : featured.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)
-          }
+          {products.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
         </div>
       </section>
 
