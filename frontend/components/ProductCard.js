@@ -91,7 +91,7 @@ export default function ProductCard({ product, priority = false }) {
               R$ {product.price.toFixed(2).replace('.', ',')}
             </p>
             {pixPrice(product.price, pixDiscount) && (
-              <p className="text-sm font-black text-green-600">
+              <p className="text-base font-black text-green-600">
                 R$ {fmt(pixPrice(product.price, pixDiscount))} PIX
               </p>
             )}
