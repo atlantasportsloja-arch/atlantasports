@@ -91,7 +91,7 @@ export default function ProductCard({ product, priority = false }) {
               </p>
             )}
             {pixPrice(product.price, pixDiscount) && (
-              <p className="text-base font-black text-green-600">
+              <p className="text-sm font-black text-green-600">
                 PIX R$ {fmt(pixPrice(product.price, pixDiscount))}
               </p>
             )}
