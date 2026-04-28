@@ -87,16 +87,14 @@ export default function ProductCard({ product, priority = false }) {
                 R$ {product.comparePrice.toFixed(2).replace('.', ',')}
               </p>
             )}
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <p className="text-base font-black text-gray-900 whitespace-nowrap">
-                R$ {product.price.toFixed(2).replace('.', ',')}
+            <p className="text-base font-black text-gray-900">
+              R$ {product.price.toFixed(2).replace('.', ',')}
+            </p>
+            {pixPrice(product.price, pixDiscount) && (
+              <p className="text-sm font-black text-green-600">
+                PIX R$ {fmt(pixPrice(product.price, pixDiscount))}
               </p>
-              {pixPrice(product.price, pixDiscount) && (
-                <p className="text-sm font-black text-green-600 whitespace-nowrap">
-                  PIX R$ {fmt(pixPrice(product.price, pixDiscount))}
-                </p>
-              )}
-            </div>
+            )}
           </div>
           <button
             onClick={addToCart}
