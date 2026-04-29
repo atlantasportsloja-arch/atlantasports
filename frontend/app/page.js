@@ -22,7 +22,7 @@ async function getData() {
   const [configRes, productsRes, categoriesRes] = await Promise.allSettled([
     fetch(`${API}/config`, { next: { revalidate: 300 } }),
     fetch(`${API}/products?limit=8`, { next: { revalidate: 60 } }),
-    fetch(`${API}/categories`, { next: { revalidate: 300 } }),
+    fetch(`${API}/categories`, { next: { revalidate: 30 } }),
   ]);
 
   const config = configRes.status === 'fulfilled' && configRes.value.ok
