@@ -1,2 +1,5 @@
+[build]
+buildCommand = "npm install && npx prisma db push --skip-generate"
+
 [deploy]
-startCommand = "npx prisma db push --skip-generate --accept-data-loss || true; node src/server.js"
+startCommand = "node src/server.js"
