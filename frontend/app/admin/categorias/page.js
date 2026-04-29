@@ -12,7 +12,7 @@ const SUGESTOES = [
   { name: 'Esporte',       emoji: '⚽' },
   { name: 'Acessório',     emoji: '🎒' },
   { name: 'Promoção',      emoji: '🏷️' },
-  { name: 'Atlanta Sports', emoji: '🏆' },
+  { name: 'Encomenda',      emoji: '✈️' },
 ];
 
 const EMPTY = { name: '', image: '' };
