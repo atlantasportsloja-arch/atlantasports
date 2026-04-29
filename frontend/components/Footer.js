@@ -24,16 +24,21 @@ export default function Footer() {
     <footer className="bg-gray-900 text-gray-400 mt-16">
       <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div>
-          <p className="text-xl font-black text-primary-500 mb-3">
-            {name}<span className="text-white">{tag ? ` ${tag}` : ''}</span>
-          </p>
-          <p className="text-sm">{config.footerDesc}</p>
-          {config.whatsapp && (
-            <a href={`https://wa.me/${config.whatsapp}`} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-3 text-green-400 hover:text-green-300 text-sm font-semibold">
-              💬 WhatsApp
-            </a>
-          )}
+          <p className="text-white font-semibold mb-3">✈️ Encomenda</p>
+          <ul className="space-y-2 text-sm">
+            <li>Produtos sob encomenda com prazo de produção e envio especial.</li>
+            <li className="pt-1">
+              <Link href="/categoria/encomenda" className="hover:text-white">Ver produtos sob encomenda</Link>
+            </li>
+            {config.whatsapp && (
+              <li>
+                <a href={`https://wa.me/${config.whatsapp}`} target="_blank" rel="noopener noreferrer"
+                  className="text-green-400 hover:text-green-300">
+                  Pedir via WhatsApp
+                </a>
+              </li>
+            )}
+          </ul>
         </div>
         <div>
           <p className="text-white font-semibold mb-3">Loja</p>
