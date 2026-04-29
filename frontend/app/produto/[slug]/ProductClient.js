@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, Star, Truck, RotateCcw, Shield, ChevronRight, Loader2, Heart, Zap } from 'lucide-react';
+import { ShoppingCart, Truck, RotateCcw, Shield, ChevronRight, Loader2, Heart, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
@@ -36,81 +36,6 @@ function ProductSkeleton() {
   );
 }
 
-function StarPicker({ value, onChange }) {
-  const [hover, setHover] = useState(0);
-  return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map(s => (
-        <button
-          key={s}
-          type="button"
-          onClick={() => onChange(s)}
-          onMouseEnter={() => setHover(s)}
-          onMouseLeave={() => setHover(0)}
-          className="transition-transform hover:scale-110"
-        >
-          <Star
-            size={28}
-            className={s <= (hover || value) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
-          />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function ReviewForm({ productId, onReviewSaved }) {
-  const { token } = useAuthStore();
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  if (!token) return (
-    <div className="card p-6 text-center text-gray-500 text-sm">
-      <Link href="/login" className="text-primary-500 font-semibold hover:underline">Faça login</Link> para avaliar este produto.
-    </div>
-  );
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (rating === 0) { toast.error('Selecione uma nota'); return; }
-    setLoading(true);
-    try {
-      const { data } = await api.post('/reviews', { productId, rating, comment });
-      toast.success('Avaliação enviada!');
-      setRating(0);
-      setComment('');
-      onReviewSaved(data);
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao enviar avaliação');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-      <h3 className="font-bold text-lg">Deixe sua avaliação</h3>
-      <div>
-        <p className="text-sm text-gray-500 mb-2">Sua nota</p>
-        <StarPicker value={rating} onChange={setRating} />
-      </div>
-      <div>
-        <label className="block text-sm text-gray-500 mb-1">Comentário <span className="text-gray-300">(opcional)</span></label>
-        <textarea
-          className="input resize-none"
-          rows={3}
-          value={comment}
-          onChange={e => setComment(e.target.value)}
-          placeholder="O que você achou do produto?"
-        />
-      </div>
-      <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
-        {loading ? <><Loader2 size={16} className="animate-spin" /> Enviando...</> : 'Enviar avaliação'}
-      </button>
-    </form>
-  );
-}
 
 export default function ProdutoPage({ params }) {
   const router = useRouter();
@@ -201,20 +126,7 @@ export default function ProdutoPage({ params }) {
     }
   }
 
-  function handleReviewSaved(newReview) {
-    setProduct(p => ({
-      ...p,
-      reviews: p.reviews.some(r => r.userId === newReview.userId)
-        ? p.reviews.map(r => r.userId === newReview.userId ? newReview : r)
-        : [newReview, ...p.reviews],
-    }));
-  }
-
   if (!product) return <ProductSkeleton />;
-
-  const avgRating = product.reviews?.length
-    ? (product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length).toFixed(1)
-    : null;
 
   const outOfStock = effectiveStock === 0;
   const lowStock = effectiveStock > 0 && effectiveStock <= 5;
@@ -284,17 +196,6 @@ export default function ProdutoPage({ params }) {
           <div>
             <h1 className="text-3xl font-black leading-tight">{product.name}</h1>
           </div>
-
-          {avgRating && (
-            <div className="flex items-center gap-2">
-              <div className="flex">
-                {[1,2,3,4,5].map(s => (
-                  <Star key={s} size={16} className={s <= Math.round(avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} />
-                ))}
-              </div>
-              <span className="text-sm text-gray-500">{avgRating} <span className="text-gray-300">·</span> {product.reviews.length} avaliações</span>
-            </div>
-          )}
 
           {product.availability && (
             <div>
@@ -424,84 +325,6 @@ export default function ProdutoPage({ params }) {
         </div>
       </div>
 
-      {/* AVALIAÇÕES */}
-      <section className="mt-14 border-t pt-10">
-        <div className="flex items-center gap-3 mb-6 flex-wrap">
-          <h2 className="text-xl font-black">Avaliações</h2>
-          {product.reviews?.length > 0 && (
-            <span className="text-sm text-gray-400">{product.reviews.length} avaliações</span>
-          )}
-        </div>
-
-        {product.reviews?.length > 0 && (
-          <div className="card p-5 mb-6 flex items-center gap-8 flex-wrap">
-            <div className="text-center">
-              <p className="text-5xl font-black text-gray-900">{avgRating}</p>
-              <div className="flex justify-center mt-1">
-                {[1,2,3,4,5].map(s => (
-                  <Star key={s} size={14} className={s <= Math.round(avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} />
-                ))}
-              </div>
-              <p className="text-xs text-gray-400 mt-1">{product.reviews.length} avaliações</p>
-            </div>
-            <div className="flex-1 min-w-[160px] space-y-1.5">
-              {[5,4,3,2,1].map(star => {
-                const count = product.reviews.filter(r => r.rating === star).length;
-                const pct = product.reviews.length ? Math.round((count / product.reviews.length) * 100) : 0;
-                return (
-                  <div key={star} className="flex items-center gap-2 text-xs">
-                    <span className="w-3 text-gray-500">{star}</span>
-                    <Star size={10} className="fill-yellow-400 text-yellow-400 flex-shrink-0" />
-                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="w-6 text-gray-400 text-right">{count}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            {product.reviews?.length > 0 ? (
-              product.reviews.map(r => (
-                <div key={r.id} className="card p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                      {(r.user.name?.[0] || '?').toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-sm truncate">{r.user.name}</p>
-                        {r.createdAt && (
-                          <span className="text-xs text-gray-400 flex-shrink-0">
-                            {new Date(r.createdAt).toLocaleDateString('pt-BR')}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex">
-                        {[1,2,3,4,5].map(s => (
-                          <Star key={s} size={11} className={s <= r.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {r.comment && <p className="text-sm text-gray-600 leading-relaxed">{r.comment}</p>}
-                </div>
-              ))
-            ) : (
-              <div className="card p-6 text-center text-gray-400">
-                <p className="font-medium">Nenhuma avaliação ainda</p>
-                <p className="text-sm mt-1">Seja o primeiro a avaliar!</p>
-              </div>
-            )}
-          </div>
-
-          <ReviewForm productId={product.id} onReviewSaved={handleReviewSaved} />
-        </div>
-      </section>
 
       {/* PRODUTOS RELACIONADOS */}
       {related.length > 0 && (

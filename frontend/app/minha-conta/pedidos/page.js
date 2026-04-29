@@ -2,9 +2,61 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Package, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, ExternalLink, Star, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
+
+function StarPicker({ value, onChange }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map(s => (
+        <button key={s} type="button" onClick={() => onChange(s)}
+          onMouseEnter={() => setHover(s)} onMouseLeave={() => setHover(0)}
+          className="transition-transform hover:scale-110">
+          <Star size={24} className={s <= (hover || value) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ReviewForm({ productId, productName, onDone }) {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!rating) { toast.error('Selecione uma nota'); return; }
+    setLoading(true);
+    try {
+      await api.post('/reviews', { productId, rating, comment });
+      toast.success('Depoimento enviado!');
+      onDone();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao enviar');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+      <p className="text-sm font-semibold text-gray-700">Avaliar: <span className="text-primary-500">{productName}</span></p>
+      <StarPicker value={rating} onChange={setRating} />
+      <textarea className="input resize-none text-sm" rows={2} value={comment}
+        onChange={e => setComment(e.target.value)} placeholder="Como foi o produto? (opcional)" />
+      <div className="flex gap-2">
+        <button type="submit" disabled={loading} className="btn-primary text-sm flex items-center gap-1.5 py-2">
+          {loading ? <Loader2 size={14} className="animate-spin" /> : null} Enviar depoimento
+        </button>
+        <button type="button" onClick={onDone} className="btn-outline text-sm py-2">Cancelar</button>
+      </div>
+    </form>
+  );
+}
 
 const STATUS = {
   PENDING:    { label: 'Aguardando pagamento', color: 'bg-yellow-100 text-yellow-700', step: 0 },
@@ -48,6 +100,7 @@ export default function PedidosPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
+  const [reviewing, setReviewing] = useState(null);
 
   useEffect(() => {
     if (!token) { router.push('/login'); return; }
@@ -102,17 +155,38 @@ export default function PedidosPage() {
                   {/* Itens */}
                   <div className="space-y-2">
                     {order.items.map(item => (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span className="text-gray-600">
-                          {item.product?.name || 'Produto'}
-                          {(item.variant?.size || item.variant?.color) && (
-                            <span className="text-gray-400 ml-1">
-                              ({[item.variant.size, item.variant.color].filter(Boolean).join(' / ')})
-                            </span>
-                          )}
-                          {' '}× {item.quantity}
-                        </span>
-                        <span className="font-semibold">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                      <div key={item.id}>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">
+                            {item.product?.name || 'Produto'}
+                            {(item.variant?.size || item.variant?.color) && (
+                              <span className="text-gray-400 ml-1">
+                                ({[item.variant.size, item.variant.color].filter(Boolean).join(' / ')})
+                              </span>
+                            )}
+                            {' '}× {item.quantity}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                            {order.status === 'DELIVERED' && item.product && (
+                              reviewing === item.id ? null : (
+                                <button
+                                  onClick={() => setReviewing(item.id)}
+                                  className="text-xs text-yellow-600 hover:text-yellow-700 font-semibold border border-yellow-300 px-2 py-0.5 rounded-lg hover:bg-yellow-50 transition-colors flex-shrink-0"
+                                >
+                                  ⭐ Avaliar
+                                </button>
+                              )
+                            )}
+                          </div>
+                        </div>
+                        {reviewing === item.id && (
+                          <ReviewForm
+                            productId={item.product.id}
+                            productName={item.product.name}
+                            onDone={() => setReviewing(null)}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
