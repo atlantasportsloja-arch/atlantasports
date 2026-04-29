@@ -41,8 +41,9 @@ export default function FinanceiroPage() {
   if (loading) return <div className="text-gray-400 animate-pulse p-8">Carregando...</div>;
   if (!data) return <div className="text-red-500 p-8">Erro ao carregar dados.</div>;
 
-  const { products, totalCusto, totalReceita, totalLucro, margemMedia, totalReceitaReal, totalLucroReal } = data;
+  const { products, totalCusto, totalReceita, totalLucro, margemMedia, totalReceitaReal, totalLucroReal, totalVendaEstoque } = data;
   const semCusto = products.filter(p => p.costPrice == null).length;
+  const comCusto = products.length - semCusto;
 
   const sorted = [...products].sort((a, b) => {
     if (sort === 'lucro') return (b.lucro ?? -Infinity) - (a.lucro ?? -Infinity);
@@ -70,12 +71,45 @@ export default function FinanceiroPage() {
         <Card icon={<TrendingUp size={20} />} label="Lucro real estimado" value={semCusto > 0 ? `R$ ${fmt(totalLucroReal)}` : '—'} sub={semCusto > 0 ? `${semCusto} prod. sem custo` : 'baseado nos custos cadastrados'} color="text-primary-500" />
       </div>
 
-      {/* Cards potencial de estoque */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card icon={<DollarSign size={20} />} label="Custo total em estoque" value={`R$ ${fmt(totalCusto)}`} sub="valor investido" color="text-red-500" />
-        <Card icon={<DollarSign size={20} />} label="Receita potencial" value={`R$ ${fmt(totalReceita)}`} sub="se vender tudo" color="text-blue-500" />
-        <Card icon={<TrendingUp size={20} />} label="Lucro potencial" value={`R$ ${fmt(totalLucro)}`} sub="receita − custo" color="text-green-600" />
-        <Card icon={<Package size={20} />} label="Margem média" value={margemMedia ? `${margemMedia}%` : '—'} sub="sobre o preço de venda" color="text-primary-500" />
+      {/* Valor total em estoque */}
+      <div className="card p-6">
+        <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide mb-4">Valor total em estoque</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-red-50 text-red-500"><DollarSign size={22} /></div>
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Valor de custo investido</p>
+              <p className="text-2xl font-black text-red-500">R$ {fmt(totalCusto ?? 0)}</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {comCusto > 0
+                  ? `baseado em ${comCusto} produto(s) com custo cadastrado`
+                  : 'nenhum produto com custo cadastrado'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-blue-50 text-blue-500"><DollarSign size={22} /></div>
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Valor para venda (todos os produtos)</p>
+              <p className="text-2xl font-black text-blue-600">R$ {fmt(totalVendaEstoque ?? 0)}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{products.length} produto(s) · se vender tudo em estoque</p>
+            </div>
+          </div>
+        </div>
+        {totalCusto > 0 && (
+          <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Lucro potencial</p>
+              <p className={`text-lg font-black ${totalLucro >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                R$ {fmt(totalLucro)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Margem média</p>
+              <p className="text-lg font-black text-primary-500">{margemMedia ? `${margemMedia}%` : '—'}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tabela por produto */}
@@ -116,9 +150,9 @@ export default function FinanceiroPage() {
                     {p.lucro != null ? `R$ ${fmt(p.lucro)}` : <span className="text-gray-300 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3"><MargemBadge margem={p.margem} /></td>
-                  <td className="px-4 py-3 text-gray-500">{p.stock}</td>
+                  <td className="px-4 py-3 text-gray-500">{p.estoqueEfetivo ?? p.stock}</td>
                   <td className="px-4 py-3 font-black text-green-700">
-                    {p.lucro != null ? `R$ ${fmt(p.lucro * p.stock)}` : <span className="text-gray-300 text-xs">—</span>}
+                    {p.lucro != null ? `R$ ${fmt(p.lucro * (p.estoqueEfetivo ?? p.stock))}` : <span className="text-gray-300 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3 font-semibold text-gray-700">{p.qtdVendida ?? 0} un.</td>
                   <td className="px-4 py-3 font-bold text-primary-600">

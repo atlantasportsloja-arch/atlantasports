@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Search, X, Loader2, AlertTriangle, Copy, EyeOff, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Loader2, AlertTriangle, Copy, EyeOff, Eye, CheckSquare, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
@@ -35,6 +35,8 @@ export default function AdminProdutos() {
   const [variantStock, setVariantStock] = useState('');
   const [savingVariant, setSavingVariant] = useState(false);
   const [editingVariants, setEditingVariants] = useState([]);
+  const [selected, setSelected] = useState(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     load();
@@ -43,6 +45,7 @@ export default function AdminProdutos() {
 
   async function load() {
     setLoading(true);
+    setSelected(new Set());
     try {
       const { data } = await api.get('/products/admin/all');
       setProducts(data.products);
@@ -163,6 +166,50 @@ export default function AdminProdutos() {
   const filtered = products.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const allSelected = filtered.length > 0 && filtered.every(p => selected.has(p.id));
+  const someSelected = filtered.some(p => selected.has(p.id));
+
+  function toggleSelect(id) {
+    setSelected(s => {
+      const next = new Set(s);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelected(s => {
+        const next = new Set(s);
+        filtered.forEach(p => next.delete(p.id));
+        return next;
+      });
+    } else {
+      setSelected(s => {
+        const next = new Set(s);
+        filtered.forEach(p => next.add(p.id));
+        return next;
+      });
+    }
+  }
+
+  async function bulkAction(action) {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    if (action === 'delete' && !confirm(`Excluir ${ids.length} produto(s)? Essa ação não pode ser desfeita.`)) return;
+    setBulkLoading(true);
+    try {
+      await api.post('/products/admin/bulk', { ids, action });
+      const labels = { activate: 'ativados', deactivate: 'desativados', delete: 'excluídos' };
+      toast.success(`${ids.length} produto(s) ${labels[action]}`);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro na ação em massa');
+    } finally {
+      setBulkLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -357,19 +404,58 @@ export default function AdminProdutos() {
         </div>
       )}
 
-      {/* Busca */}
-      <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          className="input pl-9 max-w-sm"
-          placeholder="Buscar produto..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        {search && (
-          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-            <X size={14} />
-          </button>
+      {/* Busca + barra de ações em massa */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            className="input pl-9 max-w-sm"
+            placeholder="Buscar produto..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {selected.size > 0 && (
+          <div className="flex items-center gap-2 bg-primary-50 border border-primary-200 rounded-xl px-4 py-2 animate-in fade-in">
+            <span className="text-sm font-semibold text-primary-700">
+              {selected.size} selecionado{selected.size > 1 ? 's' : ''}
+            </span>
+            <div className="w-px h-4 bg-primary-200" />
+            <button
+              onClick={() => bulkAction('activate')}
+              disabled={bulkLoading}
+              className="text-xs font-semibold text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
+            >
+              ✓ Ativar
+            </button>
+            <button
+              onClick={() => bulkAction('deactivate')}
+              disabled={bulkLoading}
+              className="text-xs font-semibold text-orange-600 hover:text-orange-800 hover:bg-orange-100 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
+            >
+              ✕ Desativar
+            </button>
+            <button
+              onClick={() => bulkAction('delete')}
+              disabled={bulkLoading}
+              className="text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-100 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
+            >
+              🗑 Excluir
+            </button>
+            {bulkLoading && <Loader2 size={14} className="animate-spin text-primary-500" />}
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-gray-400 hover:text-gray-600 ml-1"
+            >
+              <X size={14} />
+            </button>
+          </div>
         )}
       </div>
 
@@ -381,6 +467,15 @@ export default function AdminProdutos() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  <th className="px-4 py-3 w-10">
+                    <button onClick={toggleAll} className="text-gray-400 hover:text-primary-500 transition-colors">
+                      {allSelected
+                        ? <CheckSquare size={16} className="text-primary-500" />
+                        : someSelected
+                          ? <CheckSquare size={16} className="text-primary-300" />
+                          : <Square size={16} />}
+                    </button>
+                  </th>
                   {['', 'Produto', 'Categorias', 'Disponib.', 'Status', 'Preço', 'Estoque', 'Ações'].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">{h}</th>
                   ))}
@@ -388,7 +483,14 @@ export default function AdminProdutos() {
               </thead>
               <tbody className="divide-y">
                 {filtered.map(p => (
-                  <tr key={p.id} className="hover:bg-gray-50">
+                  <tr key={p.id} className={`hover:bg-gray-50 ${selected.has(p.id) ? 'bg-primary-50/50' : ''}`}>
+                    <td className="px-4 py-3 w-10">
+                      <button onClick={() => toggleSelect(p.id)} className="text-gray-400 hover:text-primary-500 transition-colors">
+                        {selected.has(p.id)
+                          ? <CheckSquare size={16} className="text-primary-500" />
+                          : <Square size={16} />}
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                         {p.images?.[0] ? (
@@ -443,7 +545,7 @@ export default function AdminProdutos() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
+                    <td colSpan={9} className="px-4 py-10 text-center text-gray-400">
                       {search ? `Nenhum produto encontrado para "${search}"` : 'Nenhum produto cadastrado'}
                     </td>
                   </tr>

@@ -62,6 +62,7 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
           id: true, name: true, price: true, costPrice: true,
           stock: true, images: true,
           categories: { select: { name: true } },
+          variants: { where: { active: true }, select: { stock: true, price: true } },
         },
         orderBy: { name: 'asc' },
       }),
@@ -82,6 +83,11 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
     }
 
     const data = products.map(p => {
+      // estoque efetivo: soma das variantes se existirem, senão stock geral
+      const estoqueEfetivo = p.variants?.length > 0
+        ? p.variants.reduce((s, v) => s + (v.stock || 0), 0)
+        : (p.stock || 0);
+
       const lucro = p.costPrice != null ? p.price - p.costPrice : null;
       const margem = p.costPrice != null && p.costPrice > 0
         ? ((lucro / p.price) * 100).toFixed(1) : null;
@@ -92,23 +98,25 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
         qtdVendida: sale.qtdVendida,
         receitaVendas: sale.receitaVendas,
         lucroVendas,
+        estoqueEfetivo,
       };
     });
 
     const comCusto = data.filter(p => p.costPrice != null);
-    const totalCusto = comCusto.reduce((s, p) => s + p.costPrice * p.stock, 0);
-    const totalReceita = comCusto.reduce((s, p) => s + p.price * p.stock, 0);
+    const totalCusto = comCusto.reduce((s, p) => s + p.costPrice * p.estoqueEfetivo, 0);
+    const totalReceita = comCusto.reduce((s, p) => s + p.price * p.estoqueEfetivo, 0);
     const totalLucro = totalReceita - totalCusto;
     const margemMedia = comCusto.length > 0
       ? (comCusto.reduce((s, p) => s + p.margem, 0) / comCusto.length).toFixed(1) : null;
     const totalReceitaReal = ordersRevenue._sum.total || 0;
     const totalLucroReal = comCusto.reduce((s, p) => s + (p.lucroVendas ?? 0), 0);
+    const totalVendaEstoque = data.reduce((s, p) => s + p.price * p.estoqueEfetivo, 0);
 
     res.json({
       products: data,
       totalProdutos: data.length,
       totalCusto, totalReceita, totalLucro, margemMedia,
-      totalReceitaReal, totalLucroReal,
+      totalReceitaReal, totalLucroReal, totalVendaEstoque,
     });
   } catch {
     res.status(500).json({ error: 'Erro ao buscar dados financeiros' });
@@ -285,6 +293,35 @@ router.patch('/:id/toggle', adminMiddleware, async (req, res) => {
     res.json(updated);
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar produto' });
+  }
+});
+
+router.post('/admin/bulk', adminMiddleware, async (req, res) => {
+  const { ids, action } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0)
+    return res.status(400).json({ error: 'Nenhum produto selecionado' });
+  if (!['activate', 'deactivate', 'delete'].includes(action))
+    return res.status(400).json({ error: 'Ação inválida' });
+
+  try {
+    if (action === 'activate') {
+      await prisma.product.updateMany({ where: { id: { in: ids } }, data: { active: true } });
+    } else if (action === 'deactivate') {
+      await prisma.product.updateMany({ where: { id: { in: ids } }, data: { active: false } });
+    } else {
+      for (const id of ids) {
+        await prisma.cart.deleteMany({ where: { productId: id } });
+        await prisma.wishlist.deleteMany({ where: { productId: id } });
+        await prisma.review.deleteMany({ where: { productId: id } });
+        await prisma.orderItem.deleteMany({ where: { productId: id } });
+        await prisma.productVariant.deleteMany({ where: { productId: id } });
+      }
+      await prisma.product.deleteMany({ where: { id: { in: ids } } });
+    }
+    res.json({ affected: ids.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro na ação em massa' });
   }
 });
 

@@ -91,6 +91,43 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
+router.get('/dashboard/chart', async (req, res) => {
+  const days = Math.min(Number(req.query.days) || 30, 90);
+  const paidStatuses = ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
+
+  const since = new Date();
+  since.setDate(since.getDate() - days + 1);
+  since.setHours(0, 0, 0, 0);
+
+  try {
+    const orders = await prisma.order.findMany({
+      where: { status: { in: paidStatuses }, createdAt: { gte: since } },
+      select: { total: true, createdAt: true },
+    });
+
+    const buckets = {};
+    for (let i = 0; i < days; i++) {
+      const d = new Date(since);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      buckets[key] = { date: key, revenue: 0, orders: 0 };
+    }
+
+    for (const o of orders) {
+      const key = new Date(o.createdAt).toISOString().slice(0, 10);
+      if (buckets[key]) {
+        buckets[key].revenue += Number(o.total);
+        buckets[key].orders += 1;
+      }
+    }
+
+    res.json(Object.values(buckets));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar gráfico' });
+  }
+});
+
 router.get('/users', async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
