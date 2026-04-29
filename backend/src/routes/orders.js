@@ -39,6 +39,13 @@ router.post('/', authMiddleware, async (req, res) => {
             ? subtotal * (coupon.discount / 100)
             : coupon.discount;
           await prisma.coupon.update({ where: { code: couponCode }, data: { usedCount: { increment: 1 } } });
+          if (coupon.onePerUser) {
+            await prisma.couponUsage.upsert({
+              where: { couponId_userId: { couponId: coupon.id, userId: req.user.id } },
+              create: { couponId: coupon.id, userId: req.user.id },
+              update: {},
+            });
+          }
         }
       }
     }

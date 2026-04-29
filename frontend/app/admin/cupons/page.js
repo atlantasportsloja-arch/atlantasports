@@ -4,7 +4,7 @@ import { Plus, Trash2, Edit2, Copy, Check, X, Loader2, AlertTriangle } from 'luc
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
-const EMPTY = { code: '', discount: '', type: 'percentage', minValue: '0', maxUses: '', expiresAt: '' };
+const EMPTY = { code: '', discount: '', type: 'percentage', minValue: '0', maxUses: '', expiresAt: '', onePerUser: false };
 
 function couponStatus(c) {
   if (c.expiresAt && new Date() > new Date(c.expiresAt)) return 'expired';
@@ -68,6 +68,7 @@ function CouponForm({ initial = EMPTY, onSubmit, onCancel, saving, title }) {
       minValue: Number(form.minValue) || 0,
       maxUses: form.maxUses ? Number(form.maxUses) : null,
       expiresAt: form.expiresAt || null,
+      onePerUser: Boolean(form.onePerUser),
     });
   }
 
@@ -108,6 +109,20 @@ function CouponForm({ initial = EMPTY, onSubmit, onCancel, saving, title }) {
         <div>
           <label className="block text-sm font-medium mb-1">Data de expiração <span className="text-gray-400 font-normal">(opcional)</span></label>
           <input className="input" type="date" value={form.expiresAt ? form.expiresAt.slice(0, 10) : ''} onChange={f('expiresAt')} />
+        </div>
+        <div className="col-span-2">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => setForm(prev => ({ ...prev, onePerUser: !prev.onePerUser }))}
+              className={`w-10 h-5 rounded-full transition-colors flex items-center px-0.5 ${form.onePerUser ? 'bg-primary-500' : 'bg-gray-300'}`}
+            >
+              <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${form.onePerUser ? 'translate-x-5' : 'translate-x-0'}`} />
+            </div>
+            <span className="text-sm font-medium">
+              Limitar 1 uso por usuário
+            </span>
+          </label>
+          <p className="text-xs text-gray-400 mt-1 ml-[52px]">Cada cliente só poderá usar este cupom uma vez</p>
         </div>
         <div className="col-span-2 flex gap-3">
           <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
@@ -261,6 +276,7 @@ export default function AdminCupons() {
                     minValue: String(c.minValue),
                     maxUses: c.maxUses ? String(c.maxUses) : '',
                     expiresAt: c.expiresAt ? c.expiresAt.slice(0, 10) : '',
+                    onePerUser: c.onePerUser || false,
                   }}
                   saving={saving}
                   onSubmit={(payload) => update(c.id, payload)}
@@ -291,6 +307,13 @@ export default function AdminCupons() {
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${cfg.color}`}>
                     {cfg.label}
                   </span>
+
+                  {/* Badge 1 por usuário */}
+                  {c.onePerUser && (
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 text-purple-700">
+                      1 por usuário
+                    </span>
+                  )}
 
                   {/* Alerta expirando */}
                   {expiring !== null && (

@@ -17,6 +17,13 @@ router.post('/validate', authMiddleware, async (req, res) => {
     if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) return res.status(400).json({ error: 'Cupom esgotado' });
     if (subtotal < coupon.minValue) return res.status(400).json({ error: `Valor mínimo: R$ ${coupon.minValue}` });
 
+    if (coupon.onePerUser) {
+      const alreadyUsed = await prisma.couponUsage.findUnique({
+        where: { couponId_userId: { couponId: coupon.id, userId: req.user.id } },
+      });
+      if (alreadyUsed) return res.status(400).json({ error: 'Você já usou este cupom' });
+    }
+
     const discount = coupon.type === 'percentage'
       ? subtotal * (coupon.discount / 100)
       : coupon.discount;
