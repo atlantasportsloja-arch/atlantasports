@@ -13,7 +13,7 @@ const DEFAULT_CONFIG = {
 
 const CATEGORY_ICON = {
   masculino: '👨', feminino: '👩', infantil: '👦', calcados: '👟',
-  esporte: '⚽', acessorio: '🎒', promocao: '🏷️', 'atlanta-sports': '🏆',
+  esporte: '⚽', acessorio: '🎒', promocao: '🏷️', encomenda: '✈️',
 };
 
 const API = process.env.NEXT_PUBLIC_API_URL;
