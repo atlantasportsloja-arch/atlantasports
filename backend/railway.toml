@@ -1,5 +1,0 @@
-[build]
-buildCommand = "npm install && npx prisma db push --skip-generate"
-
-[deploy]
-startCommand = "node src/server.js"
