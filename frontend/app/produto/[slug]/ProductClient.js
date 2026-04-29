@@ -2,12 +2,14 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Star, Truck, RotateCcw, Shield, ChevronRight, Loader2, Heart } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ShoppingCart, Star, Truck, RotateCcw, Shield, ChevronRight, Loader2, Heart, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
 import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
 import { sortSizes } from '@/lib/sortSizes';
+import ProductCard from '@/components/ProductCard';
 
 function ProductSkeleton() {
   return (
@@ -111,20 +113,31 @@ function ReviewForm({ productId, onReviewSaved }) {
 }
 
 export default function ProdutoPage({ params }) {
+  const router = useRouter();
   const { token } = useAuthStore();
   const { setCart } = useCartStore();
   const { pixDiscount } = useConfig();
   const [product, setProduct] = useState(null);
+  const [related, setRelated] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [selectedSize, setSelectedSize] = useState(null);
   const [imgErrors, setImgErrors] = useState({});
 
   useEffect(() => {
-    api.get(`/products/${params.slug}`).then(r => setProduct(r.data)).catch(() => {});
+    api.get(`/products/${params.slug}`).then(r => {
+      setProduct(r.data);
+      const cat = r.data.categories?.[0]?.slug;
+      if (cat) {
+        api.get(`/products?category=${cat}&limit=9`).then(res => {
+          setRelated(res.data.products.filter(p => p.slug !== params.slug).slice(0, 4));
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }, [params.slug]);
 
   useEffect(() => {
@@ -156,6 +169,21 @@ export default function ProdutoPage({ params }) {
       toast.error('Erro ao adicionar ao carrinho');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function buyNow() {
+    if (!token) { toast.error('Faça login para continuar'); return; }
+    if (hasVariants && !selectedSize) { toast.error('Selecione um tamanho'); return; }
+    setBuyingNow(true);
+    try {
+      await api.post('/cart', { productId: product.id, variantId: selectedVariant?.id || null, quantity });
+      const { data } = await api.get('/cart');
+      setCart(data.items, data.total);
+      router.push('/checkout');
+    } catch {
+      toast.error('Erro ao processar');
+      setBuyingNow(false);
     }
   }
 
@@ -344,30 +372,41 @@ export default function ProdutoPage({ params }) {
             {lowStock && <span className="text-xs text-orange-500 font-semibold">⚠️ Apenas {effectiveStock} em estoque</span>}
           </div>
 
-          <div className="flex gap-3">
+          <div className="space-y-2">
             <button
-              onClick={addToCart}
-              disabled={loading}
-              className="btn-primary flex-1 flex items-center justify-center gap-2 py-4 text-base"
+              onClick={buyNow}
+              disabled={buyingNow || outOfStock}
+              className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold rounded-xl bg-gray-900 hover:bg-gray-800 text-white transition-colors disabled:opacity-50"
             >
-              {loading
-                ? <><Loader2 size={20} className="animate-spin" /> Adicionando...</>
-                : <><ShoppingCart size={20} /> Adicionar ao carrinho</>
+              {buyingNow
+                ? <><Loader2 size={20} className="animate-spin" /> Processando...</>
+                : <><Zap size={20} /> Comprar agora</>
               }
             </button>
-
-            <button
-              onClick={toggleWishlist}
-              disabled={wishlistLoading}
-              className={`p-4 rounded-lg border-2 transition-all ${
-                wishlisted
-                  ? 'border-red-400 bg-red-50 text-red-500'
-                  : 'border-gray-300 text-gray-400 hover:border-red-300 hover:text-red-400'
-              }`}
-              title={wishlisted ? 'Remover da lista de desejos' : 'Salvar na lista de desejos'}
-            >
-              <Heart size={22} className={wishlisted ? 'fill-current' : ''} />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={addToCart}
+                disabled={loading || outOfStock}
+                className="btn-primary flex-1 flex items-center justify-center gap-2 py-3 text-sm"
+              >
+                {loading
+                  ? <><Loader2 size={16} className="animate-spin" /> Adicionando...</>
+                  : <><ShoppingCart size={16} /> Adicionar ao carrinho</>
+                }
+              </button>
+              <button
+                onClick={toggleWishlist}
+                disabled={wishlistLoading}
+                className={`p-3 rounded-lg border-2 transition-all ${
+                  wishlisted
+                    ? 'border-red-400 bg-red-50 text-red-500'
+                    : 'border-gray-300 text-gray-400 hover:border-red-300 hover:text-red-400'
+                }`}
+                title={wishlisted ? 'Remover da lista de desejos' : 'Salvar na lista de desejos'}
+              >
+                <Heart size={20} className={wishlisted ? 'fill-current' : ''} />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -387,9 +426,42 @@ export default function ProdutoPage({ params }) {
 
       {/* AVALIAÇÕES */}
       <section className="mt-14 border-t pt-10">
-        <h2 className="text-xl font-black mb-6">
-          Avaliações{product.reviews?.length > 0 ? ` (${product.reviews.length})` : ''}
-        </h2>
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <h2 className="text-xl font-black">Avaliações</h2>
+          {product.reviews?.length > 0 && (
+            <span className="text-sm text-gray-400">{product.reviews.length} avaliações</span>
+          )}
+        </div>
+
+        {product.reviews?.length > 0 && (
+          <div className="card p-5 mb-6 flex items-center gap-8 flex-wrap">
+            <div className="text-center">
+              <p className="text-5xl font-black text-gray-900">{avgRating}</p>
+              <div className="flex justify-center mt-1">
+                {[1,2,3,4,5].map(s => (
+                  <Star key={s} size={14} className={s <= Math.round(avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} />
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">{product.reviews.length} avaliações</p>
+            </div>
+            <div className="flex-1 min-w-[160px] space-y-1.5">
+              {[5,4,3,2,1].map(star => {
+                const count = product.reviews.filter(r => r.rating === star).length;
+                const pct = product.reviews.length ? Math.round((count / product.reviews.length) * 100) : 0;
+                return (
+                  <div key={star} className="flex items-center gap-2 text-xs">
+                    <span className="w-3 text-gray-500">{star}</span>
+                    <Star size={10} className="fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="w-6 text-gray-400 text-right">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
@@ -401,7 +473,14 @@ export default function ProdutoPage({ params }) {
                       {(r.user.name?.[0] || '?').toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">{r.user.name}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-sm truncate">{r.user.name}</p>
+                        {r.createdAt && (
+                          <span className="text-xs text-gray-400 flex-shrink-0">
+                            {new Date(r.createdAt).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                      </div>
                       <div className="flex">
                         {[1,2,3,4,5].map(s => (
                           <Star key={s} size={11} className={s <= r.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} />
@@ -423,6 +502,16 @@ export default function ProdutoPage({ params }) {
           <ReviewForm productId={product.id} onReviewSaved={handleReviewSaved} />
         </div>
       </section>
+
+      {/* PRODUTOS RELACIONADOS */}
+      {related.length > 0 && (
+        <section className="mt-14 border-t pt-10">
+          <h2 className="text-xl font-black mb-6">Você também pode gostar</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {related.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
