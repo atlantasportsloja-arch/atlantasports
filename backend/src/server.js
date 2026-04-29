@@ -68,6 +68,7 @@ async function migrate() {
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "freeShippingThreshold" FLOAT DEFAULT 299`);
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "shippingZones" JSONB DEFAULT '[]'`);
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "banners" TEXT[] DEFAULT '{}'`);
+  await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "footerLinks" JSONB DEFAULT '[]'`);
 }
 
 migrate().then(() => {

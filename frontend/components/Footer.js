@@ -35,12 +35,18 @@ export default function Footer() {
             </a>
           )}
         </div>
-        <div>
-          <p className="text-white font-semibold mb-3">Loja</p>
-          <ul className="space-y-2 text-sm">
-            <li><Link href="/categoria/encomenda" className="hover:text-white">✈️ Encomenda</Link></li>
-          </ul>
-        </div>
+        {config.footerLinks?.length > 0 && (
+          <div>
+            <p className="text-white font-semibold mb-3">Loja</p>
+            <ul className="space-y-2 text-sm">
+              {config.footerLinks.map((l, i) => (
+                <li key={i}>
+                  <Link href={l.url} className="hover:text-white">{l.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div>
           <p className="text-white font-semibold mb-3">Conta</p>
           <ul className="space-y-2 text-sm">

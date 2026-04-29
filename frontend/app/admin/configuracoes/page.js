@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Save, ImagePlus, Trash2, RefreshCw } from 'lucide-react';
+import { Save, ImagePlus, Trash2, RefreshCw, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -18,6 +18,7 @@ const DEFAULT = {
   footerHours: 'Seg–Sex 9h–18h', footerDesc: 'Equipamentos e moda esportiva de alta performance.',
   pixDiscount: 0, pixKey: '',
   banners: [],
+  footerLinks: [],
 };
 
 function Field({ label, hint, value, onChange, textarea }) {
@@ -232,6 +233,51 @@ export default function ConfiguracoesPage() {
         <Field label="WhatsApp" hint='Ex: 5511999999999 (com código do país, sem +)' value={config.whatsapp} onChange={set('whatsapp')} />
         <Field label="E-mail de atendimento" value={config.footerEmail} onChange={set('footerEmail')} />
         <Field label="Horário de atendimento" value={config.footerHours} onChange={set('footerHours')} />
+      </Section>
+
+      {/* LINKS DO RODAPÉ */}
+      <Section title="🔗 Links da seção Loja no Rodapé">
+        <p className="text-xs text-gray-400 -mt-2">Esses links aparecem na coluna "Loja" do rodapé da loja.</p>
+        <div className="space-y-2">
+          {(config.footerLinks || []).map((link, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <input
+                className="input flex-1"
+                placeholder="Texto (ex: ✈️ Encomenda)"
+                value={link.label}
+                onChange={e => {
+                  const links = [...(config.footerLinks || [])];
+                  links[i] = { ...links[i], label: e.target.value };
+                  setConfig(c => ({ ...c, footerLinks: links }));
+                }}
+              />
+              <input
+                className="input flex-1"
+                placeholder="URL (ex: /categoria/encomenda)"
+                value={link.url}
+                onChange={e => {
+                  const links = [...(config.footerLinks || [])];
+                  links[i] = { ...links[i], url: e.target.value };
+                  setConfig(c => ({ ...c, footerLinks: links }));
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setConfig(c => ({ ...c, footerLinks: (c.footerLinks || []).filter((_, j) => j !== i) }))}
+                className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setConfig(c => ({ ...c, footerLinks: [...(c.footerLinks || []), { label: '', url: '' }] }))}
+            className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600 font-semibold"
+          >
+            <Plus size={15} /> Adicionar link
+          </button>
+        </div>
       </Section>
 
       <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2 w-full justify-center">
