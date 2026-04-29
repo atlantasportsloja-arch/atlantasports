@@ -65,6 +65,7 @@ export default function Footer() {
                 </a>
               </li>
             )}
+            <li><Link href="/termos" className="hover:text-white">Termos de Uso</Link></li>
           </ul>
         </div>
       </div>
