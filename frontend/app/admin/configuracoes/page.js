@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Save, ImagePlus, Trash2, Upload } from 'lucide-react';
+import { Save, ImagePlus, Trash2, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -101,6 +101,17 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  async function restoreBanners() {
+    if (!confirm('Restaurar banners do Cloudinary? Isso recupera todas as imagens já enviadas.')) return;
+    try {
+      const { data } = await api.post('/config/banner/restore');
+      setConfig(c => ({ ...c, banners: data.banners }));
+      toast.success(`${data.restored} banner(s) restaurado(s)!`);
+    } catch {
+      toast.error('Erro ao restaurar banners');
+    }
+  }
+
   return (
     <form onSubmit={save} className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
@@ -148,7 +159,12 @@ export default function ConfiguracoesPage() {
 
       {/* BANNERS */}
       <Section title="🖼️ Banners de Promoção">
-        <p className="text-xs text-gray-400 -mt-2">Aparecem em carrossel automático na home. Tamanho ideal: <span className="font-semibold text-gray-600">1400 × 500px</span></p>
+        <div className="flex items-center justify-between -mt-2 flex-wrap gap-2">
+          <p className="text-xs text-gray-400">Aparecem em carrossel automático na home. Tamanho ideal: <span className="font-semibold text-gray-600">1400 × 500px</span></p>
+          <button type="button" onClick={restoreBanners} className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-semibold border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+            <RefreshCw size={13} /> Restaurar do Cloudinary
+          </button>
+        </div>
         <div className="space-y-3">
           {config.banners?.map((url, i) => (
             <div key={i} className="relative rounded-xl overflow-hidden border border-gray-200 group">

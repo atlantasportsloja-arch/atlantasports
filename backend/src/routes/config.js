@@ -111,4 +111,20 @@ router.delete('/banner', adminMiddleware, async (req, res) => {
   }
 });
 
+router.post('/banner/restore', adminMiddleware, async (req, res) => {
+  try {
+    const result = await cloudinary.api.resources({
+      type: 'upload',
+      prefix: 'atlanta-sports/banners',
+      max_results: 50,
+    });
+    const urls = result.resources.map(r => r.secure_url);
+    await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${urls}, "updatedAt" = NOW() WHERE id = 'default'`;
+    res.json({ restored: urls.length, banners: urls });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao restaurar banners' });
+  }
+});
+
 module.exports = router;
