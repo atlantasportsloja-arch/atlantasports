@@ -72,7 +72,7 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
         where: { order: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } } },
       }),
       prisma.order.aggregate({
-        _sum: { total: true },
+        _sum: { total: true, shippingCost: true },
         where: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } },
       }),
     ]);
@@ -108,7 +108,7 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
     const totalLucro = totalReceita - totalCusto;
     const margemMedia = comCusto.length > 0
       ? (comCusto.reduce((s, p) => s + p.margem, 0) / comCusto.length).toFixed(1) : null;
-    const totalReceitaReal = ordersRevenue._sum.total || 0;
+    const totalReceitaReal = (ordersRevenue._sum.total || 0) - (ordersRevenue._sum.shippingCost || 0);
     const totalLucroReal = comCusto.reduce((s, p) => s + (p.lucroVendas ?? 0), 0);
     const totalVendaEstoque = data.reduce((s, p) => s + p.price * p.estoqueEfetivo, 0);
 

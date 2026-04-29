@@ -31,7 +31,7 @@ router.get('/dashboard', async (req, res) => {
       revenueLastMonth,
     ] = await Promise.all([
       prisma.order.count(),
-      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: paidStatuses } } }),
+      prisma.order.aggregate({ _sum: { total: true, shippingCost: true }, where: { status: { in: paidStatuses } } }),
       prisma.product.count({ where: { active: true } }),
       prisma.user.count({ where: { role: 'CUSTOMER' } }),
       prisma.order.count({ where: { status: 'PENDING' } }),
@@ -53,10 +53,10 @@ router.get('/dashboard', async (req, res) => {
         take: 10,
       }),
       prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
-      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfToday } } }),
+      prisma.order.aggregate({ _sum: { total: true, shippingCost: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfToday } } }),
       prisma.order.count({ where: { createdAt: { gte: startOfMonth } } }),
-      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfMonth } } }),
-      prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } } }),
+      prisma.order.aggregate({ _sum: { total: true, shippingCost: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfMonth } } }),
+      prisma.order.aggregate({ _sum: { total: true, shippingCost: true }, where: { status: { in: paidStatuses }, createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } } }),
     ]);
 
     const topProductIds = topProducts.map(p => p.productId);
@@ -72,7 +72,7 @@ router.get('/dashboard', async (req, res) => {
 
     res.json({
       totalOrders,
-      totalRevenue: totalRevenue._sum.total || 0,
+      totalRevenue: (totalRevenue._sum.total || 0) - (totalRevenue._sum.shippingCost || 0),
       totalProducts,
       totalUsers,
       pendingOrders,
@@ -80,10 +80,10 @@ router.get('/dashboard', async (req, res) => {
       topProducts: topProductsWithDetails,
       lowStockProducts,
       ordersToday,
-      revenueToday: revenueToday._sum.total || 0,
+      revenueToday: (revenueToday._sum.total || 0) - (revenueToday._sum.shippingCost || 0),
       ordersThisMonth,
-      revenueThisMonth: revenueThisMonth._sum.total || 0,
-      revenueLastMonth: revenueLastMonth._sum.total || 0,
+      revenueThisMonth: (revenueThisMonth._sum.total || 0) - (revenueThisMonth._sum.shippingCost || 0),
+      revenueLastMonth: (revenueLastMonth._sum.total || 0) - (revenueLastMonth._sum.shippingCost || 0),
     });
   } catch (err) {
     console.error(err);
@@ -102,7 +102,7 @@ router.get('/dashboard/chart', async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: { status: { in: paidStatuses }, createdAt: { gte: since } },
-      select: { total: true, createdAt: true },
+      select: { total: true, shippingCost: true, createdAt: true },
     });
 
     const buckets = {};
@@ -116,7 +116,7 @@ router.get('/dashboard/chart', async (req, res) => {
     for (const o of orders) {
       const key = new Date(o.createdAt).toISOString().slice(0, 10);
       if (buckets[key]) {
-        buckets[key].revenue += Number(o.total);
+        buckets[key].revenue += Number(o.total) - Number(o.shippingCost || 0);
         buckets[key].orders += 1;
       }
     }
