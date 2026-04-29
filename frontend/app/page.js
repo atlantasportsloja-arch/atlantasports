@@ -107,7 +107,7 @@ export default async function HomePage() {
       {/* WHATSAPP FLUTUANTE */}
       {config.whatsapp && (
         <a
-          href={`https://wa.me/${config.whatsapp}`}
+          href={`https://wa.me/${config.whatsapp}?text=${encodeURIComponent('Olá Atlanta Sports\nVim do site e preciso tirar uma dúvida. Poderia me ajudar?')}`}
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-xl hover:bg-green-600 hover:scale-105 transition-all z-50 text-2xl"
