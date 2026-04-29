@@ -232,7 +232,6 @@ router.put('/:id', adminMiddleware, async (req, res) => {
     if (price !== undefined) data.price = Number(price);
     if (comparePrice !== undefined) data.comparePrice = comparePrice ? Number(comparePrice) : null;
     if (costPrice !== undefined) data.costPrice = costPrice ? Number(costPrice) : null;
-    if (stock !== undefined) data.stock = Number(stock);
     if (images !== undefined) data.images = images;
     if (active !== undefined) data.active = active;
     if (availability !== undefined) data.availability = availability;
@@ -240,6 +239,10 @@ router.put('/:id', adminMiddleware, async (req, res) => {
     if (categoryIds !== undefined) {
       data.categories = { set: categoryIds.map(id => ({ id })) };
     }
+
+    const variantCount = await prisma.productVariant.count({ where: { productId: req.params.id, active: true } });
+    data.stock = variantCount > 0 ? 0 : (stock !== undefined ? Number(stock) : undefined);
+    if (data.stock === undefined) delete data.stock;
 
     const product = await prisma.product.update({
       where: { id: req.params.id },
@@ -249,6 +252,22 @@ router.put('/:id', adminMiddleware, async (req, res) => {
     res.json(product);
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar produto' });
+  }
+});
+
+router.post('/admin/migrate-stock', adminMiddleware, async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      where: { stock: { gt: 0 } },
+      select: { id: true, _count: { select: { variants: { where: { active: true } } } } },
+    });
+    const toZero = products.filter(p => p._count.variants > 0).map(p => p.id);
+    if (toZero.length > 0) {
+      await prisma.product.updateMany({ where: { id: { in: toZero } }, data: { stock: 0 } });
+    }
+    res.json({ updated: toZero.length });
+  } catch {
+    res.status(500).json({ error: 'Erro na migração' });
   }
 });
 
