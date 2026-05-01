@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const adminMiddleware = require('../middleware/admin');
+const { runBackup, loadStatus } = require('../jobs/backupJob');
 
 const router = express.Router();
 
@@ -129,18 +130,28 @@ router.get('/dashboard/chart', async (req, res) => {
 });
 
 router.get('/users', async (req, res) => {
-  const { page = 1, limit = 20 } = req.query;
+  const { page = 1, limit = 20, search = '' } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
+  const where = search.trim()
+    ? { OR: [
+        { name: { contains: search.trim(), mode: 'insensitive' } },
+        { email: { contains: search.trim(), mode: 'insensitive' } },
+      ] }
+    : {};
 
   try {
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         skip,
         take: Number(limit),
-        select: { id: true, name: true, email: true, role: true, phone: true, createdAt: true },
+        where,
+        select: {
+          id: true, name: true, email: true, role: true, phone: true, createdAt: true,
+          _count: { select: { orders: true } },
+        },
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.user.count(),
+      prisma.user.count({ where }),
     ]);
     res.json({ users, total });
   } catch {
@@ -161,6 +172,19 @@ router.put('/users/:id/role', async (req, res) => {
     res.json(user);
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+});
+
+router.get('/backup/status', (req, res) => {
+  res.json(loadStatus());
+});
+
+router.post('/backup', async (req, res) => {
+  try {
+    const status = await runBackup();
+    res.json({ ok: true, ...status });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao realizar backup: ' + err.message });
   }
 });
 

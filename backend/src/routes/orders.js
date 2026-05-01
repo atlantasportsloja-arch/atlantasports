@@ -148,35 +148,109 @@ router.get('/:id', authMiddleware, async (req, res) => {
 });
 
 router.get('/admin/all', adminMiddleware, async (req, res) => {
-  const { status, page = 1, limit = 20 } = req.query;
+  const { status, page = 1, limit = 20, dateFrom, dateTo, userId } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
-  const where = status ? { status } : {};
+  const where = {};
+  if (status) where.status = status;
+  if (userId) where.userId = userId;
+  if (dateFrom || dateTo) {
+    where.createdAt = {};
+    if (dateFrom) where.createdAt.gte = new Date(dateFrom);
+    if (dateTo) {
+      const end = new Date(dateTo);
+      end.setHours(23, 59, 59, 999);
+      where.createdAt.lte = end;
+    }
+  }
 
   try {
-    const [orders, total] = await Promise.all([
+    const [ordersRaw, total] = await Promise.all([
       prisma.order.findMany({
         where,
         include: { user: { select: { name: true, email: true } }, items: { include: { product: { select: { name: true } }, variant: { select: { size: true, color: true } } } } },
-        orderBy: { orderNumber: 'asc' },
+        orderBy: [{ createdAt: 'desc' }],
         skip,
         take: Number(limit),
       }),
       prisma.order.count({ where }),
     ]);
+    const orders = ordersRaw.sort((a, b) => {
+      if (a.orderNumber == null && b.orderNumber == null) return 0;
+      if (a.orderNumber == null) return 1;
+      if (b.orderNumber == null) return -1;
+      return b.orderNumber - a.orderNumber;
+    });
+
+    // Inclui adminNote (coluna fora do schema Prisma)
+    if (orders.length > 0) {
+      const ids = orders.map(o => o.id);
+      const notes = await prisma.$queryRaw`SELECT id, "adminNote" FROM orders WHERE id = ANY(${ids}::uuid[])`;
+      const noteMap = Object.fromEntries(notes.map(n => [n.id, n.adminNote || '']));
+      orders.forEach(o => { o.adminNote = noteMap[o.id] ?? ''; });
+    }
+
     res.json({ orders, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
   } catch {
     res.status(500).json({ error: 'Erro ao buscar pedidos' });
   }
 });
 
+router.put('/admin/:id/tracking', adminMiddleware, async (req, res) => {
+  const { trackingCode } = req.body;
+  try {
+    await prisma.order.update({
+      where: { id: req.params.id },
+      data: { trackingCode: trackingCode || null },
+    });
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Erro ao salvar rastreio' });
+  }
+});
+
+router.put('/admin/:id/note', adminMiddleware, async (req, res) => {
+  const { note } = req.body;
+  try {
+    await prisma.$executeRaw`UPDATE orders SET "adminNote" = ${note || ''} WHERE id = ${req.params.id}::uuid`;
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Erro ao salvar nota' });
+  }
+});
+
 router.put('/admin/:id/status', adminMiddleware, async (req, res) => {
   const { status, trackingCode } = req.body;
   try {
+    const current = await prisma.order.findUnique({
+      where: { id: req.params.id },
+      include: { items: true },
+    });
+    if (!current) return res.status(404).json({ error: 'Pedido não encontrado' });
+
     const order = await prisma.order.update({
       where: { id: req.params.id },
       data: { status, ...(trackingCode && { trackingCode }) },
       include: { user: true, items: { include: { product: true, variant: true } } },
     });
+
+    // Restaura estoque ao cancelar (apenas se não estava cancelado antes)
+    if (status === 'CANCELLED' && current.status !== 'CANCELLED') {
+      for (const item of current.items) {
+        if (item.variantId) {
+          await prisma.productVariant.update({
+            where: { id: item.variantId },
+            data: { stock: { increment: item.quantity } },
+          }).catch(() => {});
+        } else {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          }).catch(() => {});
+        }
+      }
+      console.log(`[Orders] Estoque restaurado para pedido cancelado #${current.orderNumber ?? current.id.slice(0, 8)}`);
+    }
+
     res.json(order);
 
     // E-mail de envio com rastreio

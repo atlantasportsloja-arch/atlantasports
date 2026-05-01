@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/auth');
+const adminMiddleware = require('../middleware/admin');
 
 const router = express.Router();
 
@@ -58,6 +59,15 @@ router.delete('/:productId', authMiddleware, async (req, res) => {
     await prisma.review.delete({
       where: { userId_productId: { userId: req.user.id, productId: req.params.productId } },
     });
+    res.json({ message: 'Avaliação removida' });
+  } catch {
+    res.status(500).json({ error: 'Erro ao remover avaliação' });
+  }
+});
+
+router.delete('/admin/:id', adminMiddleware, async (req, res) => {
+  try {
+    await prisma.review.delete({ where: { id: req.params.id } });
     res.json({ message: 'Avaliação removida' });
   } catch {
     res.status(500).json({ error: 'Erro ao remover avaliação' });

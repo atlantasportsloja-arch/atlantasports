@@ -8,7 +8,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendMail({ to, subject, html }) {
+async function sendMail({ to, subject, html, attachments }) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.log('[Mailer] E-mail não configurado, pulando envio para:', to);
     return;
@@ -18,6 +18,7 @@ async function sendMail({ to, subject, html }) {
     to,
     subject,
     html,
+    ...(attachments ? { attachments } : {}),
   });
 }
 

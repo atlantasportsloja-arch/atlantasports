@@ -1,13 +1,95 @@
 'use client';
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Truck, Loader2, Search, X, Mail } from 'lucide-react';
+import { Truck, Loader2, Search, X, Mail, Download, StickyNote, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
 const STATUS_OPTIONS = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 const STATUS_LABEL = { PENDING: 'Pendente', PAID: 'Pago', PROCESSING: 'Processando', SHIPPED: 'Enviado', DELIVERED: 'Entregue', CANCELLED: 'Cancelado' };
 const STATUS_COLOR = { PENDING: 'bg-yellow-100 text-yellow-700', PAID: 'bg-blue-100 text-blue-700', PROCESSING: 'bg-purple-100 text-purple-700', SHIPPED: 'bg-orange-100 text-orange-700', DELIVERED: 'bg-green-100 text-green-700', CANCELLED: 'bg-red-100 text-red-700' };
+
+function TrackingField({ orderId, initialCode }) {
+  const [code, setCode] = useState(initialCode);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await api.put(`/orders/admin/${orderId}/tracking`, { trackingCode: code });
+      toast.success('Código de rastreio atualizado');
+    } catch {
+      toast.error('Erro ao salvar rastreio');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t" onClick={e => e.stopPropagation()}>
+      <p className="text-xs font-semibold text-gray-500 flex items-center gap-1 mb-1.5">
+        <Truck size={12} /> Código de rastreio
+      </p>
+      <div className="flex gap-2">
+        <input
+          className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-1.5 font-mono focus:outline-none focus:ring-1 focus:ring-primary-500 bg-gray-50"
+          placeholder="Ex: BR123456789BR"
+          value={code}
+          onChange={e => setCode(e.target.value.toUpperCase())}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); save(); } }}
+        />
+        <button
+          onClick={save}
+          disabled={saving || code === initialCode}
+          className="shrink-0 text-xs bg-orange-500 hover:bg-orange-600 text-white px-3 rounded-lg disabled:opacity-40 transition-colors"
+        >
+          {saving ? <Loader2 size={12} className="animate-spin" /> : 'Salvar'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NoteField({ orderId, initialNote }) {
+  const [note, setNote] = useState(initialNote);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await api.put(`/orders/admin/${orderId}/note`, { note });
+      toast.success('Nota salva');
+    } catch {
+      toast.error('Erro ao salvar nota');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t" onClick={e => e.stopPropagation()}>
+      <p className="text-xs font-semibold text-gray-500 flex items-center gap-1 mb-1.5">
+        <StickyNote size={12} /> Nota interna (visível só para admins)
+      </p>
+      <div className="flex gap-2">
+        <textarea
+          className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary-500 bg-yellow-50"
+          rows={2}
+          placeholder="Ex: cliente ligou pedindo troca, aguardar contato..."
+          value={note}
+          onChange={e => setNote(e.target.value)}
+        />
+        <button
+          onClick={save}
+          disabled={saving || note === initialNote}
+          className="shrink-0 text-xs bg-gray-800 hover:bg-gray-700 text-white px-3 rounded-lg disabled:opacity-40 transition-colors"
+        >
+          {saving ? <Loader2 size={12} className="animate-spin" /> : 'Salvar'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function TrackingModal({ order, onClose, onSave }) {
   const [code, setCode] = useState(order.trackingCode || '');
@@ -57,17 +139,35 @@ function AdminPedidosInner() {
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState(searchParams.get('status') || '');
   const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [trackingModal, setTrackingModal] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const PAGE_SIZE = 30;
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { setPage(1); }, [filter, dateFrom, dateTo]);
+  useEffect(() => { load(); }, [filter, dateFrom, dateTo, page]);
 
   async function load() {
     setLoading(true);
     try {
-      const { data } = await api.get('/orders/admin/all', { params: { status: filter || undefined, limit: 50 } });
-      setOrders(data.orders);
+      const { data } = await api.get('/orders/admin/all', {
+        params: {
+          status: filter || undefined,
+          dateFrom: dateFrom || undefined,
+          dateTo: dateTo || undefined,
+          limit: PAGE_SIZE,
+          page,
+        },
+      });
+      const sorted = [...(data.orders || [])].sort((a, b) => (b.orderNumber ?? 0) - (a.orderNumber ?? 0));
+      setOrders(sorted);
+      setTotalPages(data.pages || 1);
+      setTotalOrders(data.total || 0);
     } catch {
       toast.error('Erro ao carregar pedidos');
     } finally {
@@ -94,15 +194,52 @@ function AdminPedidosInner() {
     }
   }
 
+  function exportCSV() {
+    const rows = [
+      ['Nº Pedido', 'Cliente', 'E-mail', 'Total (R$)', 'Frete (R$)', 'Status', 'Pagamento', 'Rastreio', 'Data', 'Itens', 'Endereço'],
+    ];
+    filtered.forEach(o => {
+      const addr = o.shippingAddress
+        ? `${o.shippingAddress.street}, ${o.shippingAddress.number} - ${o.shippingAddress.city}/${o.shippingAddress.state} CEP ${o.shippingAddress.zip}`
+        : '';
+      const items = o.items.map(i => `${i.product?.name || ''}${i.variant?.size ? ` (${i.variant.size})` : ''} x${i.quantity}`).join(' | ');
+      rows.push([
+        `#${o.orderNumber ?? o.id.slice(0, 8).toUpperCase()}`,
+        o.user.name,
+        o.user.email,
+        o.total.toFixed(2).replace('.', ','),
+        (o.shippingCost || 0).toFixed(2).replace('.', ','),
+        STATUS_LABEL[o.status],
+        o.paymentMethod || '',
+        o.trackingCode || '',
+        new Date(o.createdAt).toLocaleDateString('pt-BR'),
+        items,
+        addr,
+      ]);
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pedidos-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function handleStatusChange(order, newStatus) {
     if (newStatus === 'SHIPPED') {
       setTrackingModal(order);
       return;
     }
+    if (newStatus === 'CANCELLED') {
+      const num = `#${order.orderNumber ?? order.id.slice(0, 8).toUpperCase()}`;
+      if (!confirm(`Cancelar pedido ${num}?\n\nO estoque de todos os itens será restaurado automaticamente.`)) return;
+    }
     updateStatus(order.id, newStatus);
   }
 
-  const filtered = search.trim()
+  const filtered = (search.trim()
     ? orders.filter(o => {
         const q = search.toLowerCase();
         const num = String(o.orderNumber || '');
@@ -113,7 +250,8 @@ function AdminPedidosInner() {
           o.id.toLowerCase().includes(q)
         );
       })
-    : orders;
+    : orders
+  ).slice().sort((a, b) => (b.orderNumber ?? 0) - (a.orderNumber ?? 0));
 
   return (
     <div className="space-y-6">
@@ -150,7 +288,42 @@ function AdminPedidosInner() {
             <option value="">Todos os status</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
           </select>
+          <div className="flex items-center gap-1.5">
+            <input
+              type="date"
+              className="border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              title="Data inicial"
+            />
+            <span className="text-gray-400 text-xs">até</span>
+            <input
+              type="date"
+              className="border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              title="Data final"
+            />
+            {(dateFrom || dateTo) && (
+              <button
+                onClick={() => { setDateFrom(''); setDateTo(''); }}
+                className="text-gray-400 hover:text-gray-600 p-1"
+                title="Limpar datas"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
           <span className="text-sm text-gray-400">{filtered.length} pedidos</span>
+          {filtered.length > 0 && (
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+              title="Exportar lista atual como CSV"
+            >
+              <Download size={14} /> CSV
+            </button>
+          )}
         </div>
       </div>
 
@@ -225,7 +398,8 @@ function AdminPedidosInner() {
                               {o.shippingAddress.street}, {o.shippingAddress.number} — {o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}
                             </div>
                           )}
-                          <div className="mt-3 pt-3 border-t">
+                          <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
+                          <div className="mt-3 pt-3 border-t flex items-start gap-4 flex-wrap">
                             <button
                               onClick={e => { e.stopPropagation(); resendEmail(o.id); }}
                               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary-600 transition-colors"
@@ -233,6 +407,7 @@ function AdminPedidosInner() {
                               <Mail size={13} /> Reenviar e-mail de confirmação
                             </button>
                           </div>
+                          <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
                         </td>
                       </tr>
                     )}
@@ -271,6 +446,45 @@ function AdminPedidosInner() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <p className="text-sm text-gray-500">
+            Página {page} de {totalPages} — {totalOrders} pedidos no total
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={15} /> Anterior
+            </button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const p = totalPages <= 5 ? i + 1 : page <= 3 ? i + 1 : page >= totalPages - 2 ? totalPages - 4 + i : page - 2 + i;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-8 h-8 text-sm rounded-lg font-semibold transition-colors ${p === page ? 'bg-primary-500 text-white' : 'border border-gray-300 hover:bg-gray-50 text-gray-600'}`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Próxima <ChevronRight size={15} />
+            </button>
           </div>
         </div>
       )}

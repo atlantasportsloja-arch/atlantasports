@@ -8,7 +8,7 @@ import ImageUpload from '@/components/ImageUpload';
 import { sortVariants } from '@/lib/sortSizes';
 
 const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [] };
-const EMPTY_VARIANT = { size: '', stock: '' };
+const EMPTY_VARIANT = { size: '', color: '', stock: '' };
 
 function DeleteConfirm({ name, onConfirm, onCancel }) {
   return (
@@ -32,11 +32,13 @@ export default function AdminProdutos() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [variantSize, setVariantSize] = useState('');
+  const [variantColor, setVariantColor] = useState('');
   const [variantStock, setVariantStock] = useState('');
   const [savingVariant, setSavingVariant] = useState(false);
   const [editingVariants, setEditingVariants] = useState([]);
   const [selected, setSelected] = useState(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('');
 
   useEffect(() => {
     api.post('/products/admin/migrate-stock').catch(() => {});
@@ -134,24 +136,28 @@ export default function AdminProdutos() {
     setEditing(p.id);
     setEditingVariants(p.variants || []);
     setVariantSize('');
+    setVariantColor('');
     setVariantStock('');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function addNewVariantToLocal() {
-    if (!variantSize.trim()) return;
+    if (!variantSize.trim() && !variantColor.trim()) return;
     const size = variantSize.trim().toUpperCase();
+    const color = variantColor.trim();
     const stock = Number(variantStock) || 0;
-    const already = editingVariants.find(v => v.size === size);
-    if (already) { toast.error(`Tamanho ${size} já adicionado`); return; }
-    setEditingVariants(v => [...v, { id: `local-${size}`, size, stock }]);
+    const key = `${size}|${color}`;
+    const already = editingVariants.find(v => `${(v.size || '').toUpperCase()}|${v.color || ''}` === key);
+    if (already) { toast.error('Variante já adicionada'); return; }
+    setEditingVariants(v => [...v, { id: `local-${key}-${Date.now()}`, size: size || null, color: color || null, stock }]);
     setVariantSize('');
+    setVariantColor('');
     setVariantStock('');
   }
 
   async function addVariant() {
-    if (!variantSize.trim()) { toast.error('Informe o tamanho'); return; }
+    if (!variantSize.trim() && !variantColor.trim()) { toast.error('Informe ao menos tamanho ou cor'); return; }
     if (!editing) {
       addNewVariantToLocal();
       return;
@@ -159,18 +165,36 @@ export default function AdminProdutos() {
     setSavingVariant(true);
     try {
       const { data } = await api.post(`/products/${editing}/variants`, {
-        size: variantSize.trim().toUpperCase(),
+        size: variantSize.trim().toUpperCase() || null,
+        color: variantColor.trim() || null,
         stock: Number(variantStock) || 0,
       });
       setEditingVariants(v => [...v, data]);
       setProducts(ps => ps.map(p => p.id === editing ? { ...p, variants: [...(p.variants || []), data] } : p));
       setVariantSize('');
+      setVariantColor('');
       setVariantStock('');
-      toast.success('Tamanho adicionado');
+      toast.success('Variante adicionada');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao adicionar tamanho');
+      toast.error(err.response?.data?.error || 'Erro ao adicionar variante');
     } finally {
       setSavingVariant(false);
+    }
+  }
+
+  async function updateVariantField(variantId, field, rawValue) {
+    const value = rawValue === '' ? (field === 'price' ? null : 0) : Number(rawValue);
+    if (field !== 'price' && (isNaN(value) || value < 0)) return;
+    setEditingVariants(v => v.map(x => x.id === variantId ? { ...x, [field]: value } : x));
+    if (variantId.startsWith('local-')) return;
+    try {
+      await api.put(`/products/${editing}/variants/${variantId}`, { [field]: value });
+      setProducts(ps => ps.map(p => p.id === editing
+        ? { ...p, variants: (p.variants || []).map(v => v.id === variantId ? { ...v, [field]: value } : v) }
+        : p
+      ));
+    } catch {
+      toast.error('Erro ao atualizar variante');
     }
   }
 
@@ -190,7 +214,8 @@ export default function AdminProdutos() {
   }
 
   const filtered = products.filter(p =>
-    !search || p.name.toLowerCase().includes(search.toLowerCase())
+    (!search || p.name.toLowerCase().includes(search.toLowerCase())) &&
+    (!categoryFilter || (p.categories || []).some(c => c.id === categoryFilter))
   );
 
   const allSelected = filtered.length > 0 && filtered.every(p => selected.has(p.id));
@@ -242,7 +267,7 @@ export default function AdminProdutos() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-black">Produtos</h1>
         <button
-          onClick={() => { setForm(EMPTY); setEditing(null); setEditingVariants([]); setVariantSize(''); setVariantStock(''); setShowForm(!showForm); }}
+          onClick={() => { setForm(EMPTY); setEditing(null); setEditingVariants([]); setVariantSize(''); setVariantColor(''); setVariantStock(''); setShowForm(!showForm); }}
           className="btn-primary flex items-center gap-2"
         >
           <Plus size={18} /> Novo produto
@@ -279,23 +304,45 @@ export default function AdminProdutos() {
               </label>
               <input className="input border-orange-200 focus:ring-orange-400" type="number" step="0.01" min="0" value={form.costPrice} onChange={e => setForm({ ...form, costPrice: e.target.value })} placeholder="0.00" />
             </div>
-            {/* VARIAÇÕES DE TAMANHO */}
+            {/* VARIAÇÕES */}
             <div className="md:col-span-2 bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-              <h3 className="font-bold text-sm text-gray-700">Tamanhos disponíveis</h3>
+              <h3 className="font-bold text-sm text-gray-700">Variantes (tamanho e/ou cor)</h3>
 
               {editingVariants.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-2">
                     {sortVariants(editingVariants).map(v => (
-                      <div key={v.id} className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-sm">
-                        <span className="font-bold text-gray-800">{v.size}</span>
-                        <span className="text-gray-400">|</span>
-                        <span className="text-gray-600">{v.stock} un.</span>
-                        <button
-                          type="button"
-                          onClick={() => removeVariant(v.id)}
-                          className="text-red-400 hover:text-red-600 ml-1"
-                        >
+                      <div key={v.id} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-sm">
+                        {v.size && <span className="font-bold text-gray-800">{v.size}</span>}
+                        {v.size && v.color && <span className="text-gray-300">/</span>}
+                        {v.color && <span className="font-medium text-gray-700">{v.color}</span>}
+                        <span className="text-gray-300">|</span>
+                        <input
+                          type="number"
+                          min="0"
+                          title="Estoque"
+                          className="w-12 text-center text-xs font-semibold text-gray-700 border border-gray-200 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary-400 bg-gray-50"
+                          value={v.stock}
+                          onChange={e => setEditingVariants(vs => vs.map(x => x.id === v.id ? { ...x, stock: e.target.value === '' ? '' : Number(e.target.value) } : x))}
+                          onBlur={e => updateVariantField(v.id, 'stock', e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }}
+                        />
+                        <span className="text-gray-400 text-xs">un.</span>
+                        <span className="text-gray-200">|</span>
+                        <span className="text-gray-400 text-xs">R$</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          title="Preço específico desta variante (deixe vazio para usar o preço do produto)"
+                          className="w-16 text-center text-xs font-semibold text-gray-700 border border-gray-200 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary-400 bg-gray-50"
+                          value={v.price ?? ''}
+                          placeholder="padrão"
+                          onChange={e => setEditingVariants(vs => vs.map(x => x.id === v.id ? { ...x, price: e.target.value } : x))}
+                          onBlur={e => updateVariantField(v.id, 'price', e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }}
+                        />
+                        <button type="button" onClick={() => removeVariant(v.id)} className="text-red-400 hover:text-red-600 ml-1">
                           <X size={13} />
                         </button>
                       </div>
@@ -308,16 +355,24 @@ export default function AdminProdutos() {
               )}
 
               {editingVariants.length === 0 && (
-                <p className="text-xs text-gray-400">Nenhum tamanho adicionado ainda.</p>
+                <p className="text-xs text-gray-400">Nenhuma variante adicionada ainda.</p>
               )}
 
               <div className="flex gap-2 items-center flex-wrap">
                 <input
                   type="text"
-                  className="input text-sm py-2 w-32"
-                  placeholder="Tamanho (P, M, G...)"
+                  className="input text-sm py-2 w-28"
+                  placeholder="Tamanho (P, M…)"
                   value={variantSize}
                   onChange={e => setVariantSize(e.target.value.toUpperCase())}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVariant(); } }}
+                />
+                <input
+                  type="text"
+                  className="input text-sm py-2 w-28"
+                  placeholder="Cor (opcional)"
+                  value={variantColor}
+                  onChange={e => setVariantColor(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVariant(); } }}
                 />
                 <input
@@ -339,6 +394,7 @@ export default function AdminProdutos() {
                   Adicionar
                 </button>
               </div>
+              <p className="text-xs text-gray-400">Preencha tamanho, cor ou ambos. Ex: tamanho "M" + cor "Azul" = variante "M / Azul".</p>
             </div>
 
             <div>
@@ -438,6 +494,19 @@ export default function AdminProdutos() {
             </button>
           )}
         </div>
+
+        {categories.length > 0 && (
+          <select
+            className="input py-2 text-sm pr-8"
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+          >
+            <option value="">Todas as categorias</option>
+            {categories.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        )}
 
         {selected.size > 0 && (
           <div className="flex items-center gap-2 bg-primary-50 border border-primary-200 rounded-xl px-4 py-2 animate-in fade-in">

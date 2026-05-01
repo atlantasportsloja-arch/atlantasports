@@ -2,6 +2,7 @@ require('dotenv').config();
 const app = require('./app');
 const prisma = require('./lib/prisma');
 const { startReviewReminderJob } = require('./jobs/reviewReminder');
+const { startBackupJob } = require('./jobs/backupJob');
 
 const PORT = process.env.PORT || 3001;
 
@@ -69,11 +70,13 @@ async function migrate() {
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "shippingZones" JSONB DEFAULT '[]'`);
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "banners" TEXT[] DEFAULT '{}'`);
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "footerLinks" JSONB DEFAULT '[]'`);
+  await run(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS "adminNote" TEXT DEFAULT ''`);
 }
 
 migrate().then(() => {
   app.listen(PORT, () => {
     console.log(`Atlanta Sports API rodando na porta ${PORT}`);
     startReviewReminderJob();
+    startBackupJob();
   });
 });

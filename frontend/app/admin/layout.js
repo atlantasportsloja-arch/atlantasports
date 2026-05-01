@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Users, Tag, Settings, Menu, X, ChevronRight, FolderOpen, TrendingUp, MessageSquare, Truck, Bell, AlertTriangle, Clock } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Tag, Settings, Menu, X, ChevronRight, FolderOpen, TrendingUp, MessageSquare, Truck, Bell, Clock, Star } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import api from '@/lib/api';
 
@@ -12,7 +12,6 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
-  const [lowStock, setLowStock] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [showNotif, setShowNotif] = useState(false);
   const notifRef = useRef(null);
@@ -26,7 +25,6 @@ export default function AdminLayout({ children }) {
     function fetchNotifs() {
       api.get('/admin/dashboard').then(r => {
         setPendingOrders(r.data.pendingOrders || 0);
-        setLowStock(r.data.lowStockProducts || []);
         setRecentOrders(r.data.recentOrders || []);
       }).catch(() => {});
     }
@@ -43,15 +41,16 @@ export default function AdminLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const totalNotifs = pendingOrders + lowStock.length;
+  const totalNotifs = pendingOrders;
 
   const links = [
     { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-    { href: '/admin/produtos', label: 'Produtos', icon: <Package size={18} />, badge: lowStock.length || null, badgeColor: 'bg-orange-500' },
+    { href: '/admin/produtos', label: 'Produtos', icon: <Package size={18} /> },
     { href: '/admin/categorias', label: 'Categorias', icon: <FolderOpen size={18} /> },
     { href: '/admin/pedidos', label: 'Pedidos', icon: <ShoppingBag size={18} />, badge: pendingOrders || null, badgeColor: 'bg-red-500' },
     { href: '/admin/financeiro', label: 'Financeiro', icon: <TrendingUp size={18} /> },
     { href: '/admin/usuarios', label: 'Usuários', icon: <Users size={18} /> },
+    { href: '/admin/avaliacoes', label: 'Avaliações', icon: <Star size={18} /> },
     { href: '/admin/cupons', label: 'Cupons', icon: <Tag size={18} /> },
     { href: '/admin/frete', label: 'Frete', icon: <Truck size={18} /> },
     { href: '/admin/mensagens', label: 'Mensagens', icon: <MessageSquare size={18} /> },
@@ -110,26 +109,6 @@ export default function AdminLayout({ children }) {
                         </div>
                       </div>
                     </Link>
-                  )}
-
-                  {lowStock.length > 0 && (
-                    <div>
-                      <div className="px-4 py-2 bg-orange-50 border-b">
-                        <p className="text-xs font-bold text-orange-600 uppercase tracking-wide">Estoque baixo ({lowStock.length})</p>
-                      </div>
-                      {lowStock.slice(0, 5).map(p => (
-                        <Link key={p.id} href="/admin/produtos" onClick={() => setShowNotif(false)}>
-                          <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors border-b last:border-0">
-                            <AlertTriangle size={14} className="text-orange-500 flex-shrink-0" />
-                            <p className="text-sm flex-1 truncate">{p.name}</p>
-                            <span className="text-xs font-bold text-orange-600 flex-shrink-0">{p.stock} un.</span>
-                          </div>
-                        </Link>
-                      ))}
-                      {lowStock.length > 5 && (
-                        <p className="text-xs text-gray-400 text-center py-2">+{lowStock.length - 5} mais</p>
-                      )}
-                    </div>
                   )}
 
                   {totalNotifs === 0 && (

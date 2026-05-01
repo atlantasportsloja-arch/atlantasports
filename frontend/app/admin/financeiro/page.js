@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { TrendingUp, DollarSign, AlertCircle } from 'lucide-react';
+import { TrendingUp, DollarSign, AlertCircle, ArrowUpDown, Download } from 'lucide-react';
 import api from '@/lib/api';
 
 function fmt(v) { return Number(v).toFixed(2).replace('.', ','); }
@@ -19,9 +19,19 @@ function Card({ icon, label, value, sub, color = 'text-gray-900' }) {
 }
 
 
+const SORT_OPTS = [
+  { key: 'receitaVendas', label: 'Receita' },
+  { key: 'qtdVendida', label: 'Qtd. vendida' },
+  { key: 'lucroVendas', label: 'Lucro' },
+  { key: 'margem', label: 'Margem %' },
+  { key: 'estoqueEfetivo', label: 'Estoque' },
+];
+
 export default function FinanceiroPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState('receitaVendas');
+  const [sortDir, setSortDir] = useState('desc');
 
   useEffect(() => {
     api.get('/products/admin/financeiro')
@@ -30,12 +40,38 @@ export default function FinanceiroPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  function toggleSort(key) {
+    if (sortKey === key) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setSortKey(key); setSortDir('desc'); }
+  }
+
   if (loading) return <div className="text-gray-400 animate-pulse p-8">Carregando...</div>;
   if (!data) return <div className="text-red-500 p-8">Erro ao carregar dados.</div>;
 
   const { products, totalCusto, totalReceita, totalLucro, margemMedia, totalReceitaReal, totalLucroReal, totalVendaEstoque } = data;
   const semCusto = products.filter(p => p.costPrice == null).length;
   const comCusto = products.length - semCusto;
+
+  const sortedProducts = [...products].sort((a, b) => {
+    const va = a[sortKey] ?? -Infinity;
+    const vb = b[sortKey] ?? -Infinity;
+    return sortDir === 'desc' ? vb - va : va - vb;
+  });
+
+  const byCategory = (() => {
+    const map = {};
+    products.forEach(p => {
+      const cats = p.categories?.length ? p.categories : [{ id: '__sem__', name: 'Sem categoria' }];
+      cats.forEach(c => {
+        if (!map[c.id]) map[c.id] = { name: c.name, receita: 0, lucro: 0, qtd: 0, count: 0 };
+        map[c.id].receita += p.receitaVendas || 0;
+        map[c.id].lucro += p.lucroVendas || 0;
+        map[c.id].qtd += p.qtdVendida || 0;
+        map[c.id].count += 1;
+      });
+    });
+    return Object.values(map).sort((a, b) => b.receita - a.receita);
+  })();
 
   return (
     <div className="space-y-6">
@@ -96,6 +132,129 @@ export default function FinanceiroPage() {
         )}
       </div>
 
+      {/* Resumo por categoria */}
+      {byCategory.length > 0 && (
+        <div className="card overflow-hidden">
+          <div className="px-6 py-4 border-b bg-gray-50">
+            <h2 className="font-black text-sm">Receita por categoria</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  {['Categoria', 'Produtos', 'Qtd. vendida', 'Receita', 'Lucro estimado'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 font-semibold text-gray-500 text-xs whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {byCategory.map(c => (
+                  <tr key={c.name} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-semibold">{c.name}</td>
+                    <td className="px-4 py-3 text-gray-500">{c.count}</td>
+                    <td className="px-4 py-3">{c.qtd}</td>
+                    <td className="px-4 py-3 font-semibold text-green-600">{c.receita > 0 ? `R$ ${fmt(c.receita)}` : '—'}</td>
+                    <td className="px-4 py-3 text-primary-600">{c.lucro > 0 ? `R$ ${fmt(c.lucro)}` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tabela por produto */}
+      <div className="card overflow-hidden">
+        <div className="px-6 py-4 border-b bg-gray-50 flex items-center justify-between flex-wrap gap-3">
+          <h2 className="font-black text-sm">Desempenho por produto</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                const rows = [['Produto', 'Vendidos', 'Receita (R$)', 'Custo/un. (R$)', 'Lucro/un. (R$)', 'Margem (%)', 'Estoque']];
+                sortedProducts.forEach(p => rows.push([
+                  p.name,
+                  p.qtdVendida || 0,
+                  (p.receitaVendas || 0).toFixed(2).replace('.', ','),
+                  p.costPrice != null ? p.costPrice.toFixed(2).replace('.', ',') : '',
+                  p.lucro != null ? p.lucro.toFixed(2).replace('.', ',') : '',
+                  p.margem != null ? p.margem : '',
+                  p.estoqueEfetivo,
+                ]));
+                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+                const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `financeiro-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 border border-gray-300 hover:border-gray-400 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <Download size={13} /> CSV
+            </button>
+            {SORT_OPTS.map(o => (
+              <button
+                key={o.key}
+                onClick={() => toggleSort(o.key)}
+                className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border transition-colors ${
+                  sortKey === o.key
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                }`}
+              >
+                {o.label}
+                {sortKey === o.key && <ArrowUpDown size={10} className="opacity-70" />}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                {['Produto', 'Vendidos', 'Receita', 'Custo/un.', 'Lucro/un.', 'Margem', 'Estoque'].map(h => (
+                  <th key={h} className="text-left px-4 py-3 font-semibold text-gray-500 text-xs whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {sortedProducts.map(p => (
+                <tr key={p.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {p.images?.[0] && (
+                        <img src={p.images[0]} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                      )}
+                      <span className="font-medium truncate max-w-[160px]">{p.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 font-semibold">{p.qtdVendida || 0}</td>
+                  <td className="px-4 py-3 font-semibold text-green-600">
+                    {p.receitaVendas > 0 ? `R$ ${fmt(p.receitaVendas)}` : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {p.costPrice != null ? `R$ ${fmt(p.costPrice)}` : <span className="text-orange-400 text-xs">sem custo</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    {p.lucro != null
+                      ? <span className={p.lucro >= 0 ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'}>R$ {fmt(p.lucro)}</span>
+                      : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    {p.margem != null
+                      ? <span className={`font-bold text-xs px-2 py-0.5 rounded-full ${p.margem >= 30 ? 'bg-green-100 text-green-700' : p.margem >= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-600'}`}>{p.margem}%</span>
+                      : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`font-semibold ${p.estoqueEfetivo === 0 ? 'text-red-500' : p.estoqueEfetivo <= 5 ? 'text-orange-500' : 'text-gray-700'}`}>
+                      {p.estoqueEfetivo}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

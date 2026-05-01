@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Package, Users, DollarSign, Clock, Calendar, ArrowUp, ArrowDown, Minus, TrendingUp } from 'lucide-react';
+import { ShoppingBag, Package, Users, DollarSign, Clock, Calendar, ArrowUp, ArrowDown, Minus, TrendingUp, Trophy } from 'lucide-react';
 import api from '@/lib/api';
 
 const CHART_PERIODS = [
@@ -219,18 +219,20 @@ export default function AdminDashboard() {
       </div>
 
       {/* Alertas */}
-      {data.pendingOrders > 0 && (
-        <Link href="/admin/pedidos?status=PENDING" className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4 hover:bg-yellow-100 transition-colors">
-          <Clock size={20} className="text-yellow-600 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="font-semibold text-yellow-800 text-sm">
-              {data.pendingOrders} {data.pendingOrders === 1 ? 'pedido aguardando' : 'pedidos aguardando'} pagamento
-            </p>
-            <p className="text-xs text-yellow-600">Clique para ver os pedidos pendentes</p>
-          </div>
-          <span className="text-yellow-600 text-xs font-semibold">Ver →</span>
-        </Link>
-      )}
+      <div className="space-y-3">
+        {data.pendingOrders > 0 && (
+          <Link href="/admin/pedidos?status=PENDING" className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4 hover:bg-yellow-100 transition-colors">
+            <Clock size={20} className="text-yellow-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-yellow-800 text-sm">
+                {data.pendingOrders} {data.pendingOrders === 1 ? 'pedido aguardando' : 'pedidos aguardando'} pagamento
+              </p>
+              <p className="text-xs text-yellow-600">Clique para ver os pedidos pendentes</p>
+            </div>
+            <span className="text-yellow-600 text-xs font-semibold">Ver →</span>
+          </Link>
+        )}
+      </div>
 
       {/* Métricas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -296,30 +298,64 @@ export default function AdminDashboard() {
       {/* Gráfico de vendas */}
       <SalesChart />
 
-      {/* Pedidos recentes */}
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-black">Pedidos recentes</h2>
-          <Link href="/admin/pedidos" className="text-xs text-primary-500 hover:underline font-semibold">Ver todos →</Link>
+      {/* Pedidos recentes + Top produtos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-black">Pedidos recentes</h2>
+            <Link href="/admin/pedidos" className="text-xs text-primary-500 hover:underline font-semibold">Ver todos →</Link>
+          </div>
+          <div className="space-y-3">
+            {data.recentOrders.map(o => (
+              <div key={o.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-sm font-mono">#{o.orderNumber ?? o.id.slice(0, 8).toUpperCase()}</p>
+                  <p className="text-gray-400 text-xs truncate max-w-[150px]">{o.user.name}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-sm">R$ {o.total.toFixed(2).replace('.', ',')}</p>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status]}`}>
+                    {STATUS_LABEL[o.status]}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {data.recentOrders.length === 0 && (
+              <p className="text-gray-400 text-sm text-center py-4">Nenhum pedido ainda</p>
+            )}
+          </div>
         </div>
-        <div className="space-y-3">
-          {data.recentOrders.map(o => (
-            <div key={o.id} className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-sm font-mono">#{o.id.slice(0, 8).toUpperCase()}</p>
-                <p className="text-gray-400 text-xs truncate max-w-[150px]">{o.user.name}</p>
+
+        <div className="card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy size={18} className="text-yellow-500" />
+            <h2 className="font-black">Mais vendidos</h2>
+          </div>
+          <div className="space-y-3">
+            {data.topProducts?.filter(p => p.product).map((p, i) => (
+              <div key={p.productId} className="flex items-center gap-3">
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                  i === 0 ? 'bg-yellow-100 text-yellow-700' :
+                  i === 1 ? 'bg-gray-200 text-gray-600' :
+                  i === 2 ? 'bg-orange-100 text-orange-700' :
+                  'bg-gray-100 text-gray-500'
+                }`}>{i + 1}</span>
+                {p.product?.images?.[0] && (
+                  <img src={p.product.images[0]} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">{p.product?.name}</p>
+                  <p className="text-xs text-gray-400">{p._sum.quantity} vendidos</p>
+                </div>
+                <p className="text-sm font-black text-gray-700 shrink-0">
+                  R$ {(p.product?.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-sm">R$ {o.total.toFixed(2).replace('.', ',')}</p>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status]}`}>
-                  {STATUS_LABEL[o.status]}
-                </span>
-              </div>
-            </div>
-          ))}
-          {data.recentOrders.length === 0 && (
-            <p className="text-gray-400 text-sm text-center py-4">Nenhum pedido ainda</p>
-          )}
+            ))}
+            {(!data.topProducts || data.topProducts.filter(p => p.product).length === 0) && (
+              <p className="text-gray-400 text-sm text-center py-4">Nenhuma venda ainda</p>
+            )}
+          </div>
         </div>
       </div>
 

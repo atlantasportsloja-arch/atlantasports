@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, X, Loader2, Check } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
+import { Plus, Edit, Trash2, X, Loader2, Check, ImagePlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -21,10 +22,12 @@ export default function CategoriasPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const imgRef = useRef();
 
   useEffect(() => { load(); }, []);
 
@@ -87,6 +90,26 @@ export default function CategoriasPage() {
     setShowForm(true);
   }
 
+  async function uploadImage(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('images', file);
+      const { data } = await api.post('/upload/produto', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setForm(f => ({ ...f, image: data.urls[0] }));
+      toast.success('Imagem enviada!');
+    } catch {
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }
+
   async function criarSugestao(s) {
     const jaExiste = categories.some(c => c.name.toLowerCase() === s.name.toLowerCase());
     if (jaExiste) { toast.error(`"${s.name}" já existe`); return; }
@@ -129,6 +152,36 @@ export default function CategoriasPage() {
                 placeholder="Ex: Camisas"
                 autoFocus
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Imagem da categoria <span className="text-gray-400 font-normal text-xs">(opcional)</span></label>
+              <div className="flex items-center gap-3">
+                {form.image ? (
+                  <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200 shrink-0">
+                    <Image src={form.image} alt="imagem" fill className="object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, image: '' }))}
+                      className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none"
+                    >
+                      <X size={9} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 shrink-0">
+                    <ImagePlus size={20} />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => imgRef.current?.click()}
+                  disabled={uploading}
+                  className="text-sm text-primary-600 hover:text-primary-700 font-semibold border border-primary-200 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50"
+                >
+                  {uploading ? 'Enviando...' : form.image ? 'Trocar imagem' : 'Adicionar imagem'}
+                </button>
+                <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={uploadImage} />
+              </div>
             </div>
             <div className="flex gap-3">
               <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
@@ -187,13 +240,24 @@ export default function CategoriasPage() {
           <div className="divide-y">
             {categories.map(cat => (
               <div key={cat.id} className="flex items-center justify-between px-6 py-4">
-                <div>
-                  <p className="font-semibold">{cat.name}</p>
-                  <p className="text-xs text-gray-400">
-                    slug: <span className="font-mono">{cat.slug}</span>
-                    {' · '}
-                    {cat._count?.products ?? 0} produtos
-                  </p>
+                <div className="flex items-center gap-3">
+                  {cat.image ? (
+                    <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200 shrink-0">
+                      <Image src={cat.image} alt={cat.name} fill className="object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300 shrink-0">
+                      <ImagePlus size={16} />
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold">{cat.name}</p>
+                    <p className="text-xs text-gray-400">
+                      slug: <span className="font-mono">{cat.slug}</span>
+                      {' · '}
+                      {cat._count?.products ?? 0} produtos
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {confirmDelete === cat.id ? (

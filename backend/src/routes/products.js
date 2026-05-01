@@ -61,7 +61,7 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
         select: {
           id: true, name: true, price: true, costPrice: true,
           stock: true, images: true,
-          categories: { select: { name: true } },
+          categories: { select: { id: true, name: true } },
           variants: { where: { active: true }, select: { stock: true, price: true } },
         },
         orderBy: { name: 'asc' },

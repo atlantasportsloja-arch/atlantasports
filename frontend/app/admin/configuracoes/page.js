@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Save, ImagePlus, Trash2, RefreshCw, Plus, X } from 'lucide-react';
+import { Save, ImagePlus, Trash2, RefreshCw, Plus, X, DatabaseBackup, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -48,10 +48,13 @@ export default function ConfiguracoesPage() {
   const [config, setConfig] = useState(DEFAULT);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [backupStatus, setBackupStatus] = useState(null);
+  const [runningBackup, setRunningBackup] = useState(false);
   const bannerRef = useRef();
 
   useEffect(() => {
     api.get('/config').then(r => setConfig({ ...DEFAULT, ...r.data })).catch(() => {});
+    api.get('/admin/backup/status').then(r => setBackupStatus(r.data)).catch(() => {});
   }, []);
 
   function set(key) {
@@ -111,6 +114,25 @@ export default function ConfiguracoesPage() {
     } catch {
       toast.error('Erro ao restaurar banners');
     }
+  }
+
+  async function triggerBackup() {
+    if (!confirm('Iniciar backup manual agora? O arquivo será enviado por e-mail.')) return;
+    setRunningBackup(true);
+    try {
+      const { data } = await api.post('/admin/backup');
+      setBackupStatus({ lastBackupAt: data.lastBackupAt, lastBackupStatus: data.lastBackupStatus });
+      toast.success('Backup realizado e enviado por e-mail!');
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Erro ao realizar backup');
+    } finally {
+      setRunningBackup(false);
+    }
+  }
+
+  function formatBackupDate(iso) {
+    if (!iso) return null;
+    return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   }
 
   return (
@@ -279,6 +301,49 @@ export default function ConfiguracoesPage() {
           </button>
         </div>
       </Section>
+
+      {/* BACKUP */}
+      <div className="card p-6 space-y-4">
+        <h2 className="font-black text-base border-b pb-2">🗄️ Backup do Banco de Dados</h2>
+        <p className="text-sm text-gray-500 -mt-1">
+          O backup exporta todos os dados da loja (produtos, pedidos, usuários, cupons etc.) e envia por e-mail como arquivo comprimido.
+          O backup automático roda <strong>todo dia às 06h</strong>.
+        </p>
+
+        {backupStatus?.lastBackupAt && (
+          <div className={`flex items-start gap-3 rounded-xl p-4 text-sm ${backupStatus.lastBackupStatus === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            {backupStatus.lastBackupStatus === 'success'
+              ? <CheckCircle2 size={18} className="text-green-600 mt-0.5 shrink-0" />
+              : <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />}
+            <div>
+              <p className={`font-semibold ${backupStatus.lastBackupStatus === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                {backupStatus.lastBackupStatus === 'success' ? 'Último backup enviado com sucesso' : 'Último backup falhou'}
+              </p>
+              <p className="text-gray-500 flex items-center gap-1 mt-0.5">
+                <Clock size={13} />
+                {formatBackupDate(backupStatus.lastBackupAt)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!backupStatus?.lastBackupAt && (
+          <div className="flex items-center gap-3 rounded-xl p-4 text-sm bg-gray-50 border border-gray-200">
+            <DatabaseBackup size={18} className="text-gray-400 shrink-0" />
+            <p className="text-gray-500">Nenhum backup registrado ainda. O próximo automático será às 06h.</p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={triggerBackup}
+          disabled={runningBackup}
+          className="flex items-center gap-2 bg-gray-900 hover:bg-gray-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <DatabaseBackup size={18} />
+          {runningBackup ? 'Gerando backup...' : 'Fazer backup agora'}
+        </button>
+      </div>
 
       <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2 w-full justify-center">
         <Save size={18} />
