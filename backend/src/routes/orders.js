@@ -168,7 +168,7 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
       prisma.order.findMany({
         where,
         include: { user: { select: { name: true, email: true } }, items: { include: { product: { select: { name: true } }, variant: { select: { size: true, color: true } } } } },
-        orderBy: [{ createdAt: 'desc' }],
+        orderBy: { createdAt: 'desc' },
         skip,
         take: Number(limit),
       }),
@@ -183,14 +183,23 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
 
     // Inclui adminNote (coluna fora do schema Prisma)
     if (orders.length > 0) {
-      const ids = orders.map(o => o.id);
-      const notes = await prisma.$queryRaw`SELECT id, "adminNote" FROM orders WHERE id = ANY(${ids}::uuid[])`;
-      const noteMap = Object.fromEntries(notes.map(n => [n.id, n.adminNote || '']));
-      orders.forEach(o => { o.adminNote = noteMap[o.id] ?? ''; });
+      try {
+        const ids = orders.map(o => o.id);
+        const notes = await prisma.$queryRawUnsafe(
+          `SELECT id, "adminNote" FROM orders WHERE id = ANY($1::uuid[])`,
+          ids
+        );
+        const noteMap = Object.fromEntries(notes.map(n => [n.id, n.adminNote || '']));
+        orders.forEach(o => { o.adminNote = noteMap[o.id] ?? ''; });
+      } catch (noteErr) {
+        console.warn('[Orders] adminNote query falhou:', noteErr?.message);
+        orders.forEach(o => { o.adminNote = ''; });
+      }
     }
 
     res.json({ orders, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
-  } catch {
+  } catch (err) {
+    console.error('[Orders] Erro ao buscar pedidos:', err?.message || err);
     res.status(500).json({ error: 'Erro ao buscar pedidos' });
   }
 });
