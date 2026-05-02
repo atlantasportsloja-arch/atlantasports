@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('dns').setDefaultResultOrder('ipv4first');
 const app = require('./app');
 const prisma = require('./lib/prisma');
 const { startReviewReminderJob } = require('./jobs/reviewReminder');
