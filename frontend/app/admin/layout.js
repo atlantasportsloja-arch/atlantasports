@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Users, Tag, Settings, Menu, X, ChevronRight, FolderOpen, TrendingUp, MessageSquare, Truck, Bell, Clock, Star } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Tag, Settings, Menu, X, ChevronRight, FolderOpen, TrendingUp, MessageSquare, Truck, Bell, Clock, Star, CreditCard } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import api from '@/lib/api';
 
@@ -53,6 +53,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/avaliacoes', label: 'Avaliações', icon: <Star size={18} /> },
     { href: '/admin/cupons', label: 'Cupons', icon: <Tag size={18} /> },
     { href: '/admin/frete', label: 'Frete', icon: <Truck size={18} /> },
+    { href: '/admin/parcelamento', label: 'Parcelamento', icon: <CreditCard size={18} /> },
     { href: '/admin/mensagens', label: 'Mensagens', icon: <MessageSquare size={18} /> },
     { href: '/admin/configuracoes', label: 'Configurações', icon: <Settings size={18} /> },
   ];

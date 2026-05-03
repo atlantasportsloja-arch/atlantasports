@@ -53,23 +53,6 @@ const DEFAULT = {
   banners: [],
   footerLinks: [],
   termsContent: DEFAULT_TERMS,
-  installments: {
-    active: false,
-    maxDisplay: 6,
-    rows: [
-      { n: 2,  rate: 2.01  },
-      { n: 3,  rate: 3.02  },
-      { n: 4,  rate: 4.03  },
-      { n: 5,  rate: 5.04  },
-      { n: 6,  rate: 6.06  },
-      { n: 7,  rate: 9.60  },
-      { n: 8,  rate: 10.65 },
-      { n: 9,  rate: 11.72 },
-      { n: 10, rate: 12.79 },
-      { n: 11, rate: 13.87 },
-      { n: 12, rate: 14.77 },
-    ],
-  },
 };
 
 function Field({ label, hint, value, onChange, textarea }) {
@@ -353,89 +336,6 @@ export default function ConfiguracoesPage() {
           </button>
         </div>
       </Section>
-
-      {/* PARCELAMENTO */}
-      <div className="card p-6 space-y-5">
-        <div className="flex items-center justify-between border-b pb-2">
-          <h2 className="font-black text-base">💳 Parcelamento</h2>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-sm font-medium text-gray-600">Exibir nos produtos</span>
-            <div
-              className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer ${config.installments?.active ? 'bg-primary-500' : 'bg-gray-300'}`}
-              onClick={() => setConfig(c => ({ ...c, installments: { ...(c.installments || {}), active: !c.installments?.active } }))}
-            >
-              <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${config.installments?.active ? 'translate-x-5' : 'translate-x-0.5'}`} />
-            </div>
-          </label>
-        </div>
-
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <label className="block text-sm font-medium mb-1">Máx. parcelas exibidas no produto</label>
-            <select
-              className="input py-2 text-sm w-40"
-              value={config.installments?.maxDisplay ?? 6}
-              onChange={e => setConfig(c => ({ ...c, installments: { ...(c.installments || {}), maxDisplay: Number(e.target.value) } }))}
-            >
-              {[2,3,4,5,6,7,8,9,10,11,12].map(n => (
-                <option key={n} value={n}>{n}x</option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-400 mt-1">Parcelas acima desse limite não aparecem no produto.</p>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left px-3 py-2.5 font-semibold text-gray-500 w-16">Parcelas</th>
-                <th className="text-left px-3 py-2.5 font-semibold text-gray-500">Taxa (%&nbsp;a.m.)</th>
-                <th className="text-left px-3 py-2.5 font-semibold text-gray-400 text-xs">Valor p/ R$&nbsp;100</th>
-                <th className="text-left px-3 py-2.5 font-semibold text-gray-400 text-xs">Total p/ R$&nbsp;100</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {(config.installments?.rows || []).map((row, i) => {
-                const pmt = (100 * (1 + row.rate / 100)) / row.n;
-                const total = pmt * row.n;
-                const isDisplayed = row.n <= (config.installments?.maxDisplay ?? 6);
-                return (
-                  <tr key={row.n} className={isDisplayed ? '' : 'opacity-40'}>
-                    <td className="px-3 py-2">
-                      <span className="font-black text-gray-800">{row.n}x</span>
-                      {!isDisplayed && <span className="ml-1 text-xs text-gray-400">(oculto)</span>}
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          className="input text-sm py-1.5 w-24 text-right"
-                          value={row.rate}
-                          onChange={e => {
-                            const rows = [...(config.installments?.rows || [])];
-                            rows[i] = { ...rows[i], rate: Number(e.target.value) };
-                            setConfig(c => ({ ...c, installments: { ...(c.installments || {}), rows } }));
-                          }}
-                        />
-                        <span className="text-gray-400 text-xs">%</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 font-semibold text-primary-600">R$&nbsp;{pmt.toFixed(2).replace('.', ',')}</td>
-                    <td className="px-3 py-2 text-gray-500">R$&nbsp;{total.toFixed(2).replace('.', ',')}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <p className="text-xs text-gray-400">
-          Fórmula: parcela = preço × (1 + taxa/100) ÷ nº parcelas. As linhas acinzentadas são exibidas apenas na tabela de parcelas expandida quando o máximo configurado for maior.
-        </p>
-      </div>
 
       {/* TERMOS DE USO */}
       <div className="card p-6 space-y-4">
