@@ -1,9 +1,42 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Save, ImagePlus, Trash2, RefreshCw, Plus, X, DatabaseBackup, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { Save, ImagePlus, Trash2, RefreshCw, Plus, X, DatabaseBackup, CheckCircle2, AlertCircle, Clock, FileText, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
+
+const DEFAULT_TERMS = `<h2>1. Aceitação dos Termos</h2>
+<p>Ao acessar ou utilizar o site da Atlanta Sports, você concorda com estes Termos de Uso. Se não concordar com qualquer parte, por favor, não utilize nosso site.</p>
+
+<h2>2. Sobre a Atlanta Sports</h2>
+<p>A Atlanta Sports é uma loja virtual especializada em moda e equipamentos esportivos, com atendimento via e-mail e WhatsApp. Nosso objetivo é oferecer produtos de qualidade com uma experiência de compra segura e prática.</p>
+
+<h2>3. Cadastro e Conta</h2>
+<p>Para realizar compras, é necessário criar uma conta com informações verdadeiras e atualizadas. Você é responsável pela segurança de sua senha e por todas as atividades realizadas em sua conta. Em caso de uso não autorizado, entre em contato conosco imediatamente.</p>
+
+<h2>4. Produtos e Preços</h2>
+<p>Nos reservamos o direito de alterar preços, descrições e disponibilidade de produtos a qualquer momento, sem aviso prévio. Os preços exibidos são válidos no momento da finalização do pedido. Imagens dos produtos são meramente ilustrativas e podem variar levemente em relação ao produto real.</p>
+
+<h2>5. Pedidos e Pagamento</h2>
+<p>Após a confirmação do pagamento, o pedido é processado e encaminhado para expedição. Aceitamos pagamento via PIX e outros meios disponíveis no checkout. O pedido só é confirmado após a compensação do pagamento. Nos reservamos o direito de cancelar pedidos em casos de suspeita de fraude ou erro de precificação.</p>
+
+<h2>6. Entrega e Frete</h2>
+<p>Os prazos de entrega são estimados e podem variar conforme a região e a transportadora. Não nos responsabilizamos por atrasos causados por fatores externos, como greves ou condições climáticas. O frete é calculado no checkout conforme o CEP de destino.</p>
+
+<h2>7. Trocas e Devoluções</h2>
+<p>Conforme o Código de Defesa do Consumidor (Lei 8.078/90), o cliente tem até <strong>7 dias corridos</strong> após o recebimento para solicitar a devolução do produto por arrependimento, sem necessidade de justificativa. Para trocas por defeito ou produto errado, o prazo é de <strong>30 dias</strong>. Entre em contato com nosso suporte para iniciar o processo.</p>
+
+<h2>8. Privacidade e Dados</h2>
+<p>Coletamos apenas os dados necessários para processar seus pedidos (nome, e-mail, endereço, telefone). Não compartilhamos suas informações com terceiros, exceto para finalidade de entrega (transportadoras) e processamento de pagamento. Seus dados são armazenados de forma segura.</p>
+
+<h2>9. Propriedade Intelectual</h2>
+<p>Todo o conteúdo do site — incluindo textos, imagens, logotipos e layout — é de propriedade da Atlanta Sports ou de seus fornecedores e está protegido por direitos autorais. É proibida a reprodução sem autorização prévia por escrito.</p>
+
+<h2>10. Alterações nos Termos</h2>
+<p>Podemos atualizar estes Termos de Uso a qualquer momento. As alterações entram em vigor imediatamente após a publicação no site. O uso contínuo do site após as alterações implica na aceitação dos novos termos.</p>
+
+<h2>11. Contato</h2>
+<p>Dúvidas sobre estes termos? Entre em contato pelo e-mail <a href="mailto:atlantasportsloja@gmail.com">atlantasportsloja@gmail.com</a> ou via WhatsApp no horário de atendimento.</p>`;
 
 const DEFAULT = {
   storeName: 'Atlanta Sports', storeSlogan: 'Veste quem joga de verdade',
@@ -19,6 +52,7 @@ const DEFAULT = {
   pixDiscount: 0, pixKey: '',
   banners: [],
   footerLinks: [],
+  termsContent: DEFAULT_TERMS,
 };
 
 function Field({ label, hint, value, onChange, textarea }) {
@@ -50,6 +84,7 @@ export default function ConfiguracoesPage() {
   const [uploading, setUploading] = useState(false);
   const [backupStatus, setBackupStatus] = useState(null);
   const [runningBackup, setRunningBackup] = useState(false);
+  const [termsPreview, setTermsPreview] = useState(false);
   const bannerRef = useRef();
 
   useEffect(() => {
@@ -301,6 +336,71 @@ export default function ConfiguracoesPage() {
           </button>
         </div>
       </Section>
+
+      {/* TERMOS DE USO */}
+      <div className="card p-6 space-y-4">
+        <div className="flex items-center justify-between border-b pb-2">
+          <h2 className="font-black text-base flex items-center gap-2">
+            <FileText size={18} /> Termos de Uso
+          </h2>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setTermsPreview(v => !v)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 border border-gray-300 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              {termsPreview ? <><EyeOff size={13} /> Editar</> : <><Eye size={13} /> Preview</>}
+            </button>
+            <a
+              href="/termos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-primary-500 hover:underline"
+            >
+              Ver página →
+            </a>
+          </div>
+        </div>
+
+        <p className="text-xs text-gray-400">
+          Conteúdo exibido na página <span className="font-mono">/termos</span>. Use tags HTML básicas:{' '}
+          <span className="font-mono bg-gray-100 px-1 rounded">&lt;h2&gt;</span>{' '}
+          <span className="font-mono bg-gray-100 px-1 rounded">&lt;p&gt;</span>{' '}
+          <span className="font-mono bg-gray-100 px-1 rounded">&lt;strong&gt;</span>{' '}
+          <span className="font-mono bg-gray-100 px-1 rounded">&lt;a href=&quot;...&quot;&gt;</span>
+        </p>
+
+        {termsPreview ? (
+          <div
+            className="border border-gray-200 rounded-xl p-6 prose prose-gray max-w-none text-gray-700 leading-relaxed min-h-[300px] [&_h2]:text-lg [&_h2]:font-black [&_h2]:text-gray-900 [&_h2]:mb-2 [&_h2]:mt-6 [&_p]:mb-3 [&_a]:text-orange-500 [&_a]:underline"
+            dangerouslySetInnerHTML={{ __html: config.termsContent || '' }}
+          />
+        ) : (
+          <textarea
+            className="input font-mono text-xs leading-relaxed resize-y"
+            rows={20}
+            value={config.termsContent || ''}
+            onChange={e => setConfig(c => ({ ...c, termsContent: e.target.value }))}
+            placeholder="Cole ou escreva o conteúdo dos termos em HTML..."
+            spellCheck={false}
+          />
+        )}
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm('Restaurar os termos padrão? O conteúdo atual será sobrescrito.')) {
+                setConfig(c => ({ ...c, termsContent: DEFAULT_TERMS }));
+                setTermsPreview(false);
+              }
+            }}
+            className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Restaurar padrão
+          </button>
+        </div>
+      </div>
 
       {/* BACKUP */}
       <div className="card p-6 space-y-4">

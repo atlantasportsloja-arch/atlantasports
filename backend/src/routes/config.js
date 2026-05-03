@@ -38,6 +38,7 @@ router.put('/', adminMiddleware, async (req, res) => {
     whatsapp, footerEmail, footerHours, footerDesc,
     pixDiscount, pixKey, pixMessage, parceladoMessage,
     freeShippingThreshold, shippingZones, footerLinks,
+    termsContent,
   } = req.body;
 
   try {
@@ -71,6 +72,7 @@ router.put('/', adminMiddleware, async (req, res) => {
         "freeShippingThreshold" = ${Number(freeShippingThreshold) || 299},
         "shippingZones" = ${zonesJson}::jsonb,
         "footerLinks" = ${linksJson}::jsonb,
+        "termsContent" = ${termsContent || ''},
         "updatedAt" = NOW()
       WHERE id = 'default'
     `;
