@@ -6,12 +6,15 @@ import { Trash2, ShoppingBag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useCartStore, useAuthStore } from '@/lib/store';
+import { useConfig, pixPrice, fmt, getBestInstallment, getAllInstallments } from '@/lib/useConfig';
 
 export default function CarrinhoPage() {
   const { token } = useAuthStore();
   const { items, total, setCart, setCoupon: saveCoupon, clearCoupon, couponCode, discount } = useCartStore();
+  const config = useConfig();
   const [coupon, setCoupon] = useState(couponCode || '');
   const [loading, setLoading] = useState(false);
+  const [showInstallments, setShowInstallments] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -130,6 +133,64 @@ export default function CarrinhoPage() {
               <span>Total</span>
               <span>R$ {finalTotal.toFixed(2).replace('.', ',')}</span>
             </div>
+
+            {/* PIX */}
+            {config?.pixKey && config?.pixDiscount > 0 && (
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="bg-green-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">PIX</span>
+                  <span className="text-green-700 font-black">R$ {fmt(pixPrice(finalTotal, config.pixDiscount))}</span>
+                </div>
+                <span className="text-green-600 text-xs font-semibold">{config.pixDiscount}% off</span>
+              </div>
+            )}
+
+            {/* Parcelamento */}
+            {(() => {
+              const best = getBestInstallment(finalTotal, config);
+              if (!best) return null;
+              const all = getAllInstallments(finalTotal, config);
+              return (
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowInstallments(v => !v)}
+                    className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    <span>
+                      ou <span className="font-black text-gray-900">{best.n}x</span> de{' '}
+                      <span className="text-primary-600 font-black">R$ {fmt(best.value)}</span>
+                    </span>
+                    <span className="text-xs text-primary-500 underline">
+                      {showInstallments ? 'ocultar' : 'ver parcelas'}
+                    </span>
+                  </button>
+                  {showInstallments && (
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-500">Parcelas</th>
+                            <th className="text-right px-3 py-2 font-semibold text-gray-500">Valor/parcela</th>
+                            <th className="text-right px-3 py-2 font-semibold text-gray-500">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {all.map(row => (
+                            <tr key={row.n} className={row.n === best.n ? 'bg-primary-50' : 'hover:bg-gray-50'}>
+                              <td className="px-3 py-2 font-bold text-gray-800">{row.n}x</td>
+                              <td className="px-3 py-2 text-right font-black text-primary-600">R$ {fmt(row.value)}</td>
+                              <td className="px-3 py-2 text-right text-gray-500">R$ {fmt(row.value * row.n)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <Link href="/checkout" className="btn-primary block text-center">
               Finalizar compra
             </Link>
