@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
@@ -19,11 +19,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orders        Order[]
-  cart          Cart[]
-  reviews       Review[]
-  wishlist      Wishlist[]
-  couponUsages  CouponUsage[]
+  orders       Order[]
+  cart         Cart[]
+  reviews      Review[]
+  wishlist     Wishlist[]
+  couponUsages CouponUsage[]
 
   @@map("users")
 }
@@ -44,20 +44,20 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String
-  price       Float
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String
+  price        Float
   comparePrice Float?
-  costPrice   Float?
-  stock       Int      @default(0)
+  costPrice    Float?
+  stock        Int      @default(0)
   images       String[]
   availability String   @default("pronta_entrega")
   keywords     String?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt    DateTime @updatedAt
 
   categories Category[]
   orderItems OrderItem[]
@@ -110,6 +110,7 @@ model Order {
   shippingAddress Json
   shippingCost    Float       @default(0)
   trackingCode    String?
+  adminNote       String?     @default("")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -136,8 +137,8 @@ model OrderItem {
   quantity  Int
   price     Float
 
-  order   Order          @relation(fields: [orderId], references: [id])
-  product Product        @relation(fields: [productId], references: [id])
+  order   Order           @relation(fields: [orderId], references: [id])
+  product Product         @relation(fields: [productId], references: [id])
   variant ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@map("order_items")
@@ -173,18 +174,18 @@ model Review {
 }
 
 model Coupon {
-  id          String   @id @default(uuid())
-  code        String   @unique
-  discount    Float
-  type        String   @default("percentage")
-  minValue    Float    @default(0)
-  maxUses     Int?
-  usedCount   Int      @default(0)
-  expiresAt   DateTime?
-  active      Boolean  @default(true)
-  onePerUser  Boolean  @default(false)
+  id         String    @id @default(uuid())
+  code       String    @unique
+  discount   Float
+  type       String    @default("percentage")
+  minValue   Float     @default(0)
+  maxUses    Int?
+  usedCount  Int       @default(0)
+  expiresAt  DateTime?
+  active     Boolean   @default(true)
+  onePerUser Boolean   @default(false)
 
-  usages      CouponUsage[]
+  usages CouponUsage[]
 
   @@map("coupons")
 }
@@ -195,9 +196,52 @@ model CouponUsage {
   userId    String
   createdAt DateTime @default(now())
 
-  coupon    Coupon   @relation(fields: [couponId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   @@unique([couponId, userId])
   @@map("coupon_usages")
+}
+
+model BackupStatus {
+  id               Int       @id @default(1)
+  lastBackupAt     DateTime? @db.Timestamp(6)
+  lastBackupStatus String?
+  updatedAt        DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+
+  @@map("backup_status")
+}
+
+model StoreConfig {
+  id                   String    @id
+  storeName            String?   @default("Atlanta Sports")
+  storeSlogan          String?   @default("")
+  banners              String[]  @default([])
+  heroBadge            String?   @default("")
+  heroTitle            String?   @default("")
+  heroSubtitle         String?   @default("")
+  heroBtnPrimary       String?   @default("")
+  heroBtnPrimaryLink   String?   @default("")
+  heroBtnSecondary     String?   @default("")
+  heroBtnSecondaryLink String?   @default("")
+  benefit1             String?   @default("")
+  benefit2             String?   @default("")
+  benefit3             String?   @default("")
+  benefit4             String?   @default("")
+  sectionCategories    String?   @default("")
+  sectionFeatured      String?   @default("")
+  freeShippingThreshold Float?   @default(299)
+  shippingZones        Json?     @default("[]")
+  pixDiscount          Float?    @default(0)
+  pixKey               String?   @default("")
+  pixMessage           String?   @default("")
+  parceladoMessage     String?   @default("")
+  whatsapp             String?   @default("")
+  footerEmail          String?   @default("")
+  footerHours          String?   @default("")
+  footerDesc           String?   @default("")
+  footerLinks          Json?     @default("[]")
+  updatedAt            DateTime? @default(now()) @db.Timestamp(6)
+
+  @@map("store_config")
 }

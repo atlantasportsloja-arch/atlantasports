@@ -1,5 +1,5 @@
 const API = process.env.NEXT_PUBLIC_API_URL;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://atlantasports.com.br';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.atlantasports.com.br';
 
 export default async function sitemap() {
   const staticPages = [

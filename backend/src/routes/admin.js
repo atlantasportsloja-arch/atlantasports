@@ -175,8 +175,8 @@ router.put('/users/:id/role', async (req, res) => {
   }
 });
 
-router.get('/backup/status', (req, res) => {
-  res.json(loadStatus());
+router.get('/backup/status', async (req, res) => {
+  res.json(await loadStatus());
 });
 
 router.post('/backup', async (req, res) => {

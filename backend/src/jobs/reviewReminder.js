@@ -50,7 +50,7 @@ function reviewEmailHtml({ userName, products, frontendUrl }) {
 }
 
 async function runReviewReminder() {
-  const frontendUrl = process.env.FRONTEND_URL || 'https://atlantasports.com.br';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://www.atlantasports.com.br';
 
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);

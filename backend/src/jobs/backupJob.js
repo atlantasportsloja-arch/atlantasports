@@ -1,25 +1,29 @@
 const cron = require('node-cron');
 const { gzip } = require('zlib');
 const { promisify } = require('util');
-const path = require('path');
-const fs = require('fs');
 const prisma = require('../lib/prisma');
 const { sendMail } = require('../lib/mailer');
 
 const gzipAsync = promisify(gzip);
-const STATUS_FILE = path.join(__dirname, '../../backup-status.json');
 
-function loadStatus() {
+async function loadStatus() {
   try {
-    return JSON.parse(fs.readFileSync(STATUS_FILE, 'utf-8'));
+    const row = await prisma.backupStatus.findUnique({ where: { id: 1 } });
+    return row
+      ? { lastBackupAt: row.lastBackupAt?.toISOString() || null, lastBackupStatus: row.lastBackupStatus }
+      : { lastBackupAt: null, lastBackupStatus: null };
   } catch {
     return { lastBackupAt: null, lastBackupStatus: null };
   }
 }
 
-function saveStatus(status) {
+async function saveStatus(status) {
   try {
-    fs.writeFileSync(STATUS_FILE, JSON.stringify(status), 'utf-8');
+    await prisma.backupStatus.upsert({
+      where: { id: 1 },
+      update: { lastBackupAt: status.lastBackupAt ? new Date(status.lastBackupAt) : null, lastBackupStatus: status.lastBackupStatus },
+      create: { id: 1, lastBackupAt: status.lastBackupAt ? new Date(status.lastBackupAt) : null, lastBackupStatus: status.lastBackupStatus },
+    });
   } catch (e) {
     console.warn('[Backup] Não foi possível salvar status:', e.message);
   }
@@ -133,12 +137,12 @@ async function runBackup() {
     });
 
     const status = { lastBackupAt: startedAt.toISOString(), lastBackupStatus: 'success' };
-    saveStatus(status);
+    await saveStatus(status);
     console.log(`[Backup] Backup concluído e enviado para ${destEmail}`);
     return status;
   } catch (err) {
     const status = { lastBackupAt: startedAt.toISOString(), lastBackupStatus: 'error' };
-    saveStatus(status);
+    await saveStatus(status);
     console.error('[Backup] Erro ao realizar backup:', err.message);
     throw err;
   }

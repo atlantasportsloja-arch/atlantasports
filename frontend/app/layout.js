@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://atlantasports.com.br';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.atlantasports.com.br';
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),

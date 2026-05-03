@@ -103,7 +103,7 @@ export default function AdminProdutos() {
     try {
       await api.post(`/products/${p.id}/duplicate`);
       toast.success(`"Cópia de ${p.name}" criada (inativa)`);
-      load();
+      window.location.reload();
     } catch {
       toast.error('Erro ao duplicar');
     }
@@ -114,7 +114,7 @@ export default function AdminProdutos() {
       await api.delete(`/products/${id}`);
       toast.success('Produto excluído');
       setConfirmDelete(null);
-      load();
+      window.location.reload();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Erro ao excluir');
       setConfirmDelete(null);
@@ -125,7 +125,7 @@ export default function AdminProdutos() {
     try {
       await api.patch(`/products/${p.id}/toggle`);
       toast.success(p.active ? 'Produto desativado' : 'Produto ativado');
-      load();
+      window.location.reload();
     } catch {
       toast.error('Erro ao atualizar produto');
     }

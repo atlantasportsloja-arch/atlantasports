@@ -1,4 +1,4 @@
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://atlantasports.com.br';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://www.atlantasports.com.br';
 
 function header() {
   return `

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import CategoriaClient from './CategoriaClient';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://atlantasports.com.br';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.atlantasports.com.br';
 
 export async function generateMetadata({ params }) {
   try {

@@ -7,7 +7,7 @@ export default function BannerSlider({ banners }) {
 
   useEffect(() => {
     if (banners.length <= 1) return;
-    const timer = setInterval(() => setActive(i => (i + 1) % banners.length), 4000);
+    const timer = setInterval(() => setActive(i => (i + 1) % banners.length), 2030);
     return () => clearInterval(timer);
   }, [banners.length]);
 
