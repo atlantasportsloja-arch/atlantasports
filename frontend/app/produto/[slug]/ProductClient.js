@@ -7,7 +7,7 @@ import { ShoppingCart, Truck, RotateCcw, Shield, ChevronRight, Loader2, Heart, Z
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
-import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
+import { useConfig, pixPrice, fmt, getBestInstallment, getAllInstallments } from '@/lib/useConfig';
 import { sortSizes } from '@/lib/sortSizes';
 import ProductCard from '@/components/ProductCard';
 
@@ -41,7 +41,9 @@ export default function ProdutoPage({ params }) {
   const router = useRouter();
   const { token } = useAuthStore();
   const { setCart } = useCartStore();
-  const { pixDiscount } = useConfig();
+  const config = useConfig();
+  const { pixDiscount } = config;
+  const [showInstallments, setShowInstallments] = useState(false);
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
   const [quantity, setQuantity] = useState(1);
@@ -225,6 +227,54 @@ export default function ProdutoPage({ params }) {
                 </span>
               </div>
             )}
+
+            {(() => {
+              const best = getBestInstallment(product.price, config);
+              if (!best) return null;
+              const all = getAllInstallments(product.price, config);
+              return (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowInstallments(v => !v)}
+                    className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    <span className="font-semibold text-gray-800">
+                      ou {best.n}x de{' '}
+                      <span className="text-primary-600 font-black">R$ {fmt(best.value)}</span>
+                    </span>
+                    <span className="text-xs text-gray-400">({best.rate}% a.m.)</span>
+                    <span className="text-xs text-primary-500 underline ml-1">
+                      {showInstallments ? 'ocultar' : 'ver parcelas'}
+                    </span>
+                  </button>
+                  {showInstallments && all.length > 0 && (
+                    <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-500">Parcelas</th>
+                            <th className="text-right px-3 py-2 font-semibold text-gray-500">Valor/parcela</th>
+                            <th className="text-right px-3 py-2 font-semibold text-gray-500">Total</th>
+                            <th className="text-right px-3 py-2 font-semibold text-gray-500">Taxa</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {all.map(row => (
+                            <tr key={row.n} className={row.n === best.n ? 'bg-primary-50' : 'hover:bg-gray-50'}>
+                              <td className="px-3 py-2 font-bold text-gray-800">{row.n}x</td>
+                              <td className="px-3 py-2 text-right font-black text-primary-600">R$ {fmt(row.value)}</td>
+                              <td className="px-3 py-2 text-right text-gray-500">R$ {fmt(row.value * row.n)}</td>
+                              <td className="px-3 py-2 text-right text-gray-400">{row.rate}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <p className="text-gray-600 leading-relaxed">{product.description}</p>

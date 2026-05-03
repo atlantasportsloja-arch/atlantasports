@@ -30,3 +30,26 @@ export function pixPrice(price, pixDiscount) {
 export function fmt(value) {
   return Number(value).toFixed(2).replace('.', ',');
 }
+
+// Retorna { n, value, rate } para a parcela de destaque (até maxDisplay)
+export function getBestInstallment(price, config) {
+  const cfg = config?.installments;
+  if (!cfg?.active || !cfg.rows?.length || price <= 0) return null;
+  const max = Math.min(cfg.maxDisplay || 6, 12);
+  const rows = cfg.rows.filter(r => r.n >= 2 && r.n <= max).sort((a, b) => b.n - a.n);
+  const row = rows[0];
+  if (!row) return null;
+  const value = (price * (1 + row.rate / 100)) / row.n;
+  return { n: row.n, value, rate: row.rate };
+}
+
+// Retorna array [{n, value, rate}] para exibir tabela completa até maxDisplay
+export function getAllInstallments(price, config) {
+  const cfg = config?.installments;
+  if (!cfg?.active || !cfg.rows?.length || price <= 0) return [];
+  const max = Math.min(cfg.maxDisplay || 6, 12);
+  return cfg.rows
+    .filter(r => r.n >= 2 && r.n <= max)
+    .sort((a, b) => a.n - b.n)
+    .map(r => ({ n: r.n, value: (price * (1 + r.rate / 100)) / r.n, rate: r.rate }));
+}

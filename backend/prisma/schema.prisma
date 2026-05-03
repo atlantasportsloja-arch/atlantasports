@@ -242,6 +242,7 @@ model StoreConfig {
   footerDesc           String?   @default("")
   footerLinks          Json?     @default("[]")
   termsContent         String?   @default("")
+  installments         Json?
   updatedAt            DateTime? @default(now()) @db.Timestamp(6)
 
   @@map("store_config")
