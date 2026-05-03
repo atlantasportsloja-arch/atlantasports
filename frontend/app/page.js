@@ -5,8 +5,10 @@ import BannerSlider from '@/components/BannerSlider';
 const DEFAULT_CONFIG = {
   storeName: 'Atlanta Sports', heroBadge: 'Nova coleção 2025',
   heroTitle: 'Veste quem joga de verdade', heroSubtitle: 'Camisas oficiais, tênis e acessórios fitness.',
-  benefit1: '🚚 Frete grátis acima de R$ 299', benefit2: '🔒 Pagamento 100% seguro',
-  benefit3: '↩️ Troca em 30 dias', benefit4: '⭐ +5.000 clientes satisfeitos',
+  benefit1: '🚚 Frete Grátis acima R$ 299,00',
+  benefit2: '🔒 Compra 100% Segura',
+  benefit3: '💬 Atendimento diferenciado',
+  benefit4: '⭐ Clientes Satisfeitos',
   sectionCategories: 'Categorias', sectionFeatured: 'Produtos em destaque',
   banners: [],
 };
@@ -32,8 +34,13 @@ async function getData() {
   const categories = categoriesRes.status === 'fulfilled' && categoriesRes.value.ok
     ? await categoriesRes.value.json() : [];
 
+  const merged = { ...DEFAULT_CONFIG, ...config };
+  ['benefit1','benefit2','benefit3','benefit4'].forEach(k => {
+    if (!merged[k]) merged[k] = DEFAULT_CONFIG[k];
+  });
+
   return {
-    config: { ...DEFAULT_CONFIG, ...config },
+    config: merged,
     products: productsData.products || [],
     categories: Array.isArray(categories) ? categories : [],
   };

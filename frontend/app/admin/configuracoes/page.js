@@ -44,8 +44,8 @@ const DEFAULT = {
   heroSubtitle: 'Camisas oficiais, tênis de performance e acessórios fitness. Frete grátis acima de R$ 299.',
   heroBtnPrimary: 'Ver coleção', heroBtnPrimaryLink: '/categoria/camisas',
   heroBtnSecondary: 'Ver tênis', heroBtnSecondaryLink: '/categoria/tenis',
-  benefit1: '🚚 Frete grátis acima de R$ 299', benefit2: '🔒 Pagamento 100% seguro',
-  benefit3: '↩️ Troca em 30 dias', benefit4: '⭐ +5.000 clientes satisfeitos',
+  benefit1: '🚚 Frete Grátis acima R$ 299,00', benefit2: '🔒 Compra 100% Segura',
+  benefit3: '💬 Atendimento diferenciado', benefit4: '⭐ Clientes Satisfeitos',
   sectionCategories: 'Categorias', sectionFeatured: 'Produtos em destaque',
   whatsapp: '', footerEmail: 'atlantasportsloja@gmail.com',
   footerHours: 'Seg–Sex 9h–18h', footerDesc: 'Equipamentos e moda esportiva de alta performance.',
@@ -88,7 +88,13 @@ export default function ConfiguracoesPage() {
   const bannerRef = useRef();
 
   useEffect(() => {
-    api.get('/config').then(r => setConfig({ ...DEFAULT, ...r.data })).catch(() => {});
+    api.get('/config').then(r => {
+      const merged = { ...DEFAULT, ...r.data };
+      ['benefit1','benefit2','benefit3','benefit4'].forEach(k => {
+        if (!merged[k]) merged[k] = DEFAULT[k];
+      });
+      setConfig(merged);
+    }).catch(() => {});
     api.get('/admin/backup/status').then(r => setBackupStatus(r.data)).catch(() => {});
   }, []);
 
