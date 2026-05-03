@@ -36,11 +36,10 @@ export function getBestInstallment(price, config) {
   const cfg = config?.installments;
   if (!cfg?.active || !cfg.rows?.length || price <= 0) return null;
   const max = Math.min(cfg.maxDisplay || 6, 12);
-  const fixedFee = cfg.fixedFee ?? 0;
   const rows = cfg.rows.filter(r => r.n >= 2 && r.n <= max).sort((a, b) => b.n - a.n);
   const row = rows[0];
   if (!row) return null;
-  const value = (price * (1 + row.rate / 100)) / row.n + fixedFee;
+  const value = (price * (1 + row.rate / 100)) / row.n;
   return { n: row.n, value, rate: row.rate };
 }
 
@@ -49,9 +48,8 @@ export function getAllInstallments(price, config) {
   const cfg = config?.installments;
   if (!cfg?.active || !cfg.rows?.length || price <= 0) return [];
   const max = Math.min(cfg.maxDisplay || 6, 12);
-  const fixedFee = cfg.fixedFee ?? 0;
   return cfg.rows
     .filter(r => r.n >= 2 && r.n <= max)
     .sort((a, b) => a.n - b.n)
-    .map(r => ({ n: r.n, value: (price * (1 + r.rate / 100)) / r.n + fixedFee, rate: r.rate }));
+    .map(r => ({ n: r.n, value: (price * (1 + r.rate / 100)) / r.n, rate: r.rate }));
 }

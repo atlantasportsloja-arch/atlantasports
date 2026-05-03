@@ -18,14 +18,13 @@ const DEFAULT_ROWS = [
   { n: 12, rate: 14.77 },
 ];
 
-function calcPmt(price, rate, n, fixedFee = 0) {
-  return (price * (1 + rate / 100)) / n + fixedFee;
+function calcPmt(price, rate, n) {
+  return (price * (1 + rate / 100)) / n;
 }
 
 export default function ParcelamentoPage() {
   const [active, setActive]         = useState(false);
   const [maxDisplay, setMaxDisplay] = useState(6);
-  const [fixedFee, setFixedFee]     = useState(4.38);
   const [rows, setRows]             = useState(DEFAULT_ROWS);
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
@@ -37,7 +36,6 @@ export default function ParcelamentoPage() {
       if (cfg) {
         setActive(cfg.active ?? false);
         setMaxDisplay(cfg.maxDisplay ?? 6);
-        setFixedFee(cfg.fixedFee ?? 4.38);
         setRows(cfg.rows?.length ? cfg.rows : DEFAULT_ROWS);
       }
     }).catch(() => {}).finally(() => setLoading(false));
@@ -50,7 +48,7 @@ export default function ParcelamentoPage() {
   async function save() {
     setSaving(true);
     try {
-      await api.put('/config', { installments: { active, maxDisplay, fixedFee, rows } });
+      await api.put('/config', { installments: { active, maxDisplay, rows } });
       toast.success('Parcelamento salvo!');
     } catch {
       toast.error('Erro ao salvar');
@@ -101,7 +99,7 @@ export default function ParcelamentoPage() {
       </div>
 
       {/* Configuração geral */}
-      <div className="card p-6 space-y-5">
+      <div className="card p-6 space-y-4">
         <h2 className="font-black border-b pb-2">Configurações gerais</h2>
 
         <div className="flex items-start gap-8 flex-wrap">
@@ -137,31 +135,6 @@ export default function ParcelamentoPage() {
           </div>
         </div>
 
-        {/* Taxa fixa */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-black text-amber-800">Taxa fixa por parcela (R$)</span>
-            <span className="text-xs bg-amber-200 text-amber-700 font-semibold px-2 py-0.5 rounded-full">adicionada em cada parcela</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold text-gray-600">R$</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="input py-2 text-sm w-32 font-mono text-right"
-                value={fixedFee}
-                onChange={e => setFixedFee(Number(e.target.value) || 0)}
-              />
-              <span className="text-sm text-gray-400">por parcela</span>
-            </div>
-          </div>
-          <p className="text-xs text-amber-700">
-            Fórmula final: parcela = (preço × (1 + taxa%) ÷ n) + R$ {fixedFee.toFixed(2).replace('.', ',')}
-          </p>
-        </div>
-
         {/* Preview do destaque no produto */}
         {active && bestRow && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
@@ -170,7 +143,7 @@ export default function ParcelamentoPage() {
               <span className="font-semibold text-gray-800 text-sm">
                 ou <span className="font-black text-gray-900">{bestRow.n}x</span> de{' '}
                 <span className="text-primary-600 font-black text-lg">
-                  R$ {calcPmt(preview, bestRow.rate, bestRow.n, fixedFee).toFixed(2).replace('.', ',')}
+                  R$ {calcPmt(preview, bestRow.rate, bestRow.n).toFixed(2).replace('.', ',')}
                 </span>
               </span>
               <span className="text-xs text-gray-400">({bestRow.rate}% a.m.)</span>
@@ -186,7 +159,7 @@ export default function ParcelamentoPage() {
           <h2 className="font-black text-sm flex-1">Taxas por número de parcelas</h2>
           <div className="flex items-center gap-1.5 text-xs text-gray-400">
             <Info size={13} />
-            Fórmula: (preço × (1 + taxa%) ÷ n) + taxa fixa
+            Fórmula: parcela = preço × (1 + taxa%) ÷ n
           </div>
         </div>
 
@@ -197,12 +170,12 @@ export default function ParcelamentoPage() {
               <th className="text-left px-5 py-3 font-semibold text-gray-500 w-44">Taxa (% a.m.)</th>
               <th className="text-left px-5 py-3 font-semibold text-gray-500">Valor / parcela</th>
               <th className="text-left px-5 py-3 font-semibold text-gray-500">Total pago</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-500">Juros + taxa</th>
+              <th className="text-left px-5 py-3 font-semibold text-gray-500">Juros</th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {rows.map((row, i) => {
-              const pmt       = calcPmt(preview, row.rate, row.n, fixedFee);
+              const pmt       = calcPmt(preview, row.rate, row.n);
               const total     = pmt * row.n;
               const juros     = total - preview;
               const displayed = row.n <= maxDisplay;
@@ -239,7 +212,7 @@ export default function ParcelamentoPage() {
                     R$ {total.toFixed(2).replace('.', ',')}
                   </td>
                   <td className="px-5 py-3 text-gray-400 text-xs">
-                    {juros > 0.005
+                    {juros > 0
                       ? <span className="text-red-400 font-semibold">+ R$ {juros.toFixed(2).replace('.', ',')}</span>
                       : <span className="text-green-600 font-semibold">Sem juros</span>}
                   </td>
