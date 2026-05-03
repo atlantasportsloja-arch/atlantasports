@@ -48,7 +48,8 @@ export default function ParcelamentoPage() {
   async function save() {
     setSaving(true);
     try {
-      await api.put('/config', { installments: { active, maxDisplay, rows } });
+      const { data: current } = await api.get('/config');
+      await api.put('/config', { ...current, installments: { active, maxDisplay, rows } });
       toast.success('Parcelamento salvo!');
     } catch {
       toast.error('Erro ao salvar');
