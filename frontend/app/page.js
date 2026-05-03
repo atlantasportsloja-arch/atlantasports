@@ -72,11 +72,15 @@ export default async function HomePage() {
 
       {/* BENEFÍCIOS */}
       <section className="bg-primary-500 text-white">
-        <div className="max-w-7xl mx-auto px-3 py-2 grid grid-cols-2 md:grid-cols-4 gap-1.5 text-center font-medium">
-          <div className="py-1 text-[10px] sm:text-xs md:text-sm leading-tight">{config.benefit1}</div>
-          <div className="py-1 text-[10px] sm:text-xs md:text-sm leading-tight">{config.benefit2}</div>
-          <div className="py-1 text-[10px] sm:text-xs md:text-sm leading-tight">{config.benefit3}</div>
-          <div className="py-1 text-[10px] sm:text-xs md:text-sm leading-tight">{config.benefit4}</div>
+        <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 divide-x divide-white/20">
+          {[config.benefit1, config.benefit2, config.benefit3, config.benefit4].map((b, i) => (
+            <div key={i} className="flex items-center justify-center gap-2 px-4 py-1">
+              <span className="text-xl leading-none">{b.match(/^\S+/)?.[0]}</span>
+              <span className="text-xs sm:text-sm font-black tracking-wide uppercase leading-tight">
+                {b.replace(/^\S+\s*/, '')}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
 
