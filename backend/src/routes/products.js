@@ -55,6 +55,37 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
 
 router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
   try {
+    const { period, from, to } = req.query;
+    const paidStatuses = ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
+
+    let dateFilter = {};
+    const now = new Date();
+    if (period === 'hoje') {
+      const start = new Date(now); start.setHours(0, 0, 0, 0);
+      dateFilter = { gte: start };
+    } else if (period === '7d') {
+      const start = new Date(now); start.setDate(start.getDate() - 6); start.setHours(0, 0, 0, 0);
+      dateFilter = { gte: start };
+    } else if (period === '30d') {
+      const start = new Date(now); start.setDate(start.getDate() - 29); start.setHours(0, 0, 0, 0);
+      dateFilter = { gte: start };
+    } else if (period === 'mes') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: start };
+    } else if (period === 'mes_anterior') {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+      dateFilter = { gte: start, lte: end };
+    } else if (from || to) {
+      if (from) dateFilter.gte = new Date(from);
+      if (to) { const t = new Date(to); t.setHours(23, 59, 59, 999); dateFilter.lte = t; }
+    }
+
+    const orderWhere = {
+      status: { in: paidStatuses },
+      ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
+    };
+
     const [products, salesData, ordersRevenue] = await Promise.all([
       prisma.product.findMany({
         where: { active: true },
@@ -69,11 +100,11 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
       prisma.orderItem.groupBy({
         by: ['productId'],
         _sum: { quantity: true, price: true },
-        where: { order: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } } },
+        where: { order: orderWhere },
       }),
       prisma.order.aggregate({
         _sum: { total: true, shippingCost: true },
-        where: { status: { in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } },
+        where: orderWhere,
       }),
     ]);
 

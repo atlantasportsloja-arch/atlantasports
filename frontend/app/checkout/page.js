@@ -230,27 +230,70 @@ export default function CheckoutPage() {
 
           {/* Pagamento */}
           <div className="card p-5">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <CreditCard size={16} className="text-primary-500" />
               <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide">Pagamento</h2>
               <button onClick={() => setStep(1)} className="ml-auto text-xs text-primary-500 hover:underline">Editar</button>
             </div>
             {paymentMethod === 'pix' ? (
-              <div>
-                <p className="font-bold">⚡ PIX{pixDiscount > 0 ? ` (${pixDiscount}% off)` : ''}</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">⚡</span>
+                  <p className="font-bold">PIX{pixDiscount > 0 ? ` — ${pixDiscount}% off` : ''}</p>
+                </div>
                 {pixKey && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="font-mono text-sm text-gray-700 break-all">{pixKey}</p>
-                    <button type="button" onClick={copyPix} className="flex items-center gap-1 text-xs text-green-600 border border-green-300 rounded px-2 py-0.5 font-semibold shrink-0">
-                      <Copy size={11} /> Copiar
-                    </button>
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-bold text-green-700 uppercase tracking-wide">Como pagar com PIX</p>
+                    <ol className="space-y-2">
+                      {[
+                        'Confirme o pedido clicando no botão abaixo',
+                        'Copie a chave PIX',
+                        'Abra o app do seu banco → PIX → Pagar → Cole a chave',
+                        `Valor a pagar: R$ ${fmt(finalTotal)}`,
+                        whatsappNumber ? 'Envie o comprovante pelo WhatsApp para confirmarmos' : 'Aguarde a confirmação por e-mail',
+                      ].map((step, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-green-800">
+                          <span className="w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
+                          {step}
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="border-t border-green-200 pt-3">
+                      <p className="text-xs text-green-700 mb-1 font-semibold">Chave PIX:</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-mono font-bold text-green-900 break-all text-sm flex-1">{pixKey}</p>
+                        <button type="button" onClick={copyPix} className="flex items-center gap-1 text-xs text-green-700 border border-green-400 bg-white rounded-lg px-2.5 py-1.5 font-bold shrink-0 hover:bg-green-100 transition-colors">
+                          <Copy size={12} /> Copiar
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-green-500">{WHATSAPP_ICON}</span>
-                <p className="font-bold">Parcelado via WhatsApp</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-500">{WHATSAPP_ICON}</span>
+                  <p className="font-bold">Parcelado via WhatsApp</p>
+                </div>
+                {whatsappNumber && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-green-700 uppercase tracking-wide">Como funciona</p>
+                    <ol className="space-y-2">
+                      {[
+                        'Confirme o pedido clicando no botão abaixo',
+                        'Você receberá uma mensagem no WhatsApp',
+                        'Combine as parcelas e a forma de pagamento com a loja',
+                        'Aguarde a confirmação para começar a separação',
+                      ].map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-green-800">
+                          <span className="w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
+                          {s}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
               </div>
             )}
           </div>

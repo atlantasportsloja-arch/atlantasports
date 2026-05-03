@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Package, ChevronDown, ChevronUp, ExternalLink, Star, Loader2 } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, ExternalLink, Star, Loader2, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
@@ -101,11 +101,42 @@ export default function PedidosPage() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [reviewing, setReviewing] = useState(null);
+  const [reordering, setReordering] = useState(null);
 
   useEffect(() => {
     if (!token) { router.push('/login'); return; }
     api.get('/orders').then(r => setOrders(r.data)).catch(() => {}).finally(() => setLoading(false));
   }, [token]);
+
+  async function reorder(order) {
+    setReordering(order.id);
+    try {
+      let added = 0;
+      for (const item of order.items) {
+        if (!item.product) continue;
+        try {
+          await api.post('/cart', {
+            productId: item.product.id,
+            variantId: item.variantId || undefined,
+            quantity: item.quantity,
+          });
+          added++;
+        } catch {
+          // ignora item sem estoque
+        }
+      }
+      if (added === 0) {
+        toast.error('Nenhum item disponível em estoque');
+      } else {
+        toast.success(`${added} item(s) adicionado(s) ao carrinho`);
+        router.push('/carrinho');
+      }
+    } catch {
+      toast.error('Erro ao repetir pedido');
+    } finally {
+      setReordering(null);
+    }
+  }
 
   if (loading) return (
     <div className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-400">Carregando...</div>
@@ -144,7 +175,21 @@ export default function PedidosPage() {
                     <OrderProgress status={order.status} />
                   </div>
                   <div className="text-right flex-shrink-0 flex items-start gap-3">
-                    <p className="font-black text-lg">R$ {order.total.toFixed(2).replace('.', ',')}</p>
+                    <div>
+                      <p className="font-black text-lg">R$ {order.total.toFixed(2).replace('.', ',')}</p>
+                      {['DELIVERED', 'CANCELLED'].includes(order.status) && (
+                        <button
+                          onClick={e => { e.stopPropagation(); reorder(order); }}
+                          disabled={reordering === order.id}
+                          className="mt-1 flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-800 hover:bg-primary-50 border border-primary-200 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          {reordering === order.id
+                            ? <Loader2 size={11} className="animate-spin" />
+                            : <RotateCcw size={11} />}
+                          Comprar novamente
+                        </button>
+                      )}
+                    </div>
                     {isOpen ? <ChevronUp size={18} className="text-gray-400 mt-1" /> : <ChevronDown size={18} className="text-gray-400 mt-1" />}
                   </div>
                 </div>
