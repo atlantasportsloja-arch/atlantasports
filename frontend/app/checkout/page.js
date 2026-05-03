@@ -75,6 +75,7 @@ export default function CheckoutPage() {
   const whatsappNumber = storeConfig.whatsapp || '';
   const pixDiscount = Number(storeConfig.pixDiscount || 0);
   const pixKey = storeConfig.pixKey || '';
+  const pixHolder = storeConfig.pixHolder || '';
   const subtotalWithCoupon = total - discount;
   const isFreeShipping = total >= freeShippingThreshold;
   const shippingCost = isFreeShipping ? 0 : (freteSelecionado?.preco ?? null);
@@ -258,8 +259,14 @@ export default function CheckoutPage() {
                         </li>
                       ))}
                     </ol>
-                    <div className="border-t border-green-200 pt-3">
-                      <p className="text-xs text-green-700 mb-1 font-semibold">Chave PIX:</p>
+                    <div className="border-t border-green-200 pt-3 space-y-2">
+                      {pixHolder && (
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-green-700 font-semibold">Destinatário:</p>
+                          <p className="font-bold text-green-900 text-sm">{pixHolder}</p>
+                        </div>
+                      )}
+                      <p className="text-xs text-green-700 font-semibold">Chave PIX:</p>
                       <div className="flex items-center gap-2">
                         <p className="font-mono font-bold text-green-900 break-all text-sm flex-1">{pixKey}</p>
                         <button type="button" onClick={copyPix} className="flex items-center gap-1 text-xs text-green-700 border border-green-400 bg-white rounded-lg px-2.5 py-1.5 font-bold shrink-0 hover:bg-green-100 transition-colors">

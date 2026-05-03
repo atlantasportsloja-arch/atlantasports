@@ -265,6 +265,16 @@ export default function ConfiguracoesPage() {
           <p className="text-xs text-gray-400 mt-1">Deixe em branco para não exibir a opção PIX no checkout.</p>
         </div>
         <div>
+          <label className="block text-sm font-medium mb-1">Titular / Destinatário</label>
+          <input
+            className="input"
+            value={config.pixHolder || ''}
+            onChange={e => setConfig(c => ({ ...c, pixHolder: e.target.value }))}
+            placeholder="Ex: Atlanta Sports Ltda ou João Silva"
+          />
+          <p className="text-xs text-gray-400 mt-1">Nome exibido no checkout para o cliente confirmar quem está recebendo.</p>
+        </div>
+        <div>
           <label className="block text-sm font-medium mb-1">Desconto PIX (%)</label>
           <input
             className="input"

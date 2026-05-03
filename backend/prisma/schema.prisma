@@ -234,6 +234,7 @@ model StoreConfig {
   shippingZones        Json?     @default("[]")
   pixDiscount          Float?    @default(0)
   pixKey               String?   @default("")
+  pixHolder            String?   @default("")
   pixMessage           String?   @default("")
   parceladoMessage     String?   @default("")
   whatsapp             String?   @default("")

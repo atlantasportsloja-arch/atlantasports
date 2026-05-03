@@ -36,7 +36,7 @@ router.put('/', adminMiddleware, async (req, res) => {
     benefit1, benefit2, benefit3, benefit4,
     sectionCategories, sectionFeatured,
     whatsapp, footerEmail, footerHours, footerDesc,
-    pixDiscount, pixKey, pixMessage, parceladoMessage,
+    pixDiscount, pixKey, pixHolder, pixMessage, parceladoMessage,
     freeShippingThreshold, shippingZones, footerLinks,
     termsContent, installments,
   } = req.body;
@@ -67,6 +67,7 @@ router.put('/', adminMiddleware, async (req, res) => {
         "footerDesc" = ${footerDesc},
         "pixDiscount" = ${Number(pixDiscount) || 0},
         "pixKey" = ${pixKey || ''},
+        "pixHolder" = ${pixHolder || ''},
         "pixMessage" = ${pixMessage || ''},
         "parceladoMessage" = ${parceladoMessage || ''},
         "freeShippingThreshold" = ${Number(freeShippingThreshold) || 299},
