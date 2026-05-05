@@ -2,12 +2,24 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const prisma = require('../lib/prisma');
 const adminMiddleware = require('../middleware/admin');
+const cache = require('../lib/cache');
 
 const router = express.Router();
+const PRODUCTS_TTL = 120; // 2 minutos
 
 router.get('/', async (req, res) => {
   const { category, search, page = 1, limit = 20, sort } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
+
+  // Só usa cache em listagens simples sem busca por texto
+  const cacheKey = search
+    ? null
+    : `products:list:${category || ''}:${sort || ''}:${page}:${limit}`;
+
+  if (cacheKey) {
+    const cached = cache.get(cacheKey);
+    if (cached) return res.json(cached);
+  }
 
   const where = { active: true };
   if (category) where.categories = { some: { slug: category } };
@@ -35,7 +47,9 @@ router.get('/', async (req, res) => {
       }),
       prisma.product.count({ where }),
     ]);
-    res.json({ products, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    const result = { products, total, page: Number(page), pages: Math.ceil(total / Number(limit)) };
+    if (cacheKey) cache.set(cacheKey, result, PRODUCTS_TTL);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar produtos' });
   }
@@ -155,6 +169,10 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
 });
 
 router.get('/:slug', async (req, res) => {
+  const cacheKey = `products:slug:${req.params.slug}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return res.json(cached);
+
   try {
     const product = await prisma.product.findUnique({
       where: { slug: req.params.slug },
@@ -168,6 +186,7 @@ router.get('/:slug', async (req, res) => {
       },
     });
     if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+    cache.set(cacheKey, product, PRODUCTS_TTL);
     res.json(product);
   } catch {
     res.status(500).json({ error: 'Erro ao buscar produto' });
@@ -246,6 +265,7 @@ router.post('/', adminMiddleware, [
       },
       include: { categories: true },
     });
+    cache.delByPrefix('products:');
     res.status(201).json(product);
   } catch (err) {
     if (err.code === 'P2002') return res.status(400).json({ error: 'Produto já existe' });
@@ -280,6 +300,7 @@ router.put('/:id', adminMiddleware, async (req, res) => {
       data,
       include: { categories: true },
     });
+    cache.delByPrefix('products:');
     res.json(product);
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar produto' });
@@ -340,6 +361,7 @@ router.patch('/:id/toggle', adminMiddleware, async (req, res) => {
       data: { active: !product.active },
       select: { id: true, active: true },
     });
+    cache.delByPrefix('products:');
     res.json(updated);
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar produto' });
@@ -368,6 +390,7 @@ router.post('/admin/bulk', adminMiddleware, async (req, res) => {
       }
       await prisma.product.deleteMany({ where: { id: { in: ids } } });
     }
+    cache.delByPrefix('products:');
     res.json({ affected: ids.length });
   } catch (err) {
     console.error(err);
@@ -383,6 +406,7 @@ router.delete('/:id', adminMiddleware, async (req, res) => {
     await prisma.orderItem.deleteMany({ where: { productId: req.params.id } });
     await prisma.productVariant.deleteMany({ where: { productId: req.params.id } });
     await prisma.product.delete({ where: { id: req.params.id } });
+    cache.delByPrefix('products:');
     res.json({ message: 'Produto excluído' });
   } catch (err) {
     console.error(err);

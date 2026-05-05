@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const helmet = require('helmet');
 
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
@@ -27,6 +29,15 @@ const allowedOrigins = [
   'https://atlantasports.com.br',
 ].filter(Boolean);
 
+// Segurança: headers HTTP contra XSS, clickjacking, etc.
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false, // Gerenciado pelo frontend Next.js
+}));
+
+// Compressão gzip em todas as respostas
+app.use(compression());
+
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin || allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
@@ -35,29 +46,61 @@ app.use(cors({
   credentials: true,
 }));
 
-// Raw body for payment webhook (must come before express.json)
+// Raw body para webhook de pagamento (deve vir antes de express.json)
 app.use('/payment/webhook', express.raw({ type: 'application/json' }));
 
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-app.use(limiter);
+// Rate limiting diferenciado por tipo de rota
+// Autenticação: mais restrito para evitar força bruta
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-app.use('/auth', authRoutes);
-app.use('/products', productRoutes);
-app.use('/categories', categoryRoutes);
-app.use('/cart', cartRoutes);
-app.use('/orders', orderRoutes);
-app.use('/payment', paymentRoutes);
-app.use('/admin', adminRoutes);
-app.use('/coupons', couponRoutes);
-app.use('/frete', freteRoutes);
-app.use('/upload', uploadRoutes);
-app.use('/config', configRoutes);
-app.use('/reviews', reviewRoutes);
-app.use('/wishlist', wishlistRoutes);
+// Rotas públicas de leitura: mais permissivo (produtos, categorias, config)
+const publicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  message: { error: 'Muitas requisições. Tente novamente em instantes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method !== 'GET',
+});
 
-app.get('/health', (req, res) => res.json({ status: 'ok', app: 'Atlanta Sports API' }));
+// Geral (fallback): proteção base para demais rotas
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: { error: 'Muitas requisições. Tente novamente em instantes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/auth', authLimiter, authRoutes);
+app.use('/products', publicLimiter, productRoutes);
+app.use('/categories', publicLimiter, categoryRoutes);
+app.use('/config', publicLimiter, configRoutes);
+app.use('/cart', generalLimiter, cartRoutes);
+app.use('/orders', generalLimiter, orderRoutes);
+app.use('/payment', generalLimiter, paymentRoutes);
+app.use('/admin', generalLimiter, adminRoutes);
+app.use('/coupons', generalLimiter, couponRoutes);
+app.use('/frete', generalLimiter, freteRoutes);
+app.use('/upload', generalLimiter, uploadRoutes);
+app.use('/reviews', generalLimiter, reviewRoutes);
+app.use('/wishlist', generalLimiter, wishlistRoutes);
+
+const cache = require('./lib/cache');
+app.get('/health', (req, res) => res.json({
+  status: 'ok',
+  app: 'Atlanta Sports API',
+  cacheEntries: cache.size(),
+  uptime: Math.floor(process.uptime()),
+}));
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

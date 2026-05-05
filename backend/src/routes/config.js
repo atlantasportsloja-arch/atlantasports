@@ -3,6 +3,10 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const prisma = require('../lib/prisma');
 const adminMiddleware = require('../middleware/admin');
+const cache = require('../lib/cache');
+
+const CONFIG_CACHE_KEY = 'store:config';
+const CONFIG_TTL = 120; // 2 minutos
 
 const router = express.Router();
 
@@ -21,9 +25,14 @@ const upload = multer({
 });
 
 router.get('/', async (req, res) => {
+  const cached = cache.get(CONFIG_CACHE_KEY);
+  if (cached) return res.json(cached);
+
   try {
     const config = await prisma.$queryRaw`SELECT * FROM "store_config" WHERE id = 'default' LIMIT 1`;
-    res.json(config[0] || {});
+    const data = config[0] || {};
+    cache.set(CONFIG_CACHE_KEY, data, CONFIG_TTL);
+    res.json(data);
   } catch {
     res.status(500).json({ error: 'Erro ao buscar configurações' });
   }
@@ -78,6 +87,7 @@ router.put('/', adminMiddleware, async (req, res) => {
         "updatedAt" = NOW()
       WHERE id = 'default'
     `;
+    cache.del(CONFIG_CACHE_KEY);
     res.json({ message: 'Configurações salvas' });
   } catch (err) {
     console.error(err);
@@ -98,6 +108,7 @@ router.post('/banner', adminMiddleware, upload.single('banner'), async (req, res
     const config = await prisma.$queryRaw`SELECT banners FROM "store_config" WHERE id = 'default'`;
     const newBanners = [...(config[0]?.banners || []), url];
     await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${newBanners}, "updatedAt" = NOW() WHERE id = 'default'`;
+    cache.del(CONFIG_CACHE_KEY);
     res.json({ url, banners: newBanners });
   } catch (err) {
     console.error(err);
@@ -111,6 +122,7 @@ router.delete('/banner', adminMiddleware, async (req, res) => {
     const config = await prisma.$queryRaw`SELECT banners FROM "store_config" WHERE id = 'default'`;
     const newBanners = (config[0]?.banners || []).filter(b => b !== url);
     await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${newBanners}, "updatedAt" = NOW() WHERE id = 'default'`;
+    cache.del(CONFIG_CACHE_KEY);
     res.json({ banners: newBanners });
   } catch {
     res.status(500).json({ error: 'Erro ao remover banner' });

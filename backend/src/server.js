@@ -75,9 +75,42 @@ async function migrate() {
 }
 
 migrate().then(() => {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`Atlanta Sports API rodando na porta ${PORT}`);
     startReviewReminderJob();
     startBackupJob();
+  });
+
+  // Graceful shutdown: Railway envia SIGTERM ao reiniciar/deploys
+  // Aguarda requisições ativas terminarem antes de encerrar
+  function shutdown(signal) {
+    console.log(`[Shutdown] ${signal} recebido. Encerrando servidor...`);
+    server.close(async () => {
+      try {
+        await prisma.$disconnect();
+        console.log('[Shutdown] Conexão DB encerrada. Processo finalizado.');
+      } catch (e) {
+        console.error('[Shutdown] Erro ao desconectar DB:', e.message);
+      }
+      process.exit(0);
+    });
+
+    // Força encerramento após 15s se alguma requisição travar
+    setTimeout(() => {
+      console.error('[Shutdown] Timeout forçado após 15s.');
+      process.exit(1);
+    }, 15000);
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+
+  process.on('uncaughtException', (err) => {
+    console.error('[UncaughtException]', err);
+    shutdown('uncaughtException');
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    console.error('[UnhandledRejection]', reason);
   });
 });
