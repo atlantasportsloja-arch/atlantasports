@@ -374,30 +374,60 @@ function AdminPedidosInner() {
                     </tr>
                     {expanded === o.id && (
                       <tr>
-                        <td colSpan={6} className="bg-gray-50 px-6 py-4">
-                          <p className="text-xs font-semibold text-gray-500 mb-2">ITENS DO PEDIDO</p>
-                          <div className="space-y-1">
-                            {o.items.map(item => (
-                              <div key={item.id} className="flex justify-between text-sm">
-                                <span className="text-gray-700">
-                                  {item.product?.name || '—'}
-                                  {(item.variant?.size || item.variant?.color) && (
-                                    <span className="text-gray-400 ml-1">
-                                      ({[item.variant.size, item.variant.color].filter(Boolean).join(' / ')})
+                        <td colSpan={6} className="bg-gray-50 px-6 py-5">
+
+                          {/* Itens para separação */}
+                          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">📦 Itens para separação ({o.items.length})</p>
+                          <div className="space-y-2">
+                            {o.items.map((item, idx) => (
+                              <div key={item.id} className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-4 py-3">
+                                <span className="text-gray-300 text-xs font-mono w-4 shrink-0">{idx + 1}</span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-bold text-sm text-gray-900 leading-snug">{item.product?.name || '—'}</p>
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                    {item.variant?.size && (
+                                      <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded-md">
+                                        Tamanho: {item.variant.size}
+                                      </span>
+                                    )}
+                                    {item.variant?.color && (
+                                      <span className="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-0.5 rounded-md">
+                                        Cor: {item.variant.color}
+                                      </span>
+                                    )}
+                                    {!item.variant?.size && !item.variant?.color && (
+                                      <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-md">Sem variante</span>
+                                    )}
+                                    <span className="bg-orange-100 text-orange-700 text-xs font-black px-2.5 py-0.5 rounded-md">
+                                      Qtd: {item.quantity}
                                     </span>
-                                  )}
-                                  {' '}× {item.quantity}
-                                </span>
-                                <span className="font-semibold">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className="text-xs text-gray-400">R$ {item.price.toFixed(2).replace('.', ',')} × {item.quantity}</p>
+                                  <p className="font-black text-sm text-gray-900">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</p>
+                                </div>
                               </div>
                             ))}
                           </div>
+
+                          {/* Totais */}
+                          <div className="mt-3 flex justify-end gap-6 text-sm text-gray-600 pr-1">
+                            {o.shippingCost > 0 && (
+                              <span>Frete: <strong>R$ {o.shippingCost.toFixed(2).replace('.', ',')}</strong></span>
+                            )}
+                            <span>Total: <strong className="text-gray-900 text-base">R$ {o.total.toFixed(2).replace('.', ',')}</strong></span>
+                          </div>
+
+                          {/* Endereço de entrega */}
                           {o.shippingAddress && (
                             <div className="mt-3 pt-3 border-t text-xs text-gray-500">
-                              <span className="font-semibold">Entrega: </span>
-                              {o.shippingAddress.street}, {o.shippingAddress.number} — {o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}
+                              <span className="font-semibold text-gray-700">📍 Endereço de entrega: </span>
+                              {o.shippingAddress.street}, {o.shippingAddress.number}
+                              {o.shippingAddress.complement ? `, ${o.shippingAddress.complement}` : ''} — {o.shippingAddress.neighborhood ? `${o.shippingAddress.neighborhood}, ` : ''}{o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}
                             </div>
                           )}
+
                           <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
                           <div className="mt-3 pt-3 border-t flex items-start gap-4 flex-wrap">
                             <button
@@ -421,7 +451,7 @@ function AdminPedidosInner() {
           <div className="md:hidden divide-y">
             {filtered.map(o => (
               <div key={o.id} className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-2" onClick={() => setExpanded(e => e === o.id ? null : o.id)}>
                   <div>
                     <p className="font-mono text-xs font-bold">#{o.orderNumber ?? o.id.slice(0, 8).toUpperCase()}</p>
                     <p className="font-medium text-sm">{o.user.name}</p>
@@ -434,6 +464,37 @@ function AdminPedidosInner() {
                     </span>
                   </div>
                 </div>
+
+                {/* Itens do pedido - mobile */}
+                {expanded === o.id && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">📦 Itens para separação</p>
+                    {o.items.map((item, idx) => (
+                      <div key={item.id} className="bg-gray-50 rounded-xl border border-gray-200 px-3 py-2.5">
+                        <p className="font-bold text-sm text-gray-900">{idx + 1}. {item.product?.name || '—'}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {item.variant?.size && (
+                            <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded-md">Tamanho: {item.variant.size}</span>
+                          )}
+                          {item.variant?.color && (
+                            <span className="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-0.5 rounded-md">Cor: {item.variant.color}</span>
+                          )}
+                          <span className="bg-orange-100 text-orange-700 text-xs font-black px-2.5 py-0.5 rounded-md">Qtd: {item.quantity}</span>
+                          <span className="text-xs text-gray-500 self-center">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {o.shippingAddress && (
+                      <p className="text-xs text-gray-500 pt-1">
+                        <span className="font-semibold text-gray-700">📍 </span>
+                        {o.shippingAddress.street}, {o.shippingAddress.number} — {o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}
+                      </p>
+                    )}
+                    <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
+                    <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
+                  </div>
+                )}
+
                 <select
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
                   value={o.status}
