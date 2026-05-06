@@ -2,6 +2,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Truck, Loader2, Search, X, Mail, Download, StickyNote, ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -382,6 +383,13 @@ function AdminPedidosInner() {
                             {o.items.map((item, idx) => (
                               <div key={item.id} className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-4 py-3">
                                 <span className="text-gray-300 text-xs font-mono w-4 shrink-0">{idx + 1}</span>
+                                <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
+                                  {item.product?.images?.[0] ? (
+                                    <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-2xl">👕</div>
+                                  )}
+                                </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="font-bold text-sm text-gray-900 leading-snug">{item.product?.name || '—'}</p>
                                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
@@ -470,17 +478,26 @@ function AdminPedidosInner() {
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">📦 Itens para separação</p>
                     {o.items.map((item, idx) => (
-                      <div key={item.id} className="bg-gray-50 rounded-xl border border-gray-200 px-3 py-2.5">
-                        <p className="font-bold text-sm text-gray-900">{idx + 1}. {item.product?.name || '—'}</p>
-                        <div className="flex flex-wrap gap-1.5 mt-1.5">
-                          {item.variant?.size && (
-                            <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded-md">Tamanho: {item.variant.size}</span>
+                      <div key={item.id} className="bg-gray-50 rounded-xl border border-gray-200 px-3 py-2.5 flex gap-3 items-start">
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-200 shrink-0 border border-gray-200">
+                          {item.product?.images?.[0] ? (
+                            <Image src={item.product.images[0]} alt={item.product?.name || ''} fill className="object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl">👕</div>
                           )}
-                          {item.variant?.color && (
-                            <span className="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-0.5 rounded-md">Cor: {item.variant.color}</span>
-                          )}
-                          <span className="bg-orange-100 text-orange-700 text-xs font-black px-2.5 py-0.5 rounded-md">Qtd: {item.quantity}</span>
-                          <span className="text-xs text-gray-500 self-center">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm text-gray-900">{idx + 1}. {item.product?.name || '—'}</p>
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {item.variant?.size && (
+                              <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded-md">Tamanho: {item.variant.size}</span>
+                            )}
+                            {item.variant?.color && (
+                              <span className="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-0.5 rounded-md">Cor: {item.variant.color}</span>
+                            )}
+                            <span className="bg-orange-100 text-orange-700 text-xs font-black px-2.5 py-0.5 rounded-md">Qtd: {item.quantity}</span>
+                            <span className="text-xs text-gray-500 self-center">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
