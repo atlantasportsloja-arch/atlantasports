@@ -346,7 +346,7 @@ export default function ProdutoPage({ params }) {
             )}
             <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
               <span className="text-primary-500"><Shield size={18} /></span>
-              Compra 100% segura
+              Compra<br />100% Segura
             </div>
           </div>
         </div>
