@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, Truck, RotateCcw, Shield, ChevronRight, Loader2, Heart, Zap } from 'lucide-react';
+import { ShoppingCart, Truck, Shield, ChevronRight, Loader2, Heart, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
@@ -323,12 +323,12 @@ export default function ProdutoPage({ params }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className={`grid gap-3 ${hasEstadoSigla ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
               <span className="text-primary-500"><Truck size={18} /></span>
               Frete grátis acima de R$ 299
             </div>
-            {hasEstadoSigla ? (
+            {hasEstadoSigla && (
               <a
                 href={waUrl}
                 target="_blank"
@@ -338,11 +338,6 @@ export default function ProdutoPage({ params }) {
                 {WA_ICON}
                 Ver fotos reais pelo WhatsApp
               </a>
-            ) : (
-              <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
-                <span className="text-primary-500"><RotateCcw size={18} /></span>
-                Troca em 30 dias
-              </div>
             )}
             <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
               <span className="text-primary-500"><Shield size={18} /></span>
