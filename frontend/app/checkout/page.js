@@ -514,7 +514,7 @@ export default function CheckoutPage() {
                     <span className="text-green-500 flex items-center">{WHATSAPP_ICON}</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold">Parcelado via WhatsApp</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Combine as parcelas com a loja</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Pagamento em até 12x com juros</p>
                     </div>
                     {paymentMethod === 'parcelado' && <CheckCircle size={20} className="text-green-500 shrink-0" />}
                   </div>
