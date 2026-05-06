@@ -326,7 +326,7 @@ export default function ProdutoPage({ params }) {
           <div className="grid grid-cols-3 gap-3">
             <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
               <span className="text-primary-500"><Truck size={18} /></span>
-              Frete grátis acima de R$ 299
+              Frete Grátis acima R$ 299
             </div>
             {hasEstadoSigla ? (
               <a
