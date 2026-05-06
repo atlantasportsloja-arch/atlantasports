@@ -427,14 +427,38 @@ function AdminPedidosInner() {
                             <span>Total: <strong className="text-gray-900 text-base">R$ {o.total.toFixed(2).replace('.', ',')}</strong></span>
                           </div>
 
-                          {/* Endereço de entrega */}
-                          {o.shippingAddress && (
-                            <div className="mt-3 pt-3 border-t text-xs text-gray-500">
-                              <span className="font-semibold text-gray-700">📍 Endereço de entrega: </span>
-                              {o.shippingAddress.street}, {o.shippingAddress.number}
-                              {o.shippingAddress.complement ? `, ${o.shippingAddress.complement}` : ''} — {o.shippingAddress.neighborhood ? `${o.shippingAddress.neighborhood}, ` : ''}{o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}
+                          {/* Dados do cliente */}
+                          <div className="mt-4 pt-3 border-t">
+                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">👤 Dados do Cliente</p>
+                            <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                              <div>
+                                <span className="text-xs text-gray-400 block">Nome</span>
+                                <span className="font-semibold text-gray-900">{o.user.name}</span>
+                              </div>
+                              <div>
+                                <span className="text-xs text-gray-400 block">E-mail</span>
+                                <span className="font-semibold text-gray-900">{o.user.email}</span>
+                              </div>
+                              {o.user.phone && (
+                                <div>
+                                  <span className="text-xs text-gray-400 block">Telefone / WhatsApp</span>
+                                  <span className="font-semibold text-gray-900">{o.user.phone}</span>
+                                </div>
+                              )}
+                              {o.shippingAddress && (
+                                <div className="col-span-2">
+                                  <span className="text-xs text-gray-400 block">Endereço de entrega</span>
+                                  <span className="font-semibold text-gray-900">
+                                    {o.shippingAddress.street}, {o.shippingAddress.number}
+                                    {o.shippingAddress.complement ? `, ${o.shippingAddress.complement}` : ''}
+                                    {o.shippingAddress.neighborhood ? ` — ${o.shippingAddress.neighborhood}` : ''}
+                                  </span>
+                                  <br />
+                                  <span className="text-gray-700">{o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}</span>
+                                </div>
+                              )}
                             </div>
-                          )}
+                          </div>
 
                           <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
                           <div className="mt-3 pt-3 border-t flex items-start gap-4 flex-wrap">
@@ -501,12 +525,24 @@ function AdminPedidosInner() {
                         </div>
                       </div>
                     ))}
-                    {o.shippingAddress && (
-                      <p className="text-xs text-gray-500 pt-1">
-                        <span className="font-semibold text-gray-700">📍 </span>
-                        {o.shippingAddress.street}, {o.shippingAddress.number} — {o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}
-                      </p>
-                    )}
+                    {/* Dados do cliente - mobile */}
+                    <div className="bg-white rounded-xl border border-gray-200 px-3 py-2.5 space-y-1 text-xs">
+                      <p className="font-bold text-gray-500 uppercase tracking-wide mb-1">👤 Dados do Cliente</p>
+                      <p><span className="text-gray-400">Nome: </span><span className="font-semibold text-gray-900">{o.user.name}</span></p>
+                      <p><span className="text-gray-400">E-mail: </span><span className="font-semibold text-gray-900">{o.user.email}</span></p>
+                      {o.user.phone && (
+                        <p><span className="text-gray-400">Telefone: </span><span className="font-semibold text-gray-900">{o.user.phone}</span></p>
+                      )}
+                      {o.shippingAddress && (
+                        <p>
+                          <span className="text-gray-400">📍 Endereço: </span>
+                          <span className="font-semibold text-gray-900">
+                            {o.shippingAddress.street}, {o.shippingAddress.number}
+                            {o.shippingAddress.complement ? `, ${o.shippingAddress.complement}` : ''}{o.shippingAddress.neighborhood ? ` — ${o.shippingAddress.neighborhood}` : ''}, {o.shippingAddress.city}/{o.shippingAddress.state} · CEP {o.shippingAddress.zip}
+                          </span>
+                        </p>
+                      )}
+                    </div>
                     <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
                     <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
                   </div>
