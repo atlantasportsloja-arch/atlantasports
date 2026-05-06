@@ -139,7 +139,7 @@ export default function ProdutoPage({ params }) {
 
   const outOfStock = effectiveStock === 0;
   const lowStock = effectiveStock > 0 && effectiveStock <= 5;
-  const hasEstadoSigla = true; // TESTE: remover depois, restaurar: ESTADOS_BR.some(uf => product.name?.includes(`(${uf})`))
+  const hasEstadoSigla = ESTADOS_BR.some(uf => product.name?.includes(`(${uf})`));
   const waNumero = (config.whatsapp || '').replace(/\D/g, '');
   const waUrl = `https://wa.me/${waNumero}?text=${encodeURIComponent(`Quero ver as fotos reais\nPoderia me enviar por favor? 📸\n\nhttps://www.atlantasports.com.br/produto/${product.slug}`)}`;
 
