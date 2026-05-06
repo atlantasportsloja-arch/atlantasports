@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
   try {
     const items = await prisma.wishlist.findMany({
       where: { userId: req.user.id },
-      include: { product: { include: { category: true } } },
+      include: { product: { include: { categories: true } } },
       orderBy: { createdAt: 'desc' },
     });
     res.json(items);

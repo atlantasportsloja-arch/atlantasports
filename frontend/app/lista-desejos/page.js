@@ -82,7 +82,7 @@ export default function ListaDesejosPage() {
 
             <div className="p-3 flex flex-col flex-1 gap-2">
               <Link href={`/produto/${product.slug}`}>
-                <p className="text-xs text-gray-400 uppercase">{product.category?.name}</p>
+                <p className="text-xs text-gray-400 uppercase">{product.categories?.[0]?.name}</p>
                 <h3 className="font-semibold text-sm line-clamp-2 leading-snug hover:text-primary-500">{product.name}</h3>
               </Link>
               <p className="font-black text-gray-900">R$ {product.price.toFixed(2).replace('.', ',')}</p>
