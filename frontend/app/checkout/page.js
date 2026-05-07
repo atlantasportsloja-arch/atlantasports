@@ -94,7 +94,7 @@ export default function CheckoutPage() {
     try {
       const [viaCep, freteRes] = await Promise.allSettled([
         fetch(`https://viacep.com.br/ws/${digits}/json/`).then(r => r.json()),
-        api.post('/frete/calcular', { cep: digits }),
+        api.post('/frete/calcular', { cep: digits, totalItems: items.reduce((s, i) => s + i.quantity, 0) }),
       ]);
       if (viaCep.status === 'fulfilled' && !viaCep.value.erro) {
         const d = viaCep.value;

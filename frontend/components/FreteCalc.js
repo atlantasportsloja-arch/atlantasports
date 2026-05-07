@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Truck } from 'lucide-react';
 import api from '@/lib/api';
 
-export default function FreteCalc({ onSelect }) {
+export default function FreteCalc({ onSelect, totalItems = 1 }) {
   const [cep, setCep] = useState('');
   const [opcoes, setOpcoes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -13,7 +13,7 @@ export default function FreteCalc({ onSelect }) {
     if (cep.replace(/\D/g, '').length !== 8) return;
     setLoading(true);
     try {
-      const { data } = await api.post('/frete/calcular', { cep });
+      const { data } = await api.post('/frete/calcular', { cep, totalItems });
       setOpcoes(data.opcoes);
     } catch {
       setOpcoes([]);

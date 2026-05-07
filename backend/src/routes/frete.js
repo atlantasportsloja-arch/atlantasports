@@ -17,8 +17,14 @@ const DEFAULT_ZONES = [
   { label: 'Demais regiões', cepStart: '00', cepEnd: '99', pacPrice: 27.9, pacDays: 10, sedexPrice: 50.22, sedexDays: 5 },
 ];
 
+// Multiplicador de peso: base 300g (1 produto), +12% por produto adicional, máx 2.5×
+function weightMultiplier(totalItems) {
+  const qty = Math.max(1, Math.round(totalItems) || 1);
+  return Math.min(1 + (qty - 1) * 0.12, 2.5);
+}
+
 router.post('/calcular', async (req, res) => {
-  const { cep } = req.body;
+  const { cep, totalItems = 1 } = req.body;
   if (!cep) return res.status(400).json({ error: 'CEP obrigatório' });
 
   const cepNum = cep.replace(/\D/g, '');
@@ -32,20 +38,24 @@ router.post('/calcular', async (req, res) => {
     const prefix = cepNum.substring(0, 2);
     const zone = zones.find(z => prefix >= z.cepStart && prefix <= z.cepEnd) || zones[zones.length - 1];
 
+    const mult = weightMultiplier(totalItems);
+    const totalWeight = Math.max(1, Math.round(totalItems)) * 300;
+
     res.json({
       freeShippingThreshold: freeThreshold,
+      pesoTotal: totalWeight,
       opcoes: [
         {
           id: 'pac',
           servico: 'PAC',
           prazo: `${zone.pacDays} dias úteis`,
-          preco: Number(Number(zone.pacPrice).toFixed(2)),
+          preco: Number((zone.pacPrice * mult).toFixed(2)),
         },
         {
           id: 'sedex',
           servico: 'SEDEX',
           prazo: `${zone.sedexDays} dias úteis`,
-          preco: Number(Number(zone.sedexPrice).toFixed(2)),
+          preco: Number((zone.sedexPrice * mult).toFixed(2)),
         },
       ],
     });
