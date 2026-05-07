@@ -25,6 +25,7 @@ function fmt(v) { return Number(v).toFixed(2).replace('.', ','); }
 export default function AdminFretePage() {
   const [threshold, setThreshold] = useState(299);
   const [zones, setZones] = useState([]);
+  const [cepOrigem, setCepOrigem] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -35,6 +36,7 @@ export default function AdminFretePage() {
     api.get('/config').then(r => {
       setThreshold(Number(r.data.freeShippingThreshold || 299));
       setZones(r.data.shippingZones?.length ? r.data.shippingZones : DEFAULT_ZONES);
+      setCepOrigem(r.data.cepOrigem || '');
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -42,7 +44,7 @@ export default function AdminFretePage() {
     setSaving(true);
     try {
       const full = await api.get('/config').then(r => r.data);
-      await api.put('/config', { ...full, freeShippingThreshold: threshold, shippingZones: zones });
+      await api.put('/config', { ...full, freeShippingThreshold: threshold, shippingZones: zones, cepOrigem });
       toast.success('Configurações de frete salvas!');
     } catch {
       toast.error('Erro ao salvar');
@@ -90,6 +92,36 @@ export default function AdminFretePage() {
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
           Salvar frete
         </button>
+      </div>
+
+      {/* Integração Correios */}
+      <div className="card p-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
+          <div>
+            <h2 className="font-black flex items-center gap-2">
+              Integração Correios
+              {cepOrigem.replace(/\D/g,'').length === 8
+                ? <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Ativo</span>
+                : <span className="text-xs font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Inativo</span>
+              }
+            </h2>
+            <p className="text-xs text-gray-400 mt-1">
+              Com o CEP de origem configurado, o preço é calculado diretamente pelos Correios em tempo real
+              (PAC e SEDEX). Peso: 300g por produto. Se os Correios estiverem indisponíveis, a tabela de zonas abaixo é usada como reserva.
+            </p>
+          </div>
+        </div>
+        <div className="max-w-xs">
+          <label className="block text-sm font-medium mb-1">CEP de origem (seu endereço de envio)</label>
+          <input
+            className="input"
+            placeholder="00000-000"
+            maxLength={9}
+            value={cepOrigem}
+            onChange={e => setCepOrigem(e.target.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9))}
+          />
+          <p className="text-xs text-gray-400 mt-1">CEP de onde você envia os pedidos (sua loja / residência).</p>
+        </div>
       </div>
 
       {/* Frete grátis */}
