@@ -287,7 +287,7 @@ export default function AdminProdutos() {
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Descrição</label>
-              <textarea className="input" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required placeholder="Descreva o produto..." />
+              <textarea className="input" rows={5} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required placeholder="Descreva o produto... (Enter para nova linha)" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Preço (R$)</label>

@@ -240,7 +240,7 @@ export default function ProdutoPage({ params }) {
 
           </div>
 
-          <p className="text-gray-600 leading-relaxed">{product.description}</p>
+          <p className="text-gray-600 leading-relaxed whitespace-pre-line">{product.description}</p>
 
           {sizes.length > 0 && (
             <div>
