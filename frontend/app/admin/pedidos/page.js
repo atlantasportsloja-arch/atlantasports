@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Truck, Loader2, Search, X, Mail, Download, StickyNote, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Truck, Loader2, Search, X, Mail, Download, StickyNote, ChevronLeft, ChevronRight, History, CheckSquare, Square } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
@@ -9,6 +9,7 @@ import api from '@/lib/api';
 const STATUS_OPTIONS = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 const STATUS_LABEL = { PENDING: 'Pendente', PAID: 'Pago', PROCESSING: 'Processando', SHIPPED: 'Enviado', DELIVERED: 'Entregue', CANCELLED: 'Cancelado' };
 const STATUS_COLOR = { PENDING: 'bg-yellow-100 text-yellow-700', PAID: 'bg-blue-100 text-blue-700', PROCESSING: 'bg-purple-100 text-purple-700', SHIPPED: 'bg-orange-100 text-orange-700', DELIVERED: 'bg-green-100 text-green-700', CANCELLED: 'bg-red-100 text-red-700' };
+const STATUS_BORDER = { PENDING: 'border-yellow-400', PAID: 'border-blue-400', PROCESSING: 'border-purple-400', SHIPPED: 'border-orange-400', DELIVERED: 'border-green-400', CANCELLED: 'border-red-400' };
 
 function TrackingField({ orderId, initialCode }) {
   const [code, setCode] = useState(initialCode);
@@ -92,6 +93,48 @@ function NoteField({ orderId, initialNote }) {
   );
 }
 
+function StatusHistory({ orderId }) {
+  const [history, setHistory] = useState(null);
+
+  useEffect(() => {
+    api.get(`/orders/admin/${orderId}/history`)
+      .then(r => setHistory(r.data))
+      .catch(() => setHistory([]));
+  }, [orderId]);
+
+  if (!history) return (
+    <div className="mt-3 pt-3 border-t">
+      <p className="text-xs font-semibold text-gray-500 flex items-center gap-1 mb-2"><History size={12} /> Histórico</p>
+      <p className="text-xs text-gray-400">Carregando...</p>
+    </div>
+  );
+  if (!history.length) return null;
+
+  return (
+    <div className="mt-3 pt-3 border-t" onClick={e => e.stopPropagation()}>
+      <p className="text-xs font-semibold text-gray-500 flex items-center gap-1 mb-2">
+        <History size={12} /> Histórico de status
+      </p>
+      <div className="space-y-1.5">
+        {history.map((h, i) => (
+          <div key={i} className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="text-gray-400 w-32 shrink-0">
+              {new Date(h.changed_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+            </span>
+            {h.from_status && (
+              <>
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_COLOR[h.from_status]}`}>{STATUS_LABEL[h.from_status]}</span>
+                <span className="text-gray-300">→</span>
+              </>
+            )}
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_COLOR[h.to_status]}`}>{STATUS_LABEL[h.to_status]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TrackingModal({ order, onClose, onSave }) {
   const [code, setCode] = useState(order.trackingCode || '');
   const [loading, setLoading] = useState(false);
@@ -148,6 +191,9 @@ function AdminPedidosInner() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [selected, setSelected] = useState(new Set());
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
   const PAGE_SIZE = 30;
 
   useEffect(() => { setPage(1); }, [filter, dateFrom, dateTo]);
@@ -174,6 +220,7 @@ function AdminPedidosInner() {
     } finally {
       setLoading(false);
     }
+    setSelected(new Set());
   }
 
   async function updateStatus(id, status, trackingCode) {
@@ -183,6 +230,24 @@ function AdminPedidosInner() {
       load();
     } catch {
       toast.error('Erro ao atualizar');
+    }
+  }
+
+  async function applyBulkStatus() {
+    if (!bulkStatus || !selected.size) return;
+    if (bulkStatus === 'CANCELLED') {
+      if (!confirm(`Cancelar ${selected.size} pedido(s)?\n\nO estoque será restaurado automaticamente.`)) return;
+    }
+    setBulkLoading(true);
+    try {
+      const { data } = await api.put('/orders/admin/bulk-status', { ids: [...selected], status: bulkStatus });
+      toast.success(`${data.updated} pedido(s) atualizado(s)${data.errors?.length ? ` · ${data.errors.length} erro(s)` : ''}`);
+      setBulkStatus('');
+      load();
+    } catch {
+      toast.error('Erro na atualização em massa');
+    } finally {
+      setBulkLoading(false);
     }
   }
 
@@ -240,6 +305,22 @@ function AdminPedidosInner() {
     updateStatus(order.id, newStatus);
   }
 
+  function toggleSelect(id) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map(o => o.id)));
+    }
+  }
+
   const filtered = (search.trim()
     ? orders.filter(o => {
         const q = search.toLowerCase();
@@ -254,8 +335,10 @@ function AdminPedidosInner() {
     : orders
   ).slice().sort((a, b) => (b.orderNumber ?? 0) - (a.orderNumber ?? 0));
 
+  const allSelected = filtered.length > 0 && selected.size === filtered.length;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       {trackingModal && (
         <TrackingModal
           order={trackingModal}
@@ -340,14 +423,27 @@ function AdminPedidosInner() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
-                <tr>{['Pedido', 'Cliente', 'Total', 'Status', 'Data', 'Ações'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>
-                ))}</tr>
+                <tr>
+                  <th className="px-4 py-3 w-10">
+                    <button onClick={toggleSelectAll} className="text-gray-400 hover:text-gray-700 transition-colors">
+                      {allSelected ? <CheckSquare size={16} className="text-primary-500" /> : <Square size={16} />}
+                    </button>
+                  </th>
+                  {['Pedido', 'Cliente', 'Total', 'Status', 'Data', 'Ações'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>
+                  ))}
+                </tr>
               </thead>
               <tbody className="divide-y">
                 {filtered.map(o => (
                   <React.Fragment key={o.id}>
-                    <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setExpanded(expanded === o.id ? null : o.id)}>
+                    <tr className={`hover:bg-gray-50 cursor-pointer transition-colors ${selected.has(o.id) ? 'bg-primary-50' : ''}`}
+                        onClick={() => setExpanded(expanded === o.id ? null : o.id)}>
+                      <td className="px-4 py-3" onClick={e => { e.stopPropagation(); toggleSelect(o.id); }}>
+                        {selected.has(o.id)
+                          ? <CheckSquare size={16} className="text-primary-500" />
+                          : <Square size={16} className="text-gray-300 hover:text-gray-500" />}
+                      </td>
                       <td className="px-4 py-3 font-mono text-xs font-bold">#{o.orderNumber ?? o.id.slice(0, 8).toUpperCase()}</td>
                       <td className="px-4 py-3">
                         <p className="font-medium">{o.user.name}</p>
@@ -365,7 +461,7 @@ function AdminPedidosInner() {
                       <td className="px-4 py-3 text-gray-500 text-xs">{new Date(o.createdAt).toLocaleDateString('pt-BR')}</td>
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                         <select
-                          className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary-500"
+                          className={`border-2 ${STATUS_BORDER[o.status]} rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white cursor-pointer`}
                           value={o.status}
                           onChange={e => handleStatusChange(o, e.target.value)}
                         >
@@ -375,7 +471,7 @@ function AdminPedidosInner() {
                     </tr>
                     {expanded === o.id && (
                       <tr>
-                        <td colSpan={6} className="bg-gray-50 px-6 py-5">
+                        <td colSpan={7} className="bg-gray-50 px-6 py-5">
 
                           {/* Itens para separação */}
                           <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">📦 Itens para separação ({o.items.length})</p>
@@ -461,7 +557,10 @@ function AdminPedidosInner() {
                           </div>
 
                           <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
-                          <div className="mt-3 pt-3 border-t flex items-start gap-4 flex-wrap">
+                          <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
+                          <StatusHistory orderId={o.id} />
+
+                          <div className="mt-3 pt-3 border-t">
                             <button
                               onClick={e => { e.stopPropagation(); resendEmail(o.id); }}
                               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary-600 transition-colors"
@@ -469,7 +568,6 @@ function AdminPedidosInner() {
                               <Mail size={13} /> Reenviar e-mail de confirmação
                             </button>
                           </div>
-                          <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
                         </td>
                       </tr>
                     )}
@@ -482,14 +580,22 @@ function AdminPedidosInner() {
           {/* Mobile cards */}
           <div className="md:hidden divide-y">
             {filtered.map(o => (
-              <div key={o.id} className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2" onClick={() => setExpanded(e => e === o.id ? null : o.id)}>
-                  <div>
+              <div key={o.id} className={`p-4 space-y-3 ${selected.has(o.id) ? 'bg-primary-50' : ''}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <button
+                    className="mt-0.5 shrink-0"
+                    onClick={() => toggleSelect(o.id)}
+                  >
+                    {selected.has(o.id)
+                      ? <CheckSquare size={18} className="text-primary-500" />
+                      : <Square size={18} className="text-gray-300" />}
+                  </button>
+                  <div className="flex-1" onClick={() => setExpanded(e => e === o.id ? null : o.id)}>
                     <p className="font-mono text-xs font-bold">#{o.orderNumber ?? o.id.slice(0, 8).toUpperCase()}</p>
                     <p className="font-medium text-sm">{o.user.name}</p>
                     <p className="text-xs text-gray-400">{new Date(o.createdAt).toLocaleDateString('pt-BR')}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="font-black">R$ {o.total.toFixed(2).replace('.', ',')}</p>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status]}`}>
                       {STATUS_LABEL[o.status]}
@@ -497,7 +603,6 @@ function AdminPedidosInner() {
                   </div>
                 </div>
 
-                {/* Itens do pedido - mobile */}
                 {expanded === o.id && (
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">📦 Itens para separação</p>
@@ -525,7 +630,6 @@ function AdminPedidosInner() {
                         </div>
                       </div>
                     ))}
-                    {/* Dados do cliente - mobile */}
                     <div className="bg-white rounded-xl border border-gray-200 px-3 py-2.5 space-y-1 text-xs">
                       <p className="font-bold text-gray-500 uppercase tracking-wide mb-1">👤 Dados do Cliente</p>
                       <p><span className="text-gray-400">Nome: </span><span className="font-semibold text-gray-900">{o.user.name}</span></p>
@@ -545,11 +649,12 @@ function AdminPedidosInner() {
                     </div>
                     <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
                     <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
+                    <StatusHistory orderId={o.id} />
                   </div>
                 )}
 
                 <select
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                  className={`w-full border-2 ${STATUS_BORDER[o.status]} rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none`}
                   value={o.status}
                   onChange={e => handleStatusChange(o, e.target.value)}
                 >
@@ -600,6 +705,39 @@ function AdminPedidosInner() {
               Próxima <ChevronRight size={15} />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Barra de ação em massa */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white px-6 py-4 flex items-center gap-4 flex-wrap z-40 shadow-2xl">
+          <span className="font-semibold text-sm">
+            {selected.size} pedido{selected.size > 1 ? 's' : ''} selecionado{selected.size > 1 ? 's' : ''}
+          </span>
+          <div className="flex items-center gap-2 flex-1 flex-wrap">
+            <select
+              className="border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
+              value={bulkStatus}
+              onChange={e => setBulkStatus(e.target.value)}
+            >
+              <option value="">Alterar status para...</option>
+              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+            </select>
+            <button
+              onClick={applyBulkStatus}
+              disabled={!bulkStatus || bulkLoading}
+              className="bg-orange-500 hover:bg-orange-600 disabled:opacity-40 text-white font-semibold text-sm px-4 py-1.5 rounded-lg transition-colors flex items-center gap-2"
+            >
+              {bulkLoading ? <Loader2 size={14} className="animate-spin" /> : null}
+              Aplicar
+            </button>
+          </div>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="text-gray-400 hover:text-white transition-colors text-sm"
+          >
+            Limpar seleção
+          </button>
         </div>
       )}
     </div>

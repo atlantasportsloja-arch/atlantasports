@@ -3,7 +3,7 @@ const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/auth');
 const adminMiddleware = require('../middleware/admin');
 const { sendMail } = require('../lib/mailer');
-const { orderConfirmationHtml, orderShippedHtml } = require('../lib/emails');
+const { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml } = require('../lib/emails');
 
 const router = express.Router();
 
@@ -204,6 +204,63 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
   }
 });
 
+router.get('/admin/:id/history', adminMiddleware, async (req, res) => {
+  try {
+    const history = await prisma.$queryRaw`
+      SELECT from_status, to_status, changed_at::text AS changed_at
+      FROM order_status_history
+      WHERE order_id = ${req.params.id}::uuid
+      ORDER BY changed_at ASC
+    `;
+    res.json(history);
+  } catch {
+    res.status(500).json({ error: 'Erro ao buscar histórico' });
+  }
+});
+
+router.put('/admin/bulk-status', adminMiddleware, async (req, res) => {
+  const { ids, status } = req.body;
+  if (!Array.isArray(ids) || !ids.length || !status) {
+    return res.status(400).json({ error: 'Parâmetros inválidos' });
+  }
+
+  let updated = 0;
+  const errors = [];
+
+  for (const id of ids) {
+    try {
+      const current = await prisma.order.findUnique({
+        where: { id },
+        include: { items: true, user: true },
+      });
+      if (!current) { errors.push(id); continue; }
+
+      await prisma.order.update({ where: { id }, data: { status } });
+
+      await prisma.$executeRaw`
+        INSERT INTO order_status_history (order_id, from_status, to_status)
+        VALUES (${id}::uuid, ${current.status}, ${status})
+      `;
+
+      if (status === 'CANCELLED' && current.status !== 'CANCELLED') {
+        for (const item of current.items) {
+          if (item.variantId) {
+            await prisma.productVariant.update({ where: { id: item.variantId }, data: { stock: { increment: item.quantity } } }).catch(() => {});
+          } else {
+            await prisma.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } }).catch(() => {});
+          }
+        }
+      }
+
+      updated++;
+    } catch {
+      errors.push(id);
+    }
+  }
+
+  res.json({ updated, errors });
+});
+
 router.put('/admin/:id/tracking', adminMiddleware, async (req, res) => {
   const { trackingCode } = req.body;
   try {
@@ -242,6 +299,12 @@ router.put('/admin/:id/status', adminMiddleware, async (req, res) => {
       include: { user: true, items: { include: { product: true, variant: true } } },
     });
 
+    // Registra histórico de status
+    await prisma.$executeRaw`
+      INSERT INTO order_status_history (order_id, from_status, to_status)
+      VALUES (${req.params.id}::uuid, ${current.status}, ${status})
+    `.catch(() => {});
+
     // Restaura estoque ao cancelar (apenas se não estava cancelado antes)
     if (status === 'CANCELLED' && current.status !== 'CANCELLED') {
       for (const item of current.items) {
@@ -262,17 +325,26 @@ router.put('/admin/:id/status', adminMiddleware, async (req, res) => {
 
     res.json(order);
 
-    // E-mail de envio com rastreio
-    if (status === 'SHIPPED' && trackingCode && order.user) {
-      sendMail({
-        to: order.user.email,
-        subject: `Seu pedido foi enviado! 📦 Rastreie agora`,
-        html: orderShippedHtml({
-          userName: order.user.name.split(' ')[0],
-          order,
-          trackingCode,
-        }),
-      }).catch(err => console.error('[ShippedMail] Erro ao enviar:', err.message));
+    if (order.user) {
+      if (status === 'SHIPPED' && trackingCode) {
+        sendMail({
+          to: order.user.email,
+          subject: `Seu pedido foi enviado! 📦 Rastreie agora`,
+          html: orderShippedHtml({ userName: order.user.name.split(' ')[0], order, trackingCode }),
+        }).catch(err => console.error('[ShippedMail] Erro:', err.message));
+      } else if (status === 'CANCELLED' && current.status !== 'CANCELLED') {
+        sendMail({
+          to: order.user.email,
+          subject: `Seu pedido foi cancelado`,
+          html: orderCancelledHtml({ userName: order.user.name.split(' ')[0], order }),
+        }).catch(err => console.error('[CancelledMail] Erro:', err.message));
+      } else if (status === 'DELIVERED' && current.status !== 'DELIVERED') {
+        sendMail({
+          to: order.user.email,
+          subject: `Pedido entregue! 🎉 Como foi sua experiência?`,
+          html: orderDeliveredHtml({ userName: order.user.name.split(' ')[0], order }),
+        }).catch(err => console.error('[DeliveredMail] Erro:', err.message));
+      }
     }
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar pedido' });

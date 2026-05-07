@@ -72,6 +72,15 @@ async function migrate() {
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "banners" TEXT[] DEFAULT '{}'`);
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "footerLinks" JSONB DEFAULT '[]'`);
   await run(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS "adminNote" TEXT DEFAULT ''`);
+  await run(`
+    CREATE TABLE IF NOT EXISTS order_status_history (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      order_id UUID NOT NULL,
+      from_status TEXT,
+      to_status TEXT NOT NULL,
+      changed_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
 }
 
 migrate().then(() => {

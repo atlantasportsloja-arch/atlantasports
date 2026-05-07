@@ -137,6 +137,73 @@ function orderShippedHtml({ userName, order, trackingCode }) {
   `);
 }
 
+function orderCancelledHtml({ userName, order }) {
+  const codigo = order.orderNumber ? `#${order.orderNumber}` : `#${order.id.slice(0, 8).toUpperCase()}`;
+  return wrap(`
+    <h2 style="margin:0 0 4px;color:#111;font-size:20px;">Pedido cancelado</h2>
+    <p style="color:#6b7280;margin:0 0 24px;">Olá, ${userName}! Seu pedido foi cancelado.</p>
+
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin-bottom:24px;text-align:center;">
+      <p style="margin:0;color:#dc2626;font-size:13px;font-weight:600;">Pedido cancelado</p>
+      <p style="margin:4px 0 0;color:#991b1b;font-size:24px;font-weight:900;font-family:monospace;">${codigo}</p>
+    </div>
+
+    ${order.items?.length ? `
+    <h3 style="margin:0 0 12px;color:#374151;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Itens cancelados</h3>
+    ${itemsTable(order.items)}
+    ` : ''}
+
+    <p style="color:#6b7280;font-size:14px;margin-top:20px;line-height:1.6;">
+      Se você realizou o pagamento, o estorno será processado conforme o método utilizado.
+      Dúvidas? Fale conosco pelo WhatsApp.
+    </p>
+
+    <div style="margin-top:24px;text-align:center;">
+      <a href="${FRONTEND_URL}"
+         style="display:inline-block;background:#111827;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+        Continuar comprando →
+      </a>
+    </div>
+
+    <p style="color:#9ca3af;font-size:12px;margin-top:24px;text-align:center;">
+      Atlanta Sports — Estamos aqui para ajudar. 🏆
+    </p>
+  `);
+}
+
+function orderDeliveredHtml({ userName, order }) {
+  const codigo = order.orderNumber ? `#${order.orderNumber}` : `#${order.id.slice(0, 8).toUpperCase()}`;
+  return wrap(`
+    <h2 style="margin:0 0 4px;color:#111;font-size:20px;">Pedido entregue! 🎉</h2>
+    <p style="color:#6b7280;margin:0 0 24px;">Olá, ${userName}! Seu pedido ${codigo} foi entregue com sucesso.</p>
+
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center;">
+      <p style="margin:0;color:#15803d;font-size:36px;">✅</p>
+      <p style="margin:8px 0 0;color:#166534;font-weight:700;font-size:15px;">Entregue com sucesso!</p>
+    </div>
+
+    ${order.items?.length ? `
+    <h3 style="margin:0 0 12px;color:#374151;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Itens recebidos</h3>
+    ${itemsTable(order.items)}
+    ` : ''}
+
+    <p style="color:#6b7280;font-size:14px;margin-top:20px;line-height:1.6;">
+      Aproveite! Se quiser avaliar sua compra ou precisar de suporte, acesse sua conta.
+    </p>
+
+    <div style="margin-top:24px;text-align:center;">
+      <a href="${FRONTEND_URL}/minha-conta/pedidos"
+         style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+        Avaliar minha compra →
+      </a>
+    </div>
+
+    <p style="color:#9ca3af;font-size:12px;margin-top:24px;text-align:center;">
+      Obrigado por comprar na Atlanta Sports! 🏆
+    </p>
+  `);
+}
+
 function welcomeHtml({ userName }) {
   return wrap(`
     <h2 style="margin:0 0 4px;color:#111;font-size:20px;">Bem-vindo(a) à Atlanta Sports! 🏆</h2>
@@ -166,4 +233,4 @@ function welcomeHtml({ userName }) {
   `);
 }
 
-module.exports = { orderConfirmationHtml, orderShippedHtml, welcomeHtml };
+module.exports = { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml, welcomeHtml };
