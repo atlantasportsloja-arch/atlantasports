@@ -353,12 +353,11 @@ router.put('/admin/:id/status', adminMiddleware, async (req, res) => {
 
 router.delete('/admin/reset-all', adminMiddleware, async (req, res) => {
   try {
-    await prisma.$transaction([
-      prisma.returnItem.deleteMany(),
-      prisma.return.deleteMany(),
-      prisma.orderItem.deleteMany(),
-      prisma.order.deleteMany(),
-    ]);
+    await prisma.$executeRaw`DELETE FROM return_items`;
+    await prisma.$executeRaw`DELETE FROM returns`;
+    await prisma.$executeRaw`DELETE FROM order_items`;
+    await prisma.$executeRaw`DELETE FROM order_status_history`;
+    await prisma.$executeRaw`DELETE FROM orders`;
     console.log('[Admin] Todos os pedidos foram apagados. Próximo número: 1000');
     res.json({ message: 'Todos os pedidos foram apagados. Próximo pedido começará em #1000.' });
   } catch (err) {
