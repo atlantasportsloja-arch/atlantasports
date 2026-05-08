@@ -44,8 +44,8 @@ const DEFAULT = {
   heroSubtitle: 'Camisas oficiais, tênis de performance e acessórios fitness. Frete grátis acima de R$ 299.',
   heroBtnPrimary: 'Ver coleção', heroBtnPrimaryLink: '/categoria/camisas',
   heroBtnSecondary: 'Ver tênis', heroBtnSecondaryLink: '/categoria/tenis',
-  benefit1: '🚚 Frete Grátis acima R$ 299,00', benefit2: '🔒 Compra 100% Segura',
-  benefit3: '💬 Atendimento diferenciado', benefit4: '⭐ Clientes Satisfeitos',
+  benefit1: '🚚 Frete Grátis\nacima R$ 299,00', benefit2: '🔒 Compra\n100% Segura',
+  benefit3: '📱 Atendimento\nDiferenciado', benefit4: '⭐ Clientes\nSatisfeitos',
   sectionCategories: 'Categorias', sectionFeatured: 'Produtos em destaque',
   whatsapp: '', footerEmail: 'atlantasportsloja@gmail.com',
   footerHours: 'Seg–Sex 9h–18h', footerDesc: 'Equipamentos e moda esportiva de alta performance.',
@@ -209,10 +209,10 @@ export default function ConfiguracoesPage() {
       {/* BENEFÍCIOS */}
       <Section title="✅ Faixa de Benefícios">
         <p className="text-xs text-gray-400 -mt-2">4 itens que aparecem na faixa laranja abaixo do banner. Use emojis!</p>
-        <Field label="Benefício 1" value={config.benefit1} onChange={set('benefit1')} />
-        <Field label="Benefício 2" value={config.benefit2} onChange={set('benefit2')} />
-        <Field label="Benefício 3" value={config.benefit3} onChange={set('benefit3')} />
-        <Field label="Benefício 4" value={config.benefit4} onChange={set('benefit4')} />
+        <Field label="Benefício 1" value={config.benefit1} onChange={set('benefit1')} textarea />
+        <Field label="Benefício 2" value={config.benefit2} onChange={set('benefit2')} textarea />
+        <Field label="Benefício 3" value={config.benefit3} onChange={set('benefit3')} textarea />
+        <Field label="Benefício 4" value={config.benefit4} onChange={set('benefit4')} textarea />
       </Section>
 
       {/* SEÇÕES */}

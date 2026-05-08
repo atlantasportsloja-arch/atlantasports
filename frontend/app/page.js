@@ -5,10 +5,10 @@ import BannerSlider from '@/components/BannerSlider';
 const DEFAULT_CONFIG = {
   storeName: 'Atlanta Sports', heroBadge: 'Nova coleção 2025',
   heroTitle: 'Veste quem joga de verdade', heroSubtitle: 'Camisas oficiais, tênis e acessórios fitness.',
-  benefit1: '🚚 Frete Grátis acima R$ 299,00',
-  benefit2: '🔒 Compra 100% Segura',
-  benefit3: '📱 Atendimento diferenciado',
-  benefit4: '⭐ Clientes Satisfeitos',
+  benefit1: '🚚 Frete Grátis\nacima R$ 299,00',
+  benefit2: '🔒 Compra\n100% Segura',
+  benefit3: '📱 Atendimento\nDiferenciado',
+  benefit4: '⭐ Clientes\nSatisfeitos',
   sectionCategories: 'Categorias', sectionFeatured: 'Produtos em destaque',
   banners: [],
 };
@@ -80,16 +80,27 @@ export default async function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-3 md:px-0">
           <div className="grid grid-cols-2 md:grid-cols-4 md:divide-x divide-white/20">
-            {[config.benefit1, config.benefit2, config.benefit3, config.benefit4].map((b, i) => (
-              <div key={i} className="flex flex-row items-center justify-center gap-1 md:gap-2 px-1 md:px-4 py-1 md:py-3.5">
-                <span className="text-base md:text-xl leading-none shrink-0" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }}>
-                  {b.match(/^\S+/)?.[0]}
-                </span>
-                <span className="text-[9px] md:text-sm font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
-                  {b.replace(/^\S+\s*/, '')}
-                </span>
-              </div>
-            ))}
+            {[config.benefit1, config.benefit2, config.benefit3, config.benefit4].map((b, i) => {
+              const emoji = b.match(/^\S+/)?.[0] ?? '';
+              const text = b.replace(/^\S+\s*/, '');
+              const [line1, line2] = text.split('\n');
+              return (
+                <div key={i} className="flex flex-row items-center justify-center gap-1 md:gap-2 px-1 md:px-4 py-1.5 md:py-3.5">
+                  <span className="text-base md:text-xl leading-none shrink-0" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }}>
+                    {emoji}
+                  </span>
+                  {/* Mobile: duas linhas empilhadas */}
+                  <div className="flex flex-col items-start md:hidden">
+                    <span className="text-[9px] font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>{line1}</span>
+                    {line2 && <span className="text-[9px] font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>{line2}</span>}
+                  </div>
+                  {/* Desktop: linha única */}
+                  <span className="hidden md:inline text-sm font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
+                    {line2 ? `${line1} ${line2}` : line1}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
