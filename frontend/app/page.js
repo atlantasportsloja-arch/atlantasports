@@ -7,7 +7,7 @@ const DEFAULT_CONFIG = {
   heroTitle: 'Veste quem joga de verdade', heroSubtitle: 'Camisas oficiais, tênis e acessórios fitness.',
   benefit1: '🚚 Frete Grátis acima R$ 299,00',
   benefit2: '🔒 Compra 100% Segura',
-  benefit3: '💬 Atendimento diferenciado',
+  benefit3: '📱 Atendimento diferenciado',
   benefit4: '⭐ Clientes Satisfeitos',
   sectionCategories: 'Categorias', sectionFeatured: 'Produtos em destaque',
   banners: [],
