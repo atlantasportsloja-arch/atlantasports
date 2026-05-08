@@ -70,14 +70,14 @@ export default function CarrinhoPage() {
   const finalTotal = total - discount;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-black mb-8">Meu carrinho ({items.length} {items.length === 1 ? 'item' : 'itens'})</h1>
+    <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8">
+      <h1 className="text-lg md:text-2xl font-black mb-4 md:mb-8">Meu carrinho ({items.length} {items.length === 1 ? 'item' : 'itens'})</h1>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-4">
+      <div className="grid md:grid-cols-3 gap-3 md:gap-8">
+        <div className="md:col-span-2 space-y-2 md:space-y-4">
           {items.map(item => (
-            <div key={item.id} className="card p-4 flex gap-4">
-              <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+            <div key={item.id} className="card p-3 md:p-4 flex gap-3 md:gap-4">
+              <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                 {item.product.images?.[0] ? (
                   <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
                 ) : (
@@ -85,36 +85,36 @@ export default function CarrinhoPage() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{item.product.name}</p>
+                <p className="font-semibold text-sm md:text-base truncate">{item.product.name}</p>
                 {item.variant?.size && (
                   <div className="flex gap-1.5 mt-0.5">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{item.variant.size}</span>
                   </div>
                 )}
-                <p className="text-primary-500 font-bold mt-1">
+                <p className="text-primary-500 font-bold text-sm mt-0.5">
                   R$ {(item.variant?.price ?? item.product.price).toFixed(2).replace('.', ',')}
                 </p>
-                <div className="flex items-center gap-3 mt-2">
+                <div className="flex items-center gap-2 mt-1.5">
                   <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden text-sm">
-                    <button className="px-2 py-1 hover:bg-gray-100" onClick={() => updateQty(item.id, Math.max(1, item.quantity - 1))}>−</button>
-                    <span className="px-3">{item.quantity}</span>
-                    <button className="px-2 py-1 hover:bg-gray-100" onClick={() => updateQty(item.id, item.quantity + 1)}>+</button>
+                    <button className="px-2 py-0.5 hover:bg-gray-100" onClick={() => updateQty(item.id, Math.max(1, item.quantity - 1))}>−</button>
+                    <span className="px-2.5 text-sm">{item.quantity}</span>
+                    <button className="px-2 py-0.5 hover:bg-gray-100" onClick={() => updateQty(item.id, item.quantity + 1)}>+</button>
                   </div>
                   <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600 transition-colors">
-                    <Trash2 size={16} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="font-black">R$ {((item.variant?.price ?? item.product.price) * item.quantity).toFixed(2).replace('.', ',')}</p>
+                <p className="font-black text-sm md:text-base">R$ {((item.variant?.price ?? item.product.price) * item.quantity).toFixed(2).replace('.', ',')}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="space-y-4">
-          <div className="card p-6 space-y-4">
-            <h2 className="font-black text-lg">Resumo</h2>
+        <div className="space-y-3 md:space-y-4">
+          <div className="card p-4 md:p-6 space-y-3 md:space-y-4">
+            <h2 className="font-black text-base md:text-lg">Resumo</h2>
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
               <span>R$ {total.toFixed(2).replace('.', ',')}</span>
@@ -129,7 +129,7 @@ export default function CarrinhoPage() {
               <span>Frete</span>
               <span>{total >= 299 ? 'Grátis' : 'Calculado no checkout'}</span>
             </div>
-            <div className="border-t pt-3 flex justify-between font-black text-lg">
+            <div className="border-t pt-3 flex justify-between font-black text-base md:text-lg">
               <span>Total</span>
               <span>R$ {finalTotal.toFixed(2).replace('.', ',')}</span>
             </div>
@@ -199,7 +199,7 @@ export default function CarrinhoPage() {
             </Link>
           </div>
 
-          <div className="card p-4 space-y-2">
+          <div className="card p-3 md:p-4 space-y-2">
             <p className="font-semibold text-sm">Cupom de desconto</p>
             <div className="flex gap-2">
               <input
