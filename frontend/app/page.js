@@ -71,13 +71,21 @@ export default async function HomePage() {
       )}
 
       {/* BENEFÍCIOS */}
-      <section className="bg-primary-500 text-white">
+      <section
+        className="text-white relative z-10"
+        style={{
+          background: 'linear-gradient(to bottom, #fb923c, #c2560a)',
+          boxShadow: '0 5px 0 #7c2d12, inset 0 1px 0 rgba(255,255,255,0.18)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-3 md:px-0">
           <div className="grid grid-cols-2 md:grid-cols-4 md:divide-x divide-white/20">
             {[config.benefit1, config.benefit2, config.benefit3, config.benefit4].map((b, i) => (
               <div key={i} className="flex flex-row items-center justify-center gap-1 md:gap-2 px-1 md:px-4 py-1 md:py-3.5">
-                <span className="text-base md:text-xl leading-none shrink-0">{b.match(/^\S+/)?.[0]}</span>
-                <span className="text-[9px] md:text-sm font-bold uppercase leading-tight">
+                <span className="text-base md:text-xl leading-none shrink-0" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }}>
+                  {b.match(/^\S+/)?.[0]}
+                </span>
+                <span className="text-[9px] md:text-sm font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
                   {b.replace(/^\S+\s*/, '')}
                 </span>
               </div>
