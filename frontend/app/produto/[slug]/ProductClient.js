@@ -144,9 +144,9 @@ export default function ProdutoPage({ params }) {
   const waUrl = `https://wa.me/${waNumero}?text=${encodeURIComponent(`Quero ver as fotos reais\nPoderia me enviar por favor? 📸\n\nhttps://www.atlantasports.com.br/produto/${product.slug}`)}`;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-6">
+      <nav className="flex items-center gap-1.5 text-xs md:text-sm text-gray-400 mb-4 md:mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <Link href="/" className="hover:text-gray-600 transition-colors">Início</Link>
         <ChevronRight size={14} />
         {product.categories?.[0] && (
@@ -160,9 +160,9 @@ export default function ProdutoPage({ params }) {
         <span className="text-gray-700 font-medium truncate max-w-[200px]">{product.name}</span>
       </nav>
 
-      <div className="grid md:grid-cols-2 gap-10">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-10">
         {/* IMAGENS */}
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
             {product.images?.[activeImg] && !imgErrors[activeImg] ? (
               <Image
@@ -204,9 +204,9 @@ export default function ProdutoPage({ params }) {
         </div>
 
         {/* INFO */}
-        <div className="space-y-5">
+        <div className="space-y-4 md:space-y-5">
           <div>
-            <h1 className="text-3xl font-black leading-tight">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-black leading-tight">{product.name}</h1>
           </div>
 
           {product.availability && (
@@ -216,8 +216,8 @@ export default function ProdutoPage({ params }) {
               </span>
             </div>
           )}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-1">
-            <p className="text-4xl font-black text-gray-900">
+          <div className="bg-gray-50 rounded-xl p-3 md:p-4 space-y-1">
+            <p className="text-3xl md:text-4xl font-black text-gray-900">
               R$ {product.price.toFixed(2).replace('.', ',')}
             </p>
             {product.comparePrice && (
@@ -323,7 +323,7 @@ export default function ProdutoPage({ params }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 md:gap-3">
             <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
               <span className="text-primary-500"><Truck size={18} /></span>
               Frete Grátis acima R$ 299

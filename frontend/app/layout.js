@@ -2,6 +2,7 @@ import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import BottomNav from '@/components/BottomNav';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.atlantasports.com.br';
 
@@ -36,8 +37,9 @@ export default function RootLayout({ children }) {
     <html lang="pt-BR">
       <body>
         <Header />
-        <main className="min-h-screen">{children}</main>
+        <main className="min-h-screen pb-16 md:pb-0">{children}</main>
         <Footer />
+        <BottomNav />
         <Toaster position="top-right" />
       </body>
     </html>

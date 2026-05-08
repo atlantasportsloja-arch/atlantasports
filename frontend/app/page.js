@@ -57,43 +57,45 @@ export default async function HomePage() {
       ) : (
         <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden relative">
           <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-          <div className="max-w-7xl mx-auto px-4 py-20 md:py-28 flex flex-col md:flex-row items-center gap-10 relative">
-            <div className="flex-1 space-y-6">
-              <h1 className="text-5xl md:text-6xl font-black leading-tight">
+          <div className="max-w-7xl mx-auto px-4 py-10 md:py-28 flex flex-col md:flex-row items-center gap-6 md:gap-10 relative">
+            <div className="flex-1 space-y-4 md:space-y-6 text-center md:text-left">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black leading-tight">
                 {config.heroTitle?.split(' ').slice(0, -2).join(' ')}{' '}
                 <span className="text-primary-500">{config.heroTitle?.split(' ').slice(-2).join(' ')}</span>
               </h1>
-              <p className="text-gray-300 text-lg max-w-md leading-relaxed">{config.heroSubtitle}</p>
+              <p className="text-gray-300 text-base md:text-lg max-w-md leading-relaxed mx-auto md:mx-0">{config.heroSubtitle}</p>
             </div>
-            <div className="text-[140px] select-none drop-shadow-2xl">⚽</div>
+            <div className="text-[80px] md:text-[140px] select-none drop-shadow-2xl">⚽</div>
           </div>
         </section>
       )}
 
       {/* BENEFÍCIOS */}
       <section className="bg-primary-500 text-white">
-        <div className="max-w-7xl mx-auto px-1 py-1 md:py-4 grid grid-cols-4 divide-x divide-white/20">
-          {[config.benefit1, config.benefit2, config.benefit3, config.benefit4].map((b, i) => (
-            <div key={i} className="flex items-center justify-center gap-1 px-1 md:px-4 py-0.5 md:py-1">
-              <span className="text-xs md:text-xl leading-none shrink-0">{b.match(/^\S+/)?.[0]}</span>
-              <span className="text-[7px] sm:text-[10px] md:text-sm font-black tracking-wide uppercase leading-tight">
-                {b.replace(/^\S+\s*/, '')}
-              </span>
-            </div>
-          ))}
+        <div className="max-w-7xl mx-auto px-3 md:px-0">
+          <div className="grid grid-cols-2 md:grid-cols-4 md:divide-x divide-white/20">
+            {[config.benefit1, config.benefit2, config.benefit3, config.benefit4].map((b, i) => (
+              <div key={i} className="flex items-center gap-2 px-2 md:px-4 py-3 md:py-3.5 md:justify-center">
+                <span className="text-xl leading-none shrink-0">{b.match(/^\S+/)?.[0]}</span>
+                <span className="text-xs md:text-sm font-bold uppercase leading-tight">
+                  {b.replace(/^\S+\s*/, '')}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* CATEGORIAS */}
       {categories.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-12">
-          <h2 className="text-2xl font-black mb-6">{config.sectionCategories}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <section className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+          <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-6">{config.sectionCategories}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {categories.map(cat => (
               <Link
                 key={cat.id}
                 href={`/categoria/${cat.slug}`}
-                className="card p-6 text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
+                className="card p-4 md:p-6 text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
               >
                 <div className="text-4xl mb-3">{CATEGORY_ICON[cat.slug] || '🏆'}</div>
                 <p className="font-semibold group-hover:text-primary-500 transition-colors">{cat.name}</p>
@@ -105,9 +107,9 @@ export default async function HomePage() {
       )}
 
       {/* PRODUTOS EM DESTAQUE */}
-      <section className="max-w-7xl mx-auto px-4 py-8 pb-16">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black">{config.sectionFeatured}</h2>
+      <section className="max-w-7xl mx-auto px-4 py-6 pb-12 md:pb-16">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-black">{config.sectionFeatured}</h2>
           <Link href="/busca" className="text-primary-500 text-sm font-semibold hover:underline">Ver todos →</Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -121,7 +123,7 @@ export default async function HomePage() {
           href={`https://wa.me/${config.whatsapp}?text=${encodeURIComponent('Olá Atlanta Sports\nVim do site e preciso tirar uma dúvida. Poderia me ajudar?')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-xl hover:bg-green-600 hover:scale-105 transition-all z-50 text-2xl"
+          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-green-500 text-white p-4 rounded-full shadow-xl hover:bg-green-600 hover:scale-105 transition-all z-50 text-2xl"
           title="Falar no WhatsApp"
         >
           💬

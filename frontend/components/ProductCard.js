@@ -69,8 +69,8 @@ export default function ProductCard({ product, priority = false }) {
         )}
       </div>
 
-      <div className="p-4 flex flex-col flex-1 gap-2">
-        <h3 className="font-semibold text-gray-900 line-clamp-2 leading-snug">{product.name}</h3>
+      <div className="p-3 sm:p-4 flex flex-col flex-1 gap-1.5 sm:gap-2">
+        <h3 className="font-semibold text-gray-900 line-clamp-2 leading-snug text-sm sm:text-base">{product.name}</h3>
 
         {avgRating && (
           <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -83,15 +83,15 @@ export default function ProductCard({ product, priority = false }) {
         <div className="mt-auto flex items-center justify-between gap-2">
           <div className="min-w-0">
             {product.comparePrice && (
-              <p className="text-base font-black text-gray-400 line-through">
+              <p className="text-xs sm:text-sm font-black text-gray-400 line-through">
                 R$ {product.comparePrice.toFixed(2).replace('.', ',')}
               </p>
             )}
-            <p className="text-base font-black text-gray-900">
+            <p className="text-sm sm:text-base font-black text-gray-900">
               R$ {product.price.toFixed(2).replace('.', ',')}
             </p>
             {pixPrice(product.price, pixDiscount) && (
-              <p className="text-base font-black text-green-600">
+              <p className="text-xs sm:text-sm font-black text-green-600">
                 R$ {fmt(pixPrice(product.price, pixDiscount))} PIX
               </p>
             )}
@@ -99,7 +99,7 @@ export default function ProductCard({ product, priority = false }) {
           <button
             onClick={addToCart}
             disabled={adding}
-            className="p-2.5 rounded-lg transition-all flex-shrink-0 bg-primary-500 hover:bg-primary-600 text-white hover:scale-105 active:scale-95"
+            className="p-3 rounded-lg transition-all flex-shrink-0 bg-primary-500 hover:bg-primary-600 text-white hover:scale-105 active:scale-95"
             title="Adicionar ao carrinho"
           >
             {adding ? <Loader2 size={18} className="animate-spin" /> : <ShoppingCart size={18} />}

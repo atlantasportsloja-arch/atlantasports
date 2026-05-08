@@ -21,8 +21,8 @@ export default function Footer() {
     : [config.storeName, ''];
 
   return (
-    <footer className="bg-gray-900 text-gray-400 mt-16">
-      <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-gray-900 text-gray-400 mt-12 md:mt-16">
+      <div className="max-w-7xl mx-auto px-4 py-10 md:py-12 grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
         <div>
           <p className="text-xl font-black text-primary-500 mb-3">
             {name}<span className="text-white">{tag ? ` ${tag}` : ''}</span>
