@@ -148,13 +148,41 @@ async function runBackup() {
   }
 }
 
+async function checkAndBackupOnStartup() {
+  // Aguarda 10 minutos após o servidor iniciar
+  await new Promise(resolve => setTimeout(resolve, 10 * 60 * 1000));
+
+  try {
+    const status = await loadStatus();
+    const now = new Date();
+
+    const alreadyDoneToday = status.lastBackupAt &&
+      status.lastBackupStatus === 'success' &&
+      new Date(status.lastBackupAt).toDateString() === now.toDateString();
+
+    if (alreadyDoneToday) {
+      console.log('[Backup] Startup: backup de hoje já realizado. Nada a fazer.');
+      return;
+    }
+
+    console.log('[Backup] Startup: backup do dia não encontrado. Executando...');
+    await runBackup();
+  } catch (err) {
+    console.error('[Backup] Erro no backup de startup:', err.message);
+  }
+}
+
 function startBackupJob() {
+  // Cron diário às 06h (fallback para quando o servidor já está de pé)
   cron.schedule('0 6 * * *', () => {
     console.log('[Backup] Iniciando backup automático das 06h...');
     runBackup().catch(err => console.error('[Backup] Erro:', err.message));
   }, { timezone: 'America/Sao_Paulo' });
 
-  console.log('[Backup] Job agendado para 06h todos os dias.');
+  // Verificação na inicialização: roda 10 min após ligar, uma vez por dia
+  checkAndBackupOnStartup();
+
+  console.log('[Backup] Job agendado. Verificação de startup ativa (10 min após iniciar).');
 }
 
 module.exports = { startBackupJob, runBackup, loadStatus };
