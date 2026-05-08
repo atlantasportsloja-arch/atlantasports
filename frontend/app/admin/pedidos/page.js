@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Truck, Loader2, Search, X, Mail, Download, StickyNote, ChevronLeft, ChevronRight, History } from 'lucide-react';
+import { Truck, Loader2, Search, X, Mail, Download, StickyNote, ChevronLeft, ChevronRight, History, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
@@ -232,6 +232,23 @@ function AdminPedidosInner() {
     }
   }
 
+  async function resetAllOrders() {
+    const confirmed = confirm(
+      'ATENÇÃO: Isso vai APAGAR TODOS os pedidos permanentemente e a numeração vai reiniciar em #1000.\n\nEssa ação NÃO pode ser desfeita!\n\nDeseja continuar?'
+    );
+    if (!confirmed) return;
+    const confirmed2 = confirm('Tem CERTEZA? Todos os pedidos serão deletados para sempre.');
+    if (!confirmed2) return;
+    try {
+      await api.delete('/orders/admin/reset-all');
+      toast.success('Todos os pedidos foram apagados. Próximo: #1000');
+      setOrders([]);
+      setTotalOrders(0);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao apagar pedidos');
+    }
+  }
+
   function exportCSV() {
     const rows = [
       ['Nº Pedido', 'Cliente', 'E-mail', 'Total (R$)', 'Frete (R$)', 'Status', 'Pagamento', 'Rastreio', 'Data', 'Itens', 'Endereço'],
@@ -362,6 +379,13 @@ function AdminPedidosInner() {
               <Download size={14} /> CSV
             </button>
           )}
+          <button
+            onClick={resetAllOrders}
+            className="flex items-center gap-1.5 text-sm font-semibold text-red-600 border border-red-300 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
+            title="Apagar todos os pedidos e reiniciar em #1000"
+          >
+            <Trash2 size={14} /> Apagar tudo
+          </button>
         </div>
       </div>
 

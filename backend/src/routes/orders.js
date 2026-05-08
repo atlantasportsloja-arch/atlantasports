@@ -351,6 +351,22 @@ router.put('/admin/:id/status', adminMiddleware, async (req, res) => {
   }
 });
 
+router.delete('/admin/reset-all', adminMiddleware, async (req, res) => {
+  try {
+    await prisma.$transaction([
+      prisma.returnItem.deleteMany(),
+      prisma.return.deleteMany(),
+      prisma.orderItem.deleteMany(),
+      prisma.order.deleteMany(),
+    ]);
+    console.log('[Admin] Todos os pedidos foram apagados. Próximo número: 1000');
+    res.json({ message: 'Todos os pedidos foram apagados. Próximo pedido começará em #1000.' });
+  } catch (err) {
+    console.error('[Admin] Erro ao resetar pedidos:', err.message);
+    res.status(500).json({ error: 'Erro ao apagar pedidos: ' + err.message });
+  }
+});
+
 router.post('/admin/:id/resend-confirmation', adminMiddleware, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
