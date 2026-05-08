@@ -6,6 +6,11 @@ import BottomNav from '@/components/BottomNav';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.atlantasports.com.br';
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: 'Atlanta Sports', template: '%s | Atlanta Sports' },
