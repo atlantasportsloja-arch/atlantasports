@@ -84,7 +84,7 @@ router.post('/', authMiddleware, async (req, res) => {
     let orderNumber;
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(20250428)`;
-      const [{ next }] = await tx.$queryRaw`SELECT COALESCE(MAX("orderNumber"), 999) + 1 AS next FROM orders WHERE id != ${order.id}`;
+      const [{ next }] = await tx.$queryRaw`SELECT COALESCE(MAX("orderNumber"), 1000) + 1 AS next FROM orders WHERE id != ${order.id}`;
       orderNumber = Number(next);
       await tx.$executeRaw`UPDATE orders SET "orderNumber" = ${orderNumber} WHERE id = ${order.id}`;
     });
