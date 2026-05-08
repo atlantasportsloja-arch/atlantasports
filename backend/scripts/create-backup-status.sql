@@ -1,1 +1,1 @@
-CREATE TABLE IF NOT EXISTS backup_status (id INT PRIMARY KEY DEFAULT 1, "lastBackupAt" TIMESTAMPTZ, "lastBackupStatus" TEXT, "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW());
+ALTER TABLE store_config ADD COLUMN IF NOT EXISTS "installments" JSONB DEFAULT 'null';

@@ -340,7 +340,7 @@ router.post('/:id/duplicate', adminMiddleware, async (req, res) => {
         name: newName, slug, description: original.description,
         price: original.price, comparePrice: original.comparePrice,
         costPrice: original.costPrice, stock: original.stock,
-        images: original.images, availability: original.availability,
+        images: { set: Array.isArray(original.images) ? [...original.images] : [] }, availability: original.availability,
         keywords: original.keywords, active: false,
         categories: { connect: original.categories.map(c => ({ id: c.id })) },
       },

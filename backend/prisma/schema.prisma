@@ -24,6 +24,7 @@ model User {
   reviews      Review[]
   wishlist     Wishlist[]
   couponUsages CouponUsage[]
+  returns      Return[]
 
   @@map("users")
 }
@@ -114,8 +115,9 @@ model Order {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
-  user  User        @relation(fields: [userId], references: [id])
-  items OrderItem[]
+  user    User        @relation(fields: [userId], references: [id])
+  items   OrderItem[]
+  returns Return[]
 
   @@map("orders")
 }
@@ -137,9 +139,10 @@ model OrderItem {
   quantity  Int
   price     Float
 
-  order   Order           @relation(fields: [orderId], references: [id])
-  product Product         @relation(fields: [productId], references: [id])
-  variant ProductVariant? @relation(fields: [variantId], references: [id])
+  order       Order           @relation(fields: [orderId], references: [id])
+  product     Product         @relation(fields: [productId], references: [id])
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+  returnItems ReturnItem[]
 
   @@map("order_items")
 }
@@ -210,6 +213,52 @@ model BackupStatus {
   updatedAt        DateTime  @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("backup_status")
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  RECEIVED
+  REFUNDED
+  EXCHANGED
+}
+
+enum ReturnType {
+  REFUND
+  EXCHANGE
+}
+
+model Return {
+  id           String       @id @default(uuid())
+  returnNumber Int          @unique @default(autoincrement())
+  orderId      String
+  userId       String
+  type         ReturnType   @default(REFUND)
+  status       ReturnStatus @default(REQUESTED)
+  reason       String
+  adminNote    String?      @default("")
+  refundAmount Float?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  order Order        @relation(fields: [orderId], references: [id])
+  user  User         @relation(fields: [userId], references: [id])
+  items ReturnItem[]
+
+  @@map("returns")
+}
+
+model ReturnItem {
+  id          String @id @default(uuid())
+  returnId    String
+  orderItemId String
+  quantity    Int
+
+  return    Return    @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@map("return_items")
 }
 
 model StoreConfig {

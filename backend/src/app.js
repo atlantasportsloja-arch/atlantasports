@@ -17,6 +17,7 @@ const uploadRoutes = require('./routes/upload');
 const configRoutes = require('./routes/config');
 const reviewRoutes = require('./routes/reviews');
 const wishlistRoutes = require('./routes/wishlist');
+const returnsRoutes = require('./routes/returns');
 
 const app = express();
 
@@ -93,6 +94,7 @@ app.use('/frete', generalLimiter, freteRoutes);
 app.use('/upload', generalLimiter, uploadRoutes);
 app.use('/reviews', generalLimiter, reviewRoutes);
 app.use('/wishlist', generalLimiter, wishlistRoutes);
+app.use('/returns', generalLimiter, returnsRoutes);
 
 const cache = require('./lib/cache');
 app.get('/health', (req, res) => res.json({
