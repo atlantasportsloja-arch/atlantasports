@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Package, ChevronDown, ChevronUp, ExternalLink, Star, Loader2, RotateCcw, ArrowLeftRight, X } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, ExternalLink, Star, Loader2, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
@@ -94,109 +94,6 @@ function OrderProgress({ status }) {
   );
 }
 
-function ReturnModal({ order, onClose, onSubmitted }) {
-  const [type, setType] = useState('REFUND');
-  const [reason, setReason] = useState('');
-  const [selectedItems, setSelectedItems] = useState({});
-  const [loading, setLoading] = useState(false);
-
-  function toggleItem(itemId) {
-    setSelectedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
-  }
-
-  async function submit(e) {
-    e.preventDefault();
-    if (!reason.trim()) { toast.error('Informe o motivo'); return; }
-    const items = order.items
-      .filter(i => selectedItems[i.id])
-      .map(i => ({ orderItemId: i.id, quantity: i.quantity }));
-    if (items.length === 0) { toast.error('Selecione ao menos um item'); return; }
-    setLoading(true);
-    try {
-      await api.post('/returns', { orderId: order.id, type, reason, items });
-      toast.success('Solicitação enviada! Entraremos em contato em breve.');
-      onSubmitted();
-      onClose();
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao enviar solicitação');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b">
-          <div>
-            <p className="font-black text-lg">Solicitar devolução / troca</p>
-            <p className="text-xs text-gray-400 font-mono mt-0.5">Pedido #{order.orderNumber ?? order.id.slice(0, 8).toUpperCase()}</p>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors"><X size={20} /></button>
-        </div>
-        <form onSubmit={submit} className="p-5 space-y-4">
-          {/* Tipo */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Tipo de solicitação</label>
-            <div className="flex gap-3">
-              {[{ val: 'REFUND', label: 'Devolução e reembolso', icon: <RotateCcw size={14} /> }, { val: 'EXCHANGE', label: 'Troca de produto', icon: <ArrowLeftRight size={14} /> }].map(opt => (
-                <button
-                  key={opt.val}
-                  type="button"
-                  onClick={() => setType(opt.val)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${type === opt.val ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
-                >
-                  {opt.icon} {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Itens */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Itens a devolver/trocar</label>
-            <div className="space-y-2">
-              {order.items.map(item => (
-                <label key={item.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedItems[item.id] ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                  <input type="checkbox" className="accent-primary-500" checked={!!selectedItems[item.id]} onChange={() => toggleItem(item.id)} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{item.product?.name || 'Produto'}</p>
-                    {(item.variant?.size || item.variant?.color) && (
-                      <p className="text-xs text-gray-400">{[item.variant.size, item.variant.color].filter(Boolean).join(' / ')}</p>
-                    )}
-                  </div>
-                  <span className="text-xs text-gray-400 flex-shrink-0">× {item.quantity}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Motivo */}
-          <div>
-            <label className="block text-sm font-semibold mb-1">Motivo da solicitação</label>
-            <textarea
-              className="input resize-none text-sm"
-              rows={3}
-              placeholder="Descreva o motivo da devolução ou troca..."
-              value={reason}
-              onChange={e => setReason(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="flex gap-3 pt-1">
-            <button type="submit" disabled={loading} className="flex-1 btn-primary flex items-center justify-center gap-2">
-              {loading ? <Loader2 size={15} className="animate-spin" /> : null}
-              Enviar solicitação
-            </button>
-            <button type="button" onClick={onClose} className="btn-outline px-4">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 export default function PedidosPage() {
   const { token } = useAuthStore();
   const router = useRouter();
@@ -205,8 +102,6 @@ export default function PedidosPage() {
   const [expanded, setExpanded] = useState(null);
   const [reviewing, setReviewing] = useState(null);
   const [reordering, setReordering] = useState(null);
-  const [returnModal, setReturnModal] = useState(null);
-  const [submittedReturns, setSubmittedReturns] = useState(new Set());
 
   useEffect(() => {
     if (!token) { router.push('/login'); return; }
@@ -257,13 +152,6 @@ export default function PedidosPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      {returnModal && (
-        <ReturnModal
-          order={returnModal}
-          onClose={() => setReturnModal(null)}
-          onSubmitted={() => setSubmittedReturns(prev => new Set([...prev, returnModal.id]))}
-        />
-      )}
       <h1 className="text-2xl font-black mb-6">Meus pedidos</h1>
       <div className="space-y-4">
         {orders.map(order => {
@@ -300,19 +188,6 @@ export default function PedidosPage() {
                             : <RotateCcw size={11} />}
                           Comprar novamente
                         </button>
-                      )}
-                      {order.status === 'DELIVERED' && !submittedReturns.has(order.id) && (
-                        <button
-                          onClick={e => { e.stopPropagation(); setReturnModal(order); }}
-                          className="mt-1 flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-gray-200 px-2 py-1 rounded-lg transition-colors"
-                        >
-                          <ArrowLeftRight size={11} /> Devolução / troca
-                        </button>
-                      )}
-                      {order.status === 'DELIVERED' && submittedReturns.has(order.id) && (
-                        <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-green-600 border border-green-200 bg-green-50 px-2 py-1 rounded-lg">
-                          ✓ Solicitação enviada
-                        </span>
                       )}
                     </div>
                     {isOpen ? <ChevronUp size={18} className="text-gray-400 mt-1" /> : <ChevronDown size={18} className="text-gray-400 mt-1" />}
