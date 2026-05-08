@@ -75,7 +75,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-3 md:px-0">
           <div className="grid grid-cols-2 md:grid-cols-4 md:divide-x divide-white/20">
             {[config.benefit1, config.benefit2, config.benefit3, config.benefit4].map((b, i) => (
-              <div key={i} className="flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-3.5 text-center md:text-left">
+              <div key={i} className="flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-2 px-2 md:px-4 py-1 md:py-3.5 text-center md:text-left">
                 <span className="text-base md:text-xl leading-none shrink-0">{b.match(/^\S+/)?.[0]}</span>
                 <span className="text-[9px] md:text-sm font-bold uppercase leading-tight">
                   {b.replace(/^\S+\s*/, '')}
