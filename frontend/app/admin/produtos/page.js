@@ -8,7 +8,7 @@ import ImageUpload from '@/components/ImageUpload';
 import { sortVariants } from '@/lib/sortSizes';
 
 const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [] };
-const EMPTY_VARIANT = { size: '', color: '', stock: '' };
+const EMPTY_VARIANT = { size: '', stock: '' };
 
 function DeleteConfirm({ name, onConfirm, onCancel }) {
   return (
@@ -32,7 +32,6 @@ export default function AdminProdutos() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [variantSize, setVariantSize] = useState('');
-  const [variantColor, setVariantColor] = useState('');
   const [variantStock, setVariantStock] = useState('');
   const [savingVariant, setSavingVariant] = useState(false);
   const [editingVariants, setEditingVariants] = useState([]);
@@ -136,28 +135,24 @@ export default function AdminProdutos() {
     setEditing(p.id);
     setEditingVariants(p.variants || []);
     setVariantSize('');
-    setVariantColor('');
     setVariantStock('');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function addNewVariantToLocal() {
-    if (!variantSize.trim() && !variantColor.trim()) return;
+    if (!variantSize.trim()) return;
     const size = variantSize.trim().toUpperCase();
-    const color = variantColor.trim();
     const stock = Number(variantStock) || 0;
-    const key = `${size}|${color}`;
-    const already = editingVariants.find(v => `${(v.size || '').toUpperCase()}|${v.color || ''}` === key);
-    if (already) { toast.error('Variante já adicionada'); return; }
-    setEditingVariants(v => [...v, { id: `local-${key}-${Date.now()}`, size: size || null, color: color || null, stock }]);
+    const already = editingVariants.find(v => (v.size || '').toUpperCase() === size);
+    if (already) { toast.error('Tamanho já adicionado'); return; }
+    setEditingVariants(v => [...v, { id: `local-${size}-${Date.now()}`, size, stock }]);
     setVariantSize('');
-    setVariantColor('');
     setVariantStock('');
   }
 
   async function addVariant() {
-    if (!variantSize.trim() && !variantColor.trim()) { toast.error('Informe ao menos tamanho ou cor'); return; }
+    if (!variantSize.trim()) { toast.error('Informe o tamanho'); return; }
     if (!editing) {
       addNewVariantToLocal();
       return;
@@ -165,18 +160,16 @@ export default function AdminProdutos() {
     setSavingVariant(true);
     try {
       const { data } = await api.post(`/products/${editing}/variants`, {
-        size: variantSize.trim().toUpperCase() || null,
-        color: variantColor.trim() || null,
+        size: variantSize.trim().toUpperCase(),
         stock: Number(variantStock) || 0,
       });
       setEditingVariants(v => [...v, data]);
       setProducts(ps => ps.map(p => p.id === editing ? { ...p, variants: [...(p.variants || []), data] } : p));
       setVariantSize('');
-      setVariantColor('');
       setVariantStock('');
-      toast.success('Variante adicionada');
+      toast.success('Tamanho adicionado');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao adicionar variante');
+      toast.error(err.response?.data?.error || 'Erro ao adicionar tamanho');
     } finally {
       setSavingVariant(false);
     }
@@ -267,7 +260,7 @@ export default function AdminProdutos() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-black">Produtos</h1>
         <button
-          onClick={() => { setForm(EMPTY); setEditing(null); setEditingVariants([]); setVariantSize(''); setVariantColor(''); setVariantStock(''); setShowForm(!showForm); }}
+          onClick={() => { setForm(EMPTY); setEditing(null); setEditingVariants([]); setVariantSize(''); setVariantStock(''); setShowForm(!showForm); }}
           className="btn-primary flex items-center gap-2"
         >
           <Plus size={18} /> Novo produto
@@ -306,7 +299,7 @@ export default function AdminProdutos() {
             </div>
             {/* VARIAÇÕES */}
             <div className="md:col-span-2 bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-              <h3 className="font-bold text-sm text-gray-700">Variantes (tamanho e/ou cor)</h3>
+              <h3 className="font-bold text-sm text-gray-700">Variantes por tamanho</h3>
 
               {editingVariants.length > 0 && (
                 <div className="space-y-2">
@@ -314,8 +307,6 @@ export default function AdminProdutos() {
                     {sortVariants(editingVariants).map(v => (
                       <div key={v.id} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-sm">
                         {v.size && <span className="font-bold text-gray-800">{v.size}</span>}
-                        {v.size && v.color && <span className="text-gray-300">/</span>}
-                        {v.color && <span className="font-medium text-gray-700">{v.color}</span>}
                         <span className="text-gray-300">|</span>
                         <input
                           type="number"
@@ -368,14 +359,6 @@ export default function AdminProdutos() {
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVariant(); } }}
                 />
                 <input
-                  type="text"
-                  className="input text-sm py-2 w-28"
-                  placeholder="Cor (opcional)"
-                  value={variantColor}
-                  onChange={e => setVariantColor(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVariant(); } }}
-                />
-                <input
                   type="number"
                   className="input text-sm py-2 w-24"
                   placeholder="Estoque"
@@ -394,7 +377,7 @@ export default function AdminProdutos() {
                   Adicionar
                 </button>
               </div>
-              <p className="text-xs text-gray-400">Preencha tamanho, cor ou ambos. Ex: tamanho "M" + cor "Azul" = variante "M / Azul".</p>
+              <p className="text-xs text-gray-400">Ex: P, M, G, GG, 38, 40… Pressione Enter para adicionar rapidamente.</p>
             </div>
 
             <div>
