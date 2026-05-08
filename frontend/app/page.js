@@ -74,8 +74,8 @@ export default async function HomePage() {
       <section
         className="text-white relative z-10"
         style={{
-          background: 'linear-gradient(to bottom, #fb923c, #c2560a)',
-          boxShadow: '0 5px 0 #7c2d12, inset 0 1px 0 rgba(255,255,255,0.18)',
+          background: 'linear-gradient(to bottom, #fdab60 0%, #f07010 55%, #c2560a 100%)',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -2px 0 rgba(0,0,0,0.18)',
         }}
       >
         <div className="max-w-7xl mx-auto px-3 md:px-0">
