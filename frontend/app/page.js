@@ -78,26 +78,21 @@ export default async function HomePage() {
           boxShadow: '0 8px 20px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -2px 0 rgba(0,0,0,0.18)',
         }}
       >
-        <div className="max-w-7xl mx-auto px-3 md:px-0">
-          <div className="grid grid-cols-2 md:grid-cols-4 md:divide-x divide-white/20">
+        <div className="max-w-7xl mx-auto px-0 md:px-0">
+          <div className="grid grid-cols-4 divide-x divide-white/20">
             {[config.benefit1, config.benefit2, config.benefit3, config.benefit4].map((b, i) => {
               const emoji = b.match(/^\S+/)?.[0] ?? '';
               const text = b.replace(/^\S+\s*/, '');
               const [line1, line2] = text.split('\n');
               return (
-                <div key={i} className="flex flex-row items-center justify-center gap-1 md:gap-2 px-1 md:px-4 py-1.5 md:py-3.5">
-                  <span className="text-base md:text-xl leading-none shrink-0" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }}>
+                <div key={i} className="flex flex-row items-center justify-center gap-0.5 md:gap-2 px-0.5 md:px-4 py-1.5 md:py-3.5">
+                  <span className="text-sm md:text-xl leading-none shrink-0" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }}>
                     {emoji}
                   </span>
-                  {/* Mobile: duas linhas empilhadas */}
-                  <div className="flex flex-col items-start md:hidden">
-                    <span className="text-[9px] font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>{line1}</span>
-                    {line2 && <span className="text-[9px] font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>{line2}</span>}
+                  <div className="flex flex-col items-start">
+                    <span className="text-[8px] md:text-sm font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>{line1}</span>
+                    {line2 && <span className="text-[8px] md:text-sm font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>{line2}</span>}
                   </div>
-                  {/* Desktop: linha única */}
-                  <span className="hidden md:inline text-sm font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
-                    {line2 ? `${line1} ${line2}` : line1}
-                  </span>
                 </div>
               );
             })}
