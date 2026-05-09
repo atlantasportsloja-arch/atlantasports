@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, Truck, Shield, ChevronRight, Loader2, Heart, Zap } from 'lucide-react';
+import { ShoppingCart, Truck, Shield, ChevronRight, Loader2, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
@@ -11,8 +11,6 @@ import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
 import { sortSizes } from '@/lib/sortSizes';
 import ProductCard from '@/components/ProductCard';
 
-
-const ESTADOS_BR = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 
 const WA_ICON = (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 shrink-0">
@@ -140,7 +138,6 @@ export default function ProdutoPage({ params }) {
 
   const outOfStock = effectiveStock === 0;
   const lowStock = effectiveStock > 0 && effectiveStock <= 5;
-  const hasEstadoSigla = ESTADOS_BR.some(uf => product.name?.includes(`(${uf})`));
   const waNumero = (config.whatsapp || '').replace(/\D/g, '');
   const waUrl = `https://wa.me/${waNumero}?text=${encodeURIComponent(`Quero ver as fotos reais\nPoderia me enviar por favor? 📸\n\nhttps://www.atlantasports.com.br/produto/${product.slug}`)}`;
 
@@ -316,18 +313,11 @@ export default function ProdutoPage({ params }) {
               <span className="text-primary-500"><Truck size={15} /></span>
               <span>Frete Grátis</span><span>acima R$ 299</span>
             </div>
-            {hasEstadoSigla ? (
-              <a href={waUrl} target="_blank" rel="noopener noreferrer"
-                className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs font-bold text-white bg-green-500 hover:bg-green-600 p-2 md:p-3 rounded-lg transition-colors">
-                {WA_ICON}
-                <span>Ver foto completa</span><span>no WhatsApp</span>
-              </a>
-            ) : (
-              <div className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs text-gray-500 p-2 md:p-3 bg-gray-50 rounded-lg">
-                <span className="text-primary-500"><Zap size={15} /></span>
-                Envio Imediato
-              </div>
-            )}
+            <a href={waUrl} target="_blank" rel="noopener noreferrer"
+              className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs font-bold text-white bg-green-500 hover:bg-green-600 p-2 md:p-3 rounded-lg transition-colors">
+              {WA_ICON}
+              <span>Ver foto completa</span><span>no WhatsApp</span>
+            </a>
             <div className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs text-gray-500 p-2 md:p-3 bg-gray-50 rounded-lg">
               <span className="text-primary-500"><Shield size={15} /></span>
               <span>Compra</span><span>100% Segura</span>
