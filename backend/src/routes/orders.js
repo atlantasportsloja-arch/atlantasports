@@ -352,18 +352,26 @@ router.put('/admin/:id/status', adminMiddleware, async (req, res) => {
 });
 
 router.delete('/admin/reset-all', adminMiddleware, async (req, res) => {
-  try {
-    await prisma.$executeRaw`DELETE FROM return_items`;
-    await prisma.$executeRaw`DELETE FROM returns`;
-    await prisma.$executeRaw`DELETE FROM order_items`;
-    await prisma.$executeRaw`DELETE FROM order_status_history`;
-    await prisma.$executeRaw`DELETE FROM orders`;
-    console.log('[Admin] Todos os pedidos foram apagados. Próximo número: 1000');
-    res.json({ message: 'Todos os pedidos foram apagados. Próximo pedido começará em #1000.' });
-  } catch (err) {
-    console.error('[Admin] Erro ao resetar pedidos:', err.message);
-    res.status(500).json({ error: 'Erro ao apagar pedidos: ' + err.message });
+  const steps = [
+    'DELETE FROM return_items',
+    'DELETE FROM returns',
+    'DELETE FROM order_items',
+    'DELETE FROM order_status_history',
+    'DELETE FROM orders',
+  ];
+  for (const sql of steps) {
+    try {
+      await prisma.$executeRawUnsafe(sql);
+    } catch (err) {
+      // ignora se a tabela não existir
+      if (!err.message?.includes('does not exist') && !err.message?.includes('não existe')) {
+        console.error(`[Admin] Erro em "${sql}":`, err.message);
+        return res.status(500).json({ error: `Erro ao apagar: ${err.message}` });
+      }
+    }
   }
+  console.log('[Admin] Todos os pedidos foram apagados. Próximo número: 1001');
+  res.json({ message: 'Todos os pedidos foram apagados. Próximo pedido começará em #1001.' });
 });
 
 router.post('/admin/:id/resend-confirmation', adminMiddleware, async (req, res) => {
