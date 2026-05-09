@@ -89,7 +89,7 @@ export default async function HomePage() {
                   <span className="text-sm md:text-xl leading-none shrink-0" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }}>
                     {emoji}
                   </span>
-                  <div className="flex flex-col items-start">
+                  <div className="flex flex-col items-center text-center">
                     <span className="text-[8px] md:text-sm font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>{line1}</span>
                     {line2 && <span className="text-[8px] md:text-sm font-bold uppercase leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>{line2}</span>}
                   </div>
