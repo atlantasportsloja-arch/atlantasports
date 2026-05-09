@@ -144,9 +144,9 @@ export default function ProdutoPage({ params }) {
   const waUrl = `https://wa.me/${waNumero}?text=${encodeURIComponent(`Quero ver as fotos reais\nPoderia me enviar por favor? 📸\n\nhttps://www.atlantasports.com.br/produto/${product.slug}`)}`;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <div className="max-w-7xl mx-auto px-2 md:px-4 py-3 md:py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-xs md:text-sm text-gray-400 mb-4 md:mb-6 overflow-x-auto whitespace-nowrap pb-1">
+      <nav className="flex items-center gap-1 text-xs text-gray-400 mb-2 md:mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <Link href="/" className="hover:text-gray-600 transition-colors">Início</Link>
         <ChevronRight size={14} />
         {product.categories?.[0] && (
@@ -204,48 +204,41 @@ export default function ProdutoPage({ params }) {
         </div>
 
         {/* INFO */}
-        <div className="space-y-4 md:space-y-5">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black leading-tight">{product.name}</h1>
-          </div>
+        <div className="space-y-2.5 md:space-y-5">
+          <h1 className="text-xl md:text-3xl font-black leading-tight">{product.name}</h1>
 
           {product.availability && (
-            <div>
-              <span className={`inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full ${product.availability === 'encomenda' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-                {product.availability === 'encomenda' ? '🕐 Sob Encomenda' : '✅ Pronta Entrega'}
-              </span>
-            </div>
+            <span className={`inline-flex items-center gap-1 text-xs md:text-sm font-semibold px-2.5 py-0.5 rounded-full ${product.availability === 'encomenda' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+              {product.availability === 'encomenda' ? '🕐 Sob Encomenda' : '✅ Pronta Entrega'}
+            </span>
           )}
-          <div className="bg-gray-50 rounded-xl p-3 md:p-4 space-y-1">
-            <p className="text-3xl md:text-4xl font-black text-gray-900">
+
+          <div className="bg-gray-50 rounded-xl p-2.5 md:p-4 space-y-1">
+            <p className="text-2xl md:text-4xl font-black text-gray-900">
               R$ {product.price.toFixed(2).replace('.', ',')}
             </p>
             {product.comparePrice && (
-              <p className="text-gray-400 line-through text-sm">
+              <p className="text-gray-400 line-through text-xs md:text-sm">
                 De R$ {product.comparePrice.toFixed(2).replace('.', ',')}
               </p>
             )}
-
             {pixPrice(product.price, pixDiscount) && (
-              <div className="mt-2 pt-2 border-t border-gray-200 flex items-center gap-2">
-                <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">PIX</span>
-                <span className="text-green-700 font-black text-xl">
+              <div className="pt-1.5 border-t border-gray-200 flex items-center gap-1.5">
+                <span className="bg-green-100 text-green-700 text-xs font-bold px-1.5 py-0.5 rounded">PIX</span>
+                <span className="text-green-700 font-black text-lg md:text-xl">
                   R$ {fmt(pixPrice(product.price, pixDiscount))}
                 </span>
-                <span className="text-green-600 text-xs font-semibold">
-                  ({pixDiscount}% off)
-                </span>
+                <span className="text-green-600 text-xs font-semibold">({pixDiscount}% off)</span>
               </div>
             )}
-
           </div>
 
-          <p className="text-gray-600 leading-relaxed whitespace-pre-line">{product.description}</p>
+          <p className="text-sm md:text-base text-gray-600 leading-relaxed whitespace-pre-line">{product.description}</p>
 
           {sizes.length > 0 && (
             <div>
-              <p className="text-sm font-semibold mb-2">Tamanho</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-xs md:text-sm font-semibold mb-1.5">Tamanho</p>
+              <div className="flex flex-wrap gap-1.5 md:gap-2">
                 {sizes.map(s => {
                   const variant = product.variants.find(v => v.size === s);
                   const unavailable = variant?.stock === 0;
@@ -255,7 +248,7 @@ export default function ProdutoPage({ params }) {
                       type="button"
                       disabled={unavailable}
                       onClick={() => setSelectedSize(s === selectedSize ? null : s)}
-                      className={`px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-colors ${
+                      className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg border-2 text-xs md:text-sm font-semibold transition-colors ${
                         selectedSize === s
                           ? 'border-primary-500 bg-primary-50 text-primary-700'
                           : unavailable
@@ -271,82 +264,72 @@ export default function ProdutoPage({ params }) {
             </div>
           )}
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-              <button
-                className="px-3 py-3 hover:bg-gray-100 transition-colors font-bold text-lg"
-                onClick={() => setQuantity(q => Math.max(1, q - 1))}
-              >−</button>
-              <span className="px-5 font-semibold">{quantity}</span>
-              <button
-                className="px-3 py-3 hover:bg-gray-100 transition-colors font-bold text-lg"
-                onClick={() => setQuantity(q => Math.min(Math.max(effectiveStock, 1), q + 1))}
-              >+</button>
+              <button className="px-2.5 py-2 hover:bg-gray-100 transition-colors font-bold" onClick={() => setQuantity(q => Math.max(1, q - 1))}>−</button>
+              <span className="px-4 py-2 font-semibold text-sm border-x border-gray-300">{quantity}</span>
+              <button className="px-2.5 py-2 hover:bg-gray-100 transition-colors font-bold" onClick={() => setQuantity(q => Math.min(Math.max(effectiveStock, 1), q + 1))}>+</button>
             </div>
             {lowStock && <span className="text-xs text-orange-500 font-semibold">⚠️ Apenas {effectiveStock} em estoque</span>}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 md:space-y-2">
             <button
               onClick={buyNow}
               disabled={buyingNow || outOfStock}
-              className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold rounded-xl bg-gray-900 hover:bg-gray-800 text-white transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3 md:py-4 text-sm md:text-base font-bold rounded-xl bg-gray-900 hover:bg-gray-800 text-white transition-colors disabled:opacity-50"
             >
               {buyingNow
-                ? <><Loader2 size={20} className="animate-spin" /> Processando...</>
-                : <><Zap size={20} /> Comprar agora</>
+                ? <><Loader2 size={18} className="animate-spin" /> Processando...</>
+                : <><Zap size={18} /> Comprar agora</>
               }
             </button>
             <div className="flex gap-2">
               <button
                 onClick={addToCart}
                 disabled={loading || outOfStock}
-                className="btn-primary flex-1 flex items-center justify-center gap-2 py-3 text-sm"
+                className="btn-primary flex-1 flex items-center justify-center gap-2 py-2.5 md:py-3 text-sm"
               >
                 {loading
-                  ? <><Loader2 size={16} className="animate-spin" /> Adicionando...</>
-                  : <><ShoppingCart size={16} /> Adicionar ao carrinho</>
+                  ? <><Loader2 size={15} className="animate-spin" /> Adicionando...</>
+                  : <><ShoppingCart size={15} /> Adicionar ao carrinho</>
                 }
               </button>
               <button
                 onClick={toggleWishlist}
                 disabled={wishlistLoading}
-                className={`p-3 rounded-lg border-2 transition-all ${
+                className={`p-2.5 md:p-3 rounded-lg border-2 transition-all ${
                   wishlisted
                     ? 'border-red-400 bg-red-50 text-red-500'
                     : 'border-gray-300 text-gray-400 hover:border-red-300 hover:text-red-400'
                 }`}
                 title={wishlisted ? 'Remover da lista de desejos' : 'Salvar na lista de desejos'}
               >
-                <Heart size={20} className={wishlisted ? 'fill-current' : ''} />
+                <Heart size={18} className={wishlisted ? 'fill-current' : ''} />
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 md:gap-3">
-            <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
-              <span className="text-primary-500"><Truck size={18} /></span>
+          <div className="grid grid-cols-3 gap-1.5 md:gap-3">
+            <div className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs text-gray-500 p-2 md:p-3 bg-gray-50 rounded-lg">
+              <span className="text-primary-500"><Truck size={15} /></span>
               Frete Grátis acima R$ 299
             </div>
             {hasEstadoSigla ? (
-              <a
-                href={waUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center text-center gap-1.5 text-xs font-bold text-white bg-green-500 hover:bg-green-600 p-3 rounded-lg transition-colors"
-              >
+              <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs font-bold text-white bg-green-500 hover:bg-green-600 p-2 md:p-3 rounded-lg transition-colors">
                 {WA_ICON}
-                Ver fotos reais pelo WhatsApp
+                Ver fotos reais
               </a>
             ) : (
-              <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
-                <span className="text-primary-500"><Zap size={18} /></span>
+              <div className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs text-gray-500 p-2 md:p-3 bg-gray-50 rounded-lg">
+                <span className="text-primary-500"><Zap size={15} /></span>
                 Envio Imediato
               </div>
             )}
-            <div className="flex flex-col items-center text-center gap-1.5 text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
-              <span className="text-primary-500"><Shield size={18} /></span>
-              Compra<br />100% Segura
+            <div className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs text-gray-500 p-2 md:p-3 bg-gray-50 rounded-lg">
+              <span className="text-primary-500"><Shield size={15} /></span>
+              Compra 100% Segura
             </div>
           </div>
         </div>
@@ -355,9 +338,9 @@ export default function ProdutoPage({ params }) {
 
       {/* PRODUTOS RELACIONADOS */}
       {related.length > 0 && (
-        <section className="mt-14 border-t pt-10">
-          <h2 className="text-xl font-black mb-6">Você também pode gostar</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <section className="mt-6 md:mt-14 border-t pt-5 md:pt-10">
+          <h2 className="text-base md:text-xl font-black mb-3 md:mb-6">Você também pode gostar</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {related.map(p => <ProductCard key={p.id} product={p} />)}
           </div>
         </section>
