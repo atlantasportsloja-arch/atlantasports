@@ -314,7 +314,7 @@ export default function ProdutoPage({ params }) {
           <div className="grid grid-cols-3 gap-1.5 md:gap-3">
             <div className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs text-gray-500 p-2 md:p-3 bg-gray-50 rounded-lg">
               <span className="text-primary-500"><Truck size={15} /></span>
-              Frete Grátis acima R$ 299
+              <span>Frete Grátis</span><span>acima R$ 299</span>
             </div>
             {hasEstadoSigla ? (
               <a href={waUrl} target="_blank" rel="noopener noreferrer"
@@ -330,7 +330,7 @@ export default function ProdutoPage({ params }) {
             )}
             <div className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs text-gray-500 p-2 md:p-3 bg-gray-50 rounded-lg">
               <span className="text-primary-500"><Shield size={15} /></span>
-              Compra 100% Segura
+              <span>Compra</span><span>100% Segura</span>
             </div>
           </div>
         </div>
