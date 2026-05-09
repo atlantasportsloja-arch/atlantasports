@@ -204,7 +204,7 @@ export default function ProdutoPage({ params }) {
         </div>
 
         {/* INFO */}
-        <div className="space-y-2.5 md:space-y-5">
+        <div className="space-y-2 md:space-y-5">
           <h1 className="text-xl md:text-3xl font-black leading-tight">{product.name}</h1>
 
           {product.availability && (
