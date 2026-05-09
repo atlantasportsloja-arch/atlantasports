@@ -167,12 +167,12 @@ export default function ProdutoPage({ params }) {
             )}
           </div>
           {product.images?.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="flex justify-center gap-2 flex-wrap">
               {product.images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(i)}
-                  className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-colors ${
+                  className={`relative w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-colors ${
                     i === activeImg ? 'border-primary-500' : 'border-transparent hover:border-gray-300'
                   }`}
                 >
