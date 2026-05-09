@@ -320,7 +320,7 @@ export default function ProdutoPage({ params }) {
               <a href={waUrl} target="_blank" rel="noopener noreferrer"
                 className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs font-bold text-white bg-green-500 hover:bg-green-600 p-2 md:p-3 rounded-lg transition-colors">
                 {WA_ICON}
-                Ver fotos reais pelo WhatsApp
+                Ver foto completa no WhatsApp
               </a>
             ) : (
               <div className="flex flex-col items-center text-center gap-1 text-[10px] md:text-xs text-gray-500 p-2 md:p-3 bg-gray-50 rounded-lg">
