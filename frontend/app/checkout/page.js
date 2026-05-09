@@ -18,21 +18,21 @@ const STEPS = ['Carrinho', 'Dados', 'Revisão', 'Concluído'];
 
 function StepBar({ current }) {
   return (
-    <div className="flex items-center justify-center gap-0 mb-8">
+    <div className="flex items-center justify-center gap-0 mb-4 md:mb-8">
       {STEPS.map((label, i) => (
         <div key={label} className="flex items-center">
           <div className="flex flex-col items-center">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+            <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
               i < current ? 'bg-primary-500 text-white' :
               i === current ? 'bg-gray-900 text-white' :
               'bg-gray-200 text-gray-400'
             }`}>
               {i < current ? '✓' : i + 1}
             </div>
-            <span className={`text-xs mt-1 hidden sm:block ${i === current ? 'font-bold text-gray-900' : 'text-gray-400'}`}>{label}</span>
+            <span className={`text-[10px] md:text-xs mt-0.5 hidden sm:block ${i === current ? 'font-bold text-gray-900' : 'text-gray-400'}`}>{label}</span>
           </div>
           {i < STEPS.length - 1 && (
-            <div className={`w-8 sm:w-16 h-0.5 mx-1 mb-4 sm:mb-0 transition-colors ${i < current ? 'bg-primary-500' : 'bg-gray-200'}`} />
+            <div className={`w-6 sm:w-16 h-0.5 mx-1 mb-3 sm:mb-0 transition-colors ${i < current ? 'bg-primary-500' : 'bg-gray-200'}`} />
           )}
         </div>
       ))}
@@ -85,7 +85,7 @@ export default function CheckoutPage() {
 
   const fmt = (v) => `R$ ${Number(v).toFixed(2).replace('.', ',')}`;
   const inputClass = (field) =>
-    `input ${errors[field] ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : ''}`;
+    `w-full border rounded-lg px-3 py-2 md:px-4 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${errors[field] ? 'border-red-400 focus:ring-red-200' : 'border-gray-300'}`;
 
   async function fetchCep(cep) {
     const digits = cep.replace(/\D/g, '');
@@ -182,14 +182,14 @@ export default function CheckoutPage() {
   // ─── TELA DE REVISÃO ────────────────────────────────────────────────────────
   if (step === 2) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto px-2 md:px-4 py-3 md:py-8">
         <StepBar current={2} />
 
-        <h1 className="text-2xl font-black mb-6 text-center">Revise seu pedido</h1>
+        <h1 className="text-lg md:text-2xl font-black mb-3 md:mb-6 text-center">Revise seu pedido</h1>
 
-        <div className="space-y-4">
+        <div className="space-y-2 md:space-y-4">
           {/* Itens */}
-          <div className="card p-5">
+          <div className="card p-3 md:p-5">
             <h2 className="font-black mb-3 text-sm text-gray-500 uppercase tracking-wide">Itens ({items.length})</h2>
             <div className="space-y-3">
               {items.map(item => (
@@ -211,7 +211,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Endereço */}
-          <div className="card p-5">
+          <div className="card p-3 md:p-5">
             <div className="flex items-center gap-2 mb-2">
               <MapPin size={16} className="text-primary-500" />
               <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide">Entrega</h2>
@@ -230,8 +230,8 @@ export default function CheckoutPage() {
           </div>
 
           {/* Pagamento */}
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="card p-3 md:p-5">
+            <div className="flex items-center gap-2 mb-2">
               <CreditCard size={16} className="text-primary-500" />
               <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide">Pagamento</h2>
               <button onClick={() => setStep(1)} className="ml-auto text-xs text-primary-500 hover:underline">Editar</button>
@@ -306,7 +306,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Totais */}
-          <div className="card p-5 space-y-2 text-sm">
+          <div className="card p-3 md:p-5 space-y-1.5 md:space-y-2 text-sm">
             <div className="flex justify-between text-gray-500">
               <span>Subtotal</span><span>{fmt(total)}</span>
             </div>
@@ -326,31 +326,31 @@ export default function CheckoutPage() {
                 {isFreeShipping ? 'Grátis' : shippingCost !== null ? fmt(shippingCost) : '—'}
               </span>
             </div>
-            <div className="border-t pt-3 flex justify-between font-black text-xl">
+            <div className="border-t pt-2 flex justify-between font-black text-base md:text-xl">
               <span>Total</span>
               <span className="text-primary-600">{fmt(finalTotal)}</span>
             </div>
           </div>
 
           {/* Botões */}
-          <div className="flex flex-col gap-3 pt-2">
+          <div className="flex flex-col gap-2 md:gap-3 pt-1 md:pt-2">
             <button
               onClick={confirmOrder}
               disabled={loading}
-              className={`w-full flex items-center justify-center gap-2 text-base py-4 font-bold rounded-xl text-white transition-colors disabled:opacity-60 ${
+              className={`w-full flex items-center justify-center gap-2 text-sm md:text-base py-3 md:py-4 font-bold rounded-xl text-white transition-colors disabled:opacity-60 ${
                 paymentMethod === 'pix' ? 'bg-green-500 hover:bg-green-600' : 'bg-green-600 hover:bg-green-700'
               }`}
             >
               {loading ? (
-                <><Loader2 size={20} className="animate-spin" /> Processando...</>
+                <><Loader2 size={18} className="animate-spin" /> Processando...</>
               ) : paymentMethod === 'pix' ? (
                 <>⚡ Confirmar e pagar com PIX</>
               ) : (
                 <>{WHATSAPP_ICON} Confirmar pedido</>
               )}
             </button>
-            <button onClick={() => setStep(1)} className="btn-outline flex items-center justify-center gap-2">
-              <ArrowLeft size={16} /> Voltar e editar
+            <button onClick={() => setStep(1)} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-4 py-2 md:py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm md:text-base">
+              <ArrowLeft size={15} /> Voltar e editar
             </button>
           </div>
         </div>
@@ -360,25 +360,25 @@ export default function CheckoutPage() {
 
   // ─── TELA DE FORMULÁRIO ─────────────────────────────────────────────────────
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-2 md:px-4 py-3 md:py-8">
       <StepBar current={1} />
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <form onSubmit={goToReview} className="md:col-span-2 space-y-4">
+      <div className="grid md:grid-cols-3 gap-2 md:gap-8">
+        <form onSubmit={goToReview} className="md:col-span-2 space-y-2 md:space-y-4">
 
           {/* Endereço */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-black">Endereço de entrega</h2>
+          <div className="card p-3 md:p-6">
+            <div className="flex items-center justify-between mb-2 md:mb-4">
+              <h2 className="font-black text-sm md:text-base">Endereço de entrega</h2>
               {lastAddressUsed && (
                 <span className="text-xs text-green-600 bg-green-50 border border-green-200 px-2 py-1 rounded-lg font-medium">
                   ✓ Último endereço usado
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2 md:gap-4">
               <div className="col-span-2 sm:col-span-1">
-                <label className="block text-sm font-medium mb-1">CEP</label>
+                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">CEP</label>
                 <div className="relative">
                   <input className={inputClass('zip')} value={address.zip} onChange={handleZipChange} placeholder="00000-000" maxLength={9} />
                   {cepLoading && <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-gray-400" />}
@@ -386,41 +386,41 @@ export default function CheckoutPage() {
                 {errors.zip && <p className="text-red-500 text-xs mt-1">{errors.zip}</p>}
               </div>
               <div className="col-span-2">
-                <label className="block text-sm font-medium mb-1">Rua</label>
+                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Rua</label>
                 <input className={inputClass('street')} value={address.street} onChange={e => fieldChange('street', e.target.value)} placeholder="Nome da rua" />
-                {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
+                {errors.street && <p className="text-red-500 text-xs mt-0.5">{errors.street}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Número</label>
+                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Número</label>
                 <input className={inputClass('number')} value={address.number} onChange={e => fieldChange('number', e.target.value)} placeholder="123" />
-                {errors.number && <p className="text-red-500 text-xs mt-1">{errors.number}</p>}
+                {errors.number && <p className="text-red-500 text-xs mt-0.5">{errors.number}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Complemento <span className="text-gray-400 font-normal">(opcional)</span></label>
-                <input className="input" value={address.complement} onChange={e => fieldChange('complement', e.target.value)} placeholder="Apto, bloco..." />
+                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Complemento <span className="text-gray-400 font-normal">(opcional)</span></label>
+                <input className={inputClass('')} value={address.complement} onChange={e => fieldChange('complement', e.target.value)} placeholder="Apto, bloco..." />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Bairro</label>
+                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Bairro</label>
                 <input className={inputClass('neighborhood')} value={address.neighborhood} onChange={e => fieldChange('neighborhood', e.target.value)} />
-                {errors.neighborhood && <p className="text-red-500 text-xs mt-1">{errors.neighborhood}</p>}
+                {errors.neighborhood && <p className="text-red-500 text-xs mt-0.5">{errors.neighborhood}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Cidade</label>
+                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Cidade</label>
                 <input className={inputClass('city')} value={address.city} onChange={e => fieldChange('city', e.target.value)} />
-                {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
+                {errors.city && <p className="text-red-500 text-xs mt-0.5">{errors.city}</p>}
               </div>
               <div className="col-span-2 sm:col-span-1">
-                <label className="block text-sm font-medium mb-1">Estado (UF)</label>
+                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Estado (UF)</label>
                 <input className={inputClass('state')} value={address.state} onChange={e => fieldChange('state', e.target.value.toUpperCase().slice(0, 2))} placeholder="SP" maxLength={2} />
-                {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
+                {errors.state && <p className="text-red-500 text-xs mt-0.5">{errors.state}</p>}
               </div>
             </div>
           </div>
 
           {/* Frete */}
-          <div className="card p-6">
-            <h2 className="font-black mb-4 flex items-center gap-2">
-              <Truck size={18} className="text-primary-500" /> Frete
+          <div className="card p-3 md:p-6">
+            <h2 className="font-black mb-2 md:mb-4 text-sm md:text-base flex items-center gap-2">
+              <Truck size={16} className="text-primary-500" /> Frete
             </h2>
             {isFreeShipping ? (
               <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
@@ -452,9 +452,9 @@ export default function CheckoutPage() {
           </div>
 
           {/* Cupom */}
-          <div className="card p-6">
-            <h2 className="font-black mb-4 flex items-center gap-2">
-              <Tag size={18} className="text-primary-500" /> Cupom de desconto
+          <div className="card p-3 md:p-6">
+            <h2 className="font-black mb-2 md:mb-4 text-sm md:text-base flex items-center gap-2">
+              <Tag size={16} className="text-primary-500" /> Cupom de desconto
             </h2>
             {couponCode ? (
               <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3">
@@ -468,31 +468,31 @@ export default function CheckoutPage() {
               </div>
             ) : (
               <div className="flex gap-2">
-                <input value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyCoupon())} placeholder="CÓDIGO DO CUPOM" className="input flex-1 text-sm" />
-                <button type="button" onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()} className="btn-outline py-2 px-4 text-sm flex items-center gap-1">
-                  {couponLoading ? <Loader2 size={14} className="animate-spin" /> : 'Aplicar'}
+                <input value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyCoupon())} placeholder="CÓDIGO DO CUPOM" className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                <button type="button" onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-3 py-2 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50 transition-colors">
+                  {couponLoading ? <Loader2 size={13} className="animate-spin" /> : 'Aplicar'}
                 </button>
               </div>
             )}
           </div>
 
           {/* Pagamento */}
-          <div className="card p-6">
-            <h2 className="font-black mb-4">Forma de pagamento</h2>
-            <div className="space-y-3">
+          <div className="card p-3 md:p-6">
+            <h2 className="font-black mb-2 md:mb-4 text-sm md:text-base">Forma de pagamento</h2>
+            <div className="space-y-2 md:space-y-3">
               {pixKey && (
                 <label className={`block border-2 rounded-xl cursor-pointer transition-colors overflow-hidden ${paymentMethod === 'pix' ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'}`}>
                   <input type="radio" name="payment" value="pix" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} className="sr-only" />
-                  <div className={`flex items-center gap-3 p-4 ${paymentMethod === 'pix' ? 'bg-green-50' : ''}`}>
-                    <span className="text-2xl">⚡</span>
+                  <div className={`flex items-center gap-2 md:gap-3 p-3 md:p-4 ${paymentMethod === 'pix' ? 'bg-green-50' : ''}`}>
+                    <span className="text-xl md:text-2xl">⚡</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold">PIX</p>
+                        <p className="font-bold text-sm md:text-base">PIX</p>
                         {pixDiscount > 0 && <span className="text-xs font-bold bg-green-500 text-white px-2 py-0.5 rounded-full">{pixDiscount}% off</span>}
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">Pagamento instantâneo</p>
+                      <p className="text-xs text-gray-500">Pagamento instantâneo</p>
                     </div>
-                    {paymentMethod === 'pix' && <CheckCircle size={20} className="text-green-500 shrink-0" />}
+                    {paymentMethod === 'pix' && <CheckCircle size={18} className="text-green-500 shrink-0" />}
                   </div>
                   {paymentMethod === 'pix' && pixKey && (
                     <div className="border-t border-green-200 bg-white px-4 py-3">
@@ -510,13 +510,13 @@ export default function CheckoutPage() {
               {whatsappNumber && (
                 <label className={`block border-2 rounded-xl cursor-pointer transition-colors overflow-hidden ${paymentMethod === 'parcelado' ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'}`}>
                   <input type="radio" name="payment" value="parcelado" checked={paymentMethod === 'parcelado'} onChange={() => setPaymentMethod('parcelado')} className="sr-only" />
-                  <div className={`flex items-center gap-3 p-4 ${paymentMethod === 'parcelado' ? 'bg-green-50' : ''}`}>
+                  <div className={`flex items-center gap-2 md:gap-3 p-3 md:p-4 ${paymentMethod === 'parcelado' ? 'bg-green-50' : ''}`}>
                     <span className="text-green-500 flex items-center">{WHATSAPP_ICON}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold">Parcelado via WhatsApp</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Pagamento em até 12x com juros</p>
+                      <p className="font-bold text-sm md:text-base">Parcelado via WhatsApp</p>
+                      <p className="text-xs text-gray-500">Pagamento em até 12x com juros</p>
                     </div>
-                    {paymentMethod === 'parcelado' && <CheckCircle size={20} className="text-green-500 shrink-0" />}
+                    {paymentMethod === 'parcelado' && <CheckCircle size={18} className="text-green-500 shrink-0" />}
                   </div>
                 </label>
               )}
@@ -530,15 +530,15 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={!pixKey && !whatsappNumber}
-            className="w-full flex items-center justify-center gap-2 text-base py-4 font-bold rounded-xl bg-gray-900 hover:bg-gray-800 text-white transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 text-sm md:text-base py-3 md:py-4 font-bold rounded-xl bg-gray-900 hover:bg-gray-800 text-white transition-colors disabled:opacity-60"
           >
-            Revisar pedido <ChevronRight size={18} />
+            Revisar pedido <ChevronRight size={16} />
           </button>
         </form>
 
         {/* Resumo lateral */}
         <div>
-          <div className="card p-6 space-y-4 sticky top-24">
+          <div className="card p-3 md:p-6 space-y-2 md:space-y-4 sticky top-24">
             <h2 className="font-black">Resumo</h2>
             <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
               {items.map(item => (
@@ -563,7 +563,7 @@ export default function CheckoutPage() {
                 </span>
               </div>
             </div>
-            <div className="border-t pt-3 flex justify-between font-black text-lg">
+            <div className="border-t pt-2 flex justify-between font-black text-base md:text-lg">
               <span>Total</span>
               <span className="text-primary-600">{shippingCost === null && !isFreeShipping ? '—' : fmt(finalTotal)}</span>
             </div>
