@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
+import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.atlantasports.com.br';
 
@@ -45,6 +46,7 @@ export default function RootLayout({ children }) {
         <main className="min-h-screen pb-16 md:pb-0">{children}</main>
         <Footer />
         <BottomNav />
+        <FloatingWhatsApp />
         <Toaster position="top-right" />
       </body>
     </html>
