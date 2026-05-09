@@ -17,7 +17,7 @@ export default function FloatingWhatsApp() {
     api.get('/config').then(r => setWhatsapp(r.data?.whatsapp || '')).catch(() => {});
   }, []);
 
-  if (!whatsapp || pathname.startsWith('/admin') || pathname.startsWith('/checkout')) return null;
+  if (!whatsapp || pathname.startsWith('/admin') || pathname.startsWith('/checkout') || pathname.startsWith('/produto')) return null;
 
   const href = `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Olá Atlanta Sports\nVim do site e preciso tirar uma dúvida. Poderia me ajudar?')}`;
 
