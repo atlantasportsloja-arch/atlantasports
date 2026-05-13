@@ -54,9 +54,10 @@ router.post('/', async (req, res) => {
         include: { product: true, variant: true },
       });
     } else {
-      const existing = await prisma.cart.findFirst({
-        where: { userId: req.user.id, productId, variantId: variantId || null, personalization: null },
+      const candidates = await prisma.cart.findMany({
+        where: { userId: req.user.id, productId, variantId: variantId || null },
       });
+      const existing = candidates.find(c => !c.personalization);
       if (existing) {
         item = await prisma.cart.update({
           where: { id: existing.id },
