@@ -58,12 +58,13 @@ model Product {
   keywords     String?
   active       Boolean  @default(true)
 
-  allowPersonalization         Boolean @default(false)
-  personalizationPrice         Float   @default(0)
-  personalizationNameEnabled   Boolean @default(false)
-  personalizationNameMaxLength Int     @default(10)
+  allowPersonalization           Boolean @default(false)
+  personalizationNameEnabled     Boolean @default(false)
+  personalizationNameMaxLength   Int     @default(10)
+  personalizationNamePrice       Float   @default(0)
   personalizationNumberEnabled   Boolean @default(false)
   personalizationNumberMaxDigits Int     @default(3)
+  personalizationNumberPrice     Float   @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

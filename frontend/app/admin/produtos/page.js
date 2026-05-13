@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 import { sortVariants } from '@/lib/sortSizes';
 
-const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [], allowPersonalization: false, personalizationPrice: '', personalizationNameEnabled: false, personalizationNameMaxLength: 10, personalizationNumberEnabled: false, personalizationNumberMaxDigits: 3 };
+const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [], allowPersonalization: false, personalizationNameEnabled: false, personalizationNameMaxLength: 10, personalizationNamePrice: '', personalizationNumberEnabled: false, personalizationNumberMaxDigits: 3, personalizationNumberPrice: '' };
 const EMPTY_VARIANT = { size: '', stock: '' };
 
 function DeleteConfirm({ name, onConfirm, onCancel }) {
@@ -75,11 +75,12 @@ export default function AdminProdutos() {
       keywords: form.keywords,
       active: form.active,
       allowPersonalization: form.allowPersonalization,
-      personalizationPrice: form.personalizationPrice ? Number(form.personalizationPrice) : 0,
       personalizationNameEnabled: form.personalizationNameEnabled,
       personalizationNameMaxLength: Number(form.personalizationNameMaxLength) || 10,
+      personalizationNamePrice: form.personalizationNamePrice ? Number(form.personalizationNamePrice) : 0,
       personalizationNumberEnabled: form.personalizationNumberEnabled,
       personalizationNumberMaxDigits: Number(form.personalizationNumberMaxDigits) || 3,
+      personalizationNumberPrice: form.personalizationNumberPrice ? Number(form.personalizationNumberPrice) : 0,
     };
     try {
       if (editing) {
@@ -137,7 +138,7 @@ export default function AdminProdutos() {
   }
 
   function edit(p) {
-    setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', availability: p.availability || 'pronta_entrega', keywords: p.keywords || '', active: p.active !== false, categoryIds: (p.categories || []).map(c => c.id), images: p.images || [], allowPersonalization: p.allowPersonalization || false, personalizationPrice: p.personalizationPrice || '', personalizationNameEnabled: p.personalizationNameEnabled || false, personalizationNameMaxLength: p.personalizationNameMaxLength || 10, personalizationNumberEnabled: p.personalizationNumberEnabled || false, personalizationNumberMaxDigits: p.personalizationNumberMaxDigits || 3 });
+    setForm({ name: p.name, description: p.description, price: p.price, comparePrice: p.comparePrice || '', costPrice: p.costPrice || '', availability: p.availability || 'pronta_entrega', keywords: p.keywords || '', active: p.active !== false, categoryIds: (p.categories || []).map(c => c.id), images: p.images || [], allowPersonalization: p.allowPersonalization || false, personalizationNameEnabled: p.personalizationNameEnabled || false, personalizationNameMaxLength: p.personalizationNameMaxLength || 10, personalizationNamePrice: p.personalizationNamePrice || '', personalizationNumberEnabled: p.personalizationNumberEnabled || false, personalizationNumberMaxDigits: p.personalizationNumberMaxDigits || 3, personalizationNumberPrice: p.personalizationNumberPrice || '' });
     setEditing(p.id);
     setEditingVariants(p.variants || []);
     setVariantSize('');
@@ -404,21 +405,7 @@ export default function AdminProdutos() {
               </div>
 
               {form.allowPersonalization && (
-                <div className="space-y-4 border-t border-purple-200 pt-4">
-                  <div>
-                    <label className="block text-sm font-medium text-purple-800 mb-1">
-                      Valor da personalização (R$)
-                      <span className="ml-2 text-xs font-normal text-purple-400">cobrado além do preço do produto</span>
-                    </label>
-                    <input
-                      className="input border-purple-200 focus:ring-purple-400 w-40"
-                      type="number" step="0.01" min="0"
-                      placeholder="0.00"
-                      value={form.personalizationPrice}
-                      onChange={e => setForm({ ...form, personalizationPrice: e.target.value })}
-                    />
-                  </div>
-
+                <div className="space-y-3 border-t border-purple-200 pt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Nome */}
                     <div className={`flex flex-col gap-3 p-3 rounded-xl border-2 transition-colors ${form.personalizationNameEnabled ? 'border-purple-400 bg-white' : 'border-gray-200 bg-white/60'}`}>
@@ -429,14 +416,26 @@ export default function AdminProdutos() {
                         <span className={`text-sm font-semibold ${form.personalizationNameEnabled ? 'text-purple-700' : 'text-gray-500'}`}>Nome</span>
                       </label>
                       {form.personalizationNameEnabled && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Máximo de letras</label>
-                          <input
-                            className="input text-sm py-1.5 w-20 text-center"
-                            type="number" min="1" max="30"
-                            value={form.personalizationNameMaxLength}
-                            onChange={e => setForm({ ...form, personalizationNameMaxLength: e.target.value })}
-                          />
+                        <div className="flex flex-col gap-2">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Máximo de letras</label>
+                            <input
+                              className="input text-sm py-1.5 w-20 text-center"
+                              type="number" min="1" max="30"
+                              value={form.personalizationNameMaxLength}
+                              onChange={e => setForm({ ...form, personalizationNameMaxLength: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Valor do nome (R$)</label>
+                            <input
+                              className="input text-sm py-1.5 w-28"
+                              type="number" step="0.01" min="0"
+                              placeholder="0.00"
+                              value={form.personalizationNamePrice}
+                              onChange={e => setForm({ ...form, personalizationNamePrice: e.target.value })}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -450,14 +449,26 @@ export default function AdminProdutos() {
                         <span className={`text-sm font-semibold ${form.personalizationNumberEnabled ? 'text-purple-700' : 'text-gray-500'}`}>Número</span>
                       </label>
                       {form.personalizationNumberEnabled && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Máximo de dígitos</label>
-                          <input
-                            className="input text-sm py-1.5 w-20 text-center"
-                            type="number" min="1" max="10"
-                            value={form.personalizationNumberMaxDigits}
-                            onChange={e => setForm({ ...form, personalizationNumberMaxDigits: e.target.value })}
-                          />
+                        <div className="flex flex-col gap-2">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Máximo de dígitos</label>
+                            <input
+                              className="input text-sm py-1.5 w-20 text-center"
+                              type="number" min="1" max="10"
+                              value={form.personalizationNumberMaxDigits}
+                              onChange={e => setForm({ ...form, personalizationNumberMaxDigits: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Valor do número (R$)</label>
+                            <input
+                              className="input text-sm py-1.5 w-28"
+                              type="number" step="0.01" min="0"
+                              placeholder="0.00"
+                              value={form.personalizationNumberPrice}
+                              onChange={e => setForm({ ...form, personalizationNumberPrice: e.target.value })}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>

@@ -248,8 +248,8 @@ router.post('/', adminMiddleware, [
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   const { name, description, price, comparePrice, costPrice, stock, images, categoryIds = [], availability = 'pronta_entrega', keywords = '',
-    allowPersonalization, personalizationPrice, personalizationNameEnabled, personalizationNameMaxLength,
-    personalizationNumberEnabled, personalizationNumberMaxDigits } = req.body;
+    allowPersonalization, personalizationNameEnabled, personalizationNameMaxLength, personalizationNamePrice,
+    personalizationNumberEnabled, personalizationNumberMaxDigits, personalizationNumberPrice } = req.body;
 
   try {
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -262,11 +262,12 @@ router.post('/', adminMiddleware, [
         stock: Number(stock),
         images: images || [],
         allowPersonalization: allowPersonalization || false,
-        personalizationPrice: personalizationPrice ? Number(personalizationPrice) : 0,
         personalizationNameEnabled: personalizationNameEnabled || false,
         personalizationNameMaxLength: personalizationNameMaxLength ? Number(personalizationNameMaxLength) : 10,
+        personalizationNamePrice: personalizationNamePrice ? Number(personalizationNamePrice) : 0,
         personalizationNumberEnabled: personalizationNumberEnabled || false,
         personalizationNumberMaxDigits: personalizationNumberMaxDigits ? Number(personalizationNumberMaxDigits) : 3,
+        personalizationNumberPrice: personalizationNumberPrice ? Number(personalizationNumberPrice) : 0,
         categories: categoryIds.length > 0
           ? { connect: categoryIds.map(id => ({ id })) }
           : undefined,
@@ -283,8 +284,8 @@ router.post('/', adminMiddleware, [
 
 router.put('/:id', adminMiddleware, async (req, res) => {
   const { name, description, price, comparePrice, costPrice, stock, images, active, availability, keywords, categoryIds,
-    allowPersonalization, personalizationPrice, personalizationNameEnabled, personalizationNameMaxLength,
-    personalizationNumberEnabled, personalizationNumberMaxDigits } = req.body;
+    allowPersonalization, personalizationNameEnabled, personalizationNameMaxLength, personalizationNamePrice,
+    personalizationNumberEnabled, personalizationNumberMaxDigits, personalizationNumberPrice } = req.body;
 
   try {
     const data = {};
@@ -298,11 +299,12 @@ router.put('/:id', adminMiddleware, async (req, res) => {
     if (availability !== undefined) data.availability = availability;
     if (keywords !== undefined) data.keywords = keywords;
     if (allowPersonalization !== undefined) data.allowPersonalization = allowPersonalization;
-    if (personalizationPrice !== undefined) data.personalizationPrice = Number(personalizationPrice) || 0;
     if (personalizationNameEnabled !== undefined) data.personalizationNameEnabled = personalizationNameEnabled;
     if (personalizationNameMaxLength !== undefined) data.personalizationNameMaxLength = Number(personalizationNameMaxLength) || 10;
+    if (personalizationNamePrice !== undefined) data.personalizationNamePrice = Number(personalizationNamePrice) || 0;
     if (personalizationNumberEnabled !== undefined) data.personalizationNumberEnabled = personalizationNumberEnabled;
     if (personalizationNumberMaxDigits !== undefined) data.personalizationNumberMaxDigits = Number(personalizationNumberMaxDigits) || 3;
+    if (personalizationNumberPrice !== undefined) data.personalizationNumberPrice = Number(personalizationNumberPrice) || 0;
     if (categoryIds !== undefined) {
       data.categories = { set: categoryIds.map(id => ({ id })) };
     }
