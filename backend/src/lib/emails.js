@@ -38,6 +38,14 @@ function fmtPrice(v) {
   return `R$ ${Number(v).toFixed(2).replace('.', ',')}`;
 }
 
+function personalizationBadges(p) {
+  if (!p || (!p.name && !p.number)) return '';
+  const parts = [];
+  if (p.name) parts.push(`<span style="display:inline-block;background:#f5f3ff;border:1px solid #c4b5fd;color:#6d28d9;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;margin-right:4px;">✏️ Nome: ${p.name}</span>`);
+  if (p.number) parts.push(`<span style="display:inline-block;background:#f5f3ff;border:1px solid #c4b5fd;color:#6d28d9;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;">🔢 Número: ${p.number}</span>`);
+  return `<p style="margin:4px 0 0;">${parts.join('')}</p>`;
+}
+
 function itemsTable(items) {
   return items.map(item => `
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6;">
@@ -46,6 +54,7 @@ function itemsTable(items) {
         <p style="margin:0;font-weight:600;color:#111;font-size:14px;">${item.product?.name || 'Produto'}</p>
         ${item.variant?.size ? `<p style="margin:2px 0 0;color:#6b7280;font-size:12px;">Tamanho: ${item.variant.size}</p>` : ''}
         <p style="margin:2px 0 0;color:#6b7280;font-size:12px;">Qtd: ${item.quantity}</p>
+        ${personalizationBadges(item.personalization)}
       </div>
       <p style="margin:0;font-weight:700;color:#111;font-size:14px;flex-shrink:0;">${fmtPrice(item.price * item.quantity)}</p>
     </div>
