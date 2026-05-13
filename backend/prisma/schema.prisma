@@ -57,8 +57,16 @@ model Product {
   availability String   @default("pronta_entrega")
   keywords     String?
   active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+
+  allowPersonalization         Boolean @default(false)
+  personalizationPrice         Float   @default(0)
+  personalizationNameEnabled   Boolean @default(false)
+  personalizationNameMaxLength Int     @default(10)
+  personalizationNumberEnabled   Boolean @default(false)
+  personalizationNumberMaxDigits Int     @default(3)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   categories Category[]
   orderItems OrderItem[]
