@@ -100,6 +100,20 @@ function SucessoContent({ id }) {
                     <p className="text-xs text-gray-400">Tamanho: {item.variant.size}</p>
                   )}
                   <p className="text-xs text-gray-500">Qtd: {item.quantity}</p>
+                  {item.personalization && (item.personalization.name || item.personalization.number) && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {item.personalization.name && (
+                        <span className="text-xs bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                          ✏️ {item.personalization.name}
+                        </span>
+                      )}
+                      {item.personalization.number && (
+                        <span className="text-xs bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                          🔢 {item.personalization.number}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <p className="text-sm font-bold shrink-0">{fmt(item.price * item.quantity)}</p>
               </div>

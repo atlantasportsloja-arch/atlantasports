@@ -225,6 +225,20 @@ export default function PedidosPage() {
                             )}
                           </div>
                         </div>
+                        {item.personalization && (item.personalization.name || item.personalization.number) && (
+                          <div className="mt-1 flex flex-wrap gap-2">
+                            {item.personalization.name && (
+                              <span className="inline-flex items-center gap-1 text-xs bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-2 py-0.5 rounded-lg">
+                                ✏️ Nome: {item.personalization.name}
+                              </span>
+                            )}
+                            {item.personalization.number && (
+                              <span className="inline-flex items-center gap-1 text-xs bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-2 py-0.5 rounded-lg">
+                                🔢 Número: {item.personalization.number}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {reviewing === item.id && (
                           <ReviewForm
                             productId={item.product.id}
