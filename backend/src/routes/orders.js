@@ -27,7 +27,15 @@ router.post('/', authMiddleware, async (req, res) => {
       }
     }
 
-    const itemPrice = (i) => i.variant?.price ?? i.product.price;
+    const personalizationExtra = (i) => {
+      if (!i.personalization) return 0;
+      const p = i.product;
+      let extra = 0;
+      if (i.personalization.name) extra += p.personalizationNamePrice || 0;
+      if (i.personalization.number) extra += p.personalizationNumberPrice || 0;
+      return extra;
+    };
+    const itemPrice = (i) => (i.variant?.price ?? i.product.price) + personalizationExtra(i);
 
     let discount = 0;
     if (couponCode) {
@@ -74,6 +82,7 @@ router.post('/', authMiddleware, async (req, res) => {
             variantId: i.variantId || undefined,
             quantity: i.quantity,
             price: itemPrice(i),
+            personalization: i.personalization || undefined,
           })),
         },
       },

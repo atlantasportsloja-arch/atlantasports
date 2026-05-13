@@ -141,12 +141,13 @@ enum OrderStatus {
 }
 
 model OrderItem {
-  id        String  @id @default(uuid())
-  orderId   String
-  productId String
-  variantId String?
-  quantity  Int
-  price     Float
+  id              String  @id @default(uuid())
+  orderId         String
+  productId       String
+  variantId       String?
+  quantity        Int
+  price           Float
+  personalization Json?
 
   order       Order           @relation(fields: [orderId], references: [id])
   product     Product         @relation(fields: [productId], references: [id])
@@ -157,11 +158,12 @@ model OrderItem {
 }
 
 model Cart {
-  id        String  @id @default(uuid())
-  userId    String
-  productId String
-  variantId String?
-  quantity  Int
+  id               String  @id @default(uuid())
+  userId           String
+  productId        String
+  variantId        String?
+  quantity         Int
+  personalization  Json?
 
   user    User            @relation(fields: [userId], references: [id])
   product Product         @relation(fields: [productId], references: [id])

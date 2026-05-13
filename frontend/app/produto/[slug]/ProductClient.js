@@ -61,6 +61,8 @@ export default function ProdutoPage({ params }) {
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [selectedSize, setSelectedSize] = useState(null);
   const [imgErrors, setImgErrors] = useState({});
+  const [personName, setPersonName] = useState('');
+  const [personNumber, setPersonNumber] = useState('');
 
   useEffect(() => {
     api.get(`/products/${params.slug}`).then(r => {
@@ -90,12 +92,21 @@ export default function ProdutoPage({ params }) {
     ? (selectedVariant?.stock ?? 0)
     : product?.stock ?? 0;
 
+  function buildPersonalization() {
+    if (!product.allowPersonalization) return null;
+    const p = {};
+    if (product.personalizationNameEnabled && personName.trim()) p.name = personName.trim().toUpperCase();
+    if (product.personalizationNumberEnabled && personNumber.trim()) p.number = personNumber.trim();
+    return Object.keys(p).length ? p : null;
+  }
+
   async function addToCart() {
     if (!token) { toast.error('Faça login para continuar'); return; }
     if (hasVariants && !selectedSize) { toast.error('Selecione um tamanho'); return; }
     setLoading(true);
     try {
-      await api.post('/cart', { productId: product.id, variantId: selectedVariant?.id || null, quantity });
+      const personalization = buildPersonalization();
+      await api.post('/cart', { productId: product.id, variantId: selectedVariant?.id || null, quantity, personalization });
       const { data } = await api.get('/cart');
       setCart(data.items, data.total);
       toast.success('Adicionado ao carrinho!');
@@ -111,7 +122,8 @@ export default function ProdutoPage({ params }) {
     if (hasVariants && !selectedSize) { toast.error('Selecione um tamanho'); return; }
     setBuyingNow(true);
     try {
-      await api.post('/cart', { productId: product.id, variantId: selectedVariant?.id || null, quantity });
+      const personalization = buildPersonalization();
+      await api.post('/cart', { productId: product.id, variantId: selectedVariant?.id || null, quantity, personalization });
       const { data } = await api.get('/cart');
       setCart(data.items, data.total);
       router.push('/checkout');
@@ -138,6 +150,9 @@ export default function ProdutoPage({ params }) {
   if (!product) return <ProductSkeleton />;
 
   const outOfStock = effectiveStock === 0;
+  const personalizationExtra =
+    (product.personalizationNameEnabled && personName.trim() ? product.personalizationNamePrice || 0 : 0) +
+    (product.personalizationNumberEnabled && personNumber.trim() ? product.personalizationNumberPrice || 0 : 0);
   const lowStock = effectiveStock > 0 && effectiveStock <= 5;
   const hasEstadoSigla = ESTADOS_BR.some(uf => product.name?.includes(`(${uf})`));
   const waNumero = (config.whatsapp || '').replace(/\D/g, '');
@@ -261,6 +276,67 @@ export default function ProdutoPage({ params }) {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* PERSONALIZAÇÃO */}
+          {product.allowPersonalization && (
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 md:p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-purple-600 font-bold text-sm">✏️ Personalização</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {product.personalizationNameEnabled && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Nome
+                      <span className="ml-1 text-gray-400 font-normal">(máx. {product.personalizationNameMaxLength} letras)</span>
+                      {product.personalizationNamePrice > 0 && (
+                        <span className="ml-1 text-purple-600 font-semibold">+R$ {product.personalizationNamePrice.toFixed(2).replace('.', ',')}</span>
+                      )}
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={product.personalizationNameMaxLength}
+                      value={personName}
+                      onChange={e => setPersonName(e.target.value.toUpperCase())}
+                      placeholder="Ex: JOAO"
+                      className="input text-sm uppercase"
+                    />
+                    <p className="text-xs text-gray-400 mt-0.5 text-right">{personName.length}/{product.personalizationNameMaxLength}</p>
+                  </div>
+                )}
+
+                {product.personalizationNumberEnabled && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Número
+                      <span className="ml-1 text-gray-400 font-normal">(máx. {product.personalizationNumberMaxDigits} dígitos)</span>
+                      {product.personalizationNumberPrice > 0 && (
+                        <span className="ml-1 text-purple-600 font-semibold">+R$ {product.personalizationNumberPrice.toFixed(2).replace('.', ',')}</span>
+                      )}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={product.personalizationNumberMaxDigits}
+                      value={personNumber}
+                      onChange={e => setPersonNumber(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Ex: 10"
+                      className="input text-sm"
+                    />
+                    <p className="text-xs text-gray-400 mt-0.5 text-right">{personNumber.length}/{product.personalizationNumberMaxDigits}</p>
+                  </div>
+                )}
+              </div>
+
+              {personalizationExtra > 0 && (
+                <div className="flex items-center justify-between border-t border-purple-200 pt-2">
+                  <span className="text-xs text-gray-600">Personalização:</span>
+                  <span className="text-sm font-bold text-purple-700">+R$ {personalizationExtra.toFixed(2).replace('.', ',')}</span>
+                </div>
+              )}
             </div>
           )}
 

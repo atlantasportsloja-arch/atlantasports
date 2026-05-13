@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { productId, variantId, quantity = 1 } = req.body;
+  const { productId, variantId, quantity = 1, personalization } = req.body;
   if (!productId) return res.status(400).json({ error: 'productId obrigatório' });
 
   try {
@@ -41,22 +41,31 @@ router.post('/', async (req, res) => {
       if (product.stock < quantity) return res.status(400).json({ error: 'Estoque insuficiente' });
     }
 
-    const existing = await prisma.cart.findFirst({
-      where: { userId: req.user.id, productId, variantId: variantId || null },
-    });
+    // itens personalizados nunca agrupam — cada um é único
+    const hasPersonalization = personalization && (personalization.name || personalization.number);
 
     let item;
-    if (existing) {
-      item = await prisma.cart.update({
-        where: { id: existing.id },
-        data: { quantity: existing.quantity + quantity },
+    if (hasPersonalization) {
+      item = await prisma.cart.create({
+        data: { userId: req.user.id, productId, variantId: variantId || null, quantity, personalization },
         include: { product: true, variant: true },
       });
     } else {
-      item = await prisma.cart.create({
-        data: { userId: req.user.id, productId, variantId: variantId || null, quantity },
-        include: { product: true, variant: true },
+      const existing = await prisma.cart.findFirst({
+        where: { userId: req.user.id, productId, variantId: variantId || null, personalization: null },
       });
+      if (existing) {
+        item = await prisma.cart.update({
+          where: { id: existing.id },
+          data: { quantity: existing.quantity + quantity },
+          include: { product: true, variant: true },
+        });
+      } else {
+        item = await prisma.cart.create({
+          data: { userId: req.user.id, productId, variantId: variantId || null, quantity },
+          include: { product: true, variant: true },
+        });
+      }
     }
 
     res.json(item);
