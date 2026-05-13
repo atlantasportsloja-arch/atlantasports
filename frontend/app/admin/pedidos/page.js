@@ -470,6 +470,16 @@ function AdminPedidosInner() {
                                     <span className="bg-orange-100 text-orange-700 text-xs font-black px-2.5 py-0.5 rounded-md">
                                       Qtd: {item.quantity}
                                     </span>
+                                    {item.personalization?.name && (
+                                      <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-0.5 rounded-md">
+                                        ✏️ Nome: {item.personalization.name}
+                                      </span>
+                                    )}
+                                    {item.personalization?.number && (
+                                      <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-0.5 rounded-md">
+                                        🔢 Número: {item.personalization.number}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="text-right shrink-0">
@@ -581,6 +591,12 @@ function AdminPedidosInner() {
                               <span className="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-0.5 rounded-md">Cor: {item.variant.color}</span>
                             )}
                             <span className="bg-orange-100 text-orange-700 text-xs font-black px-2.5 py-0.5 rounded-md">Qtd: {item.quantity}</span>
+                            {item.personalization?.name && (
+                              <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-0.5 rounded-md">✏️ Nome: {item.personalization.name}</span>
+                            )}
+                            {item.personalization?.number && (
+                              <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-0.5 rounded-md">🔢 Número: {item.personalization.number}</span>
+                            )}
                             <span className="text-xs text-gray-500 self-center">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
                           </div>
                         </div>
