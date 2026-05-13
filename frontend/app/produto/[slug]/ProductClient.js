@@ -223,9 +223,16 @@ export default function ProdutoPage({ params }) {
           <h1 className="text-xl md:text-3xl font-black leading-tight">{product.name}</h1>
 
           {product.availability && (
-            <span className={`inline-flex items-center gap-1 text-xs md:text-sm font-semibold px-2.5 py-0.5 rounded-full ${product.availability === 'encomenda' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-              {product.availability === 'encomenda' ? '🕐 Sob Encomenda' : '✅ Pronta Entrega'}
-            </span>
+            <div className="flex flex-col gap-1">
+              <span className={`inline-flex items-center gap-1 text-xs md:text-sm font-semibold px-2.5 py-0.5 rounded-full w-fit ${product.availability === 'encomenda' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                {product.availability === 'encomenda' ? '🕐 Sob Encomenda' : '✅ Pronta Entrega'}
+              </span>
+              {product.availability === 'encomenda' && (
+                <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                  ⚠️ Este produto é feito sob encomenda. O prazo de produção e entrega pode ser de <strong>até 45 dias</strong>.
+                </p>
+              )}
+            </div>
           )}
 
           <div className="bg-gray-50 rounded-xl p-2.5 md:p-4 space-y-1">
