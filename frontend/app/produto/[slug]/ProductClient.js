@@ -236,19 +236,26 @@ export default function ProdutoPage({ params }) {
           )}
 
           <div className="bg-gray-50 rounded-xl p-2.5 md:p-4 space-y-1">
-            <p className="text-2xl md:text-4xl font-black text-gray-900">
-              R$ {product.price.toFixed(2).replace('.', ',')}
-            </p>
+            <div className="flex items-end gap-2 flex-wrap">
+              <p className="text-2xl md:text-4xl font-black text-gray-900">
+                R$ {(product.price + personalizationExtra).toFixed(2).replace('.', ',')}
+              </p>
+              {personalizationExtra > 0 && (
+                <span className="text-xs text-purple-600 font-semibold mb-1">
+                  (inclui +R$ {personalizationExtra.toFixed(2).replace('.', ',')} personalização)
+                </span>
+              )}
+            </div>
             {product.comparePrice && (
               <p className="text-gray-400 line-through text-xs md:text-sm">
                 De R$ {product.comparePrice.toFixed(2).replace('.', ',')}
               </p>
             )}
-            {pixPrice(product.price, pixDiscount) && (
+            {pixPrice(product.price + personalizationExtra, pixDiscount) && (
               <div className="pt-1.5 border-t border-gray-200 flex items-center gap-1.5">
                 <span className="bg-green-100 text-green-700 text-xs font-bold px-1.5 py-0.5 rounded">PIX</span>
                 <span className="text-green-700 font-black text-lg md:text-xl">
-                  R$ {fmt(pixPrice(product.price, pixDiscount))}
+                  R$ {fmt(pixPrice(product.price + personalizationExtra, pixDiscount))}
                 </span>
                 <span className="text-green-600 text-xs font-semibold">({pixDiscount}% off)</span>
               </div>

@@ -95,8 +95,27 @@ export default function CarrinhoPage() {
                     {item.variant.size}
                   </span>
                 )}
+                {(item.personalization?.name || item.personalization?.number) && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {item.personalization.name && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                        ✏️ {item.personalization.name}
+                      </span>
+                    )}
+                    {item.personalization.number && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                        🔢 {item.personalization.number}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <p className="text-primary-500 font-bold text-xs md:text-sm mt-0.5">
-                  R$ {(item.variant?.price ?? item.product.price).toFixed(2).replace('.', ',')}
+                  R$ {(() => {
+                    const base = item.variant?.price ?? item.product.price;
+                    const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
+                                + (item.personalization?.number ? item.product.personalizationNumberPrice || 0 : 0);
+                    return (base + extra).toFixed(2).replace('.', ',');
+                  })()}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex items-center border border-gray-300 rounded overflow-hidden text-xs">
@@ -111,7 +130,12 @@ export default function CarrinhoPage() {
               </div>
               <div className="text-right flex-shrink-0 flex flex-col justify-between">
                 <p className="font-black text-xs md:text-base">
-                  R$ {((item.variant?.price ?? item.product.price) * item.quantity).toFixed(2).replace('.', ',')}
+                  R$ {(() => {
+                    const base = item.variant?.price ?? item.product.price;
+                    const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
+                                + (item.personalization?.number ? item.product.personalizationNumberPrice || 0 : 0);
+                    return ((base + extra) * item.quantity).toFixed(2).replace('.', ',');
+                  })()}
                 </p>
               </div>
             </div>

@@ -16,8 +16,11 @@ router.get('/', async (req, res) => {
       },
     });
     const total = items.reduce((sum, i) => {
-      const price = i.variant?.price ?? i.product.price;
-      return sum + price * i.quantity;
+      const base = i.variant?.price ?? i.product.price;
+      let extra = 0;
+      if (i.personalization?.name) extra += i.product.personalizationNamePrice || 0;
+      if (i.personalization?.number) extra += i.product.personalizationNumberPrice || 0;
+      return sum + (base + extra) * i.quantity;
     }, 0);
     res.json({ items, total });
   } catch {
