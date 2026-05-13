@@ -192,21 +192,40 @@ export default function CheckoutPage() {
           <div className="card p-3 md:p-5">
             <h2 className="font-black mb-3 text-sm text-gray-500 uppercase tracking-wide">Itens ({items.length})</h2>
             <div className="space-y-3">
-              {items.map(item => (
-                <div key={item.id} className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                    {item.product?.images?.[0]
-                      ? <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center text-xl">👕</div>}
+              {items.map(item => {
+                const base = item.variant?.price ?? item.product.price;
+                const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
+                            + (item.personalization?.number ? item.product.personalizationNumberPrice || 0 : 0);
+                return (
+                  <div key={item.id} className="flex items-center gap-3">
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {item.product?.images?.[0]
+                        ? <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center text-xl">👕</div>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{item.product.name}</p>
+                      {item.variant?.size && <p className="text-xs text-gray-400">Tamanho: {item.variant.size}</p>}
+                      <p className="text-xs text-gray-400">Qtd: {item.quantity}</p>
+                      {(item.personalization?.name || item.personalization?.number) && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.personalization.name && (
+                            <span className="text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                              ✏️ {item.personalization.name}
+                            </span>
+                          )}
+                          {item.personalization.number && (
+                            <span className="text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                              🔢 {item.personalization.number}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p className="font-bold text-sm shrink-0">{fmt((base + extra) * item.quantity)}</p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{item.product.name}</p>
-                    {item.variant?.size && <p className="text-xs text-gray-400">Tamanho: {item.variant.size}</p>}
-                    <p className="text-xs text-gray-400">Qtd: {item.quantity}</p>
-                  </div>
-                  <p className="font-bold text-sm shrink-0">{fmt((item.variant?.price ?? item.product.price) * item.quantity)}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -541,16 +560,37 @@ export default function CheckoutPage() {
           <div className="card p-3 md:p-6 space-y-2 md:space-y-4 sticky top-24">
             <h2 className="font-black">Resumo</h2>
             <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-              {items.map(item => (
-                <div key={item.id} className="flex justify-between text-sm gap-2">
-                  <span className="truncate text-gray-600 flex-1 min-w-0">
-                    {item.product.name}
-                    {item.variant?.size && <span className="text-gray-400"> ({item.variant.size})</span>}
-                    {' '}×{item.quantity}
-                  </span>
-                  <span className="font-semibold shrink-0">{fmt((item.variant?.price ?? item.product.price) * item.quantity)}</span>
-                </div>
-              ))}
+              {items.map(item => {
+                const base = item.variant?.price ?? item.product.price;
+                const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
+                            + (item.personalization?.number ? item.product.personalizationNumberPrice || 0 : 0);
+                return (
+                  <div key={item.id} className="text-sm space-y-0.5">
+                    <div className="flex justify-between gap-2">
+                      <span className="truncate text-gray-600 flex-1 min-w-0">
+                        {item.product.name}
+                        {item.variant?.size && <span className="text-gray-400"> ({item.variant.size})</span>}
+                        {' '}×{item.quantity}
+                      </span>
+                      <span className="font-semibold shrink-0">{fmt((base + extra) * item.quantity)}</span>
+                    </div>
+                    {(item.personalization?.name || item.personalization?.number) && (
+                      <div className="flex flex-wrap gap-1">
+                        {item.personalization.name && (
+                          <span className="text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                            ✏️ {item.personalization.name}
+                          </span>
+                        )}
+                        {item.personalization.number && (
+                          <span className="text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                            🔢 {item.personalization.number}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <div className="border-t pt-3 space-y-2 text-sm">
               <div className="flex justify-between"><span>Subtotal</span><span>{fmt(total)}</span></div>
