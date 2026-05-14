@@ -189,8 +189,7 @@ function PersonalizacaoTab() {
   async function save() {
     setSaving(true);
     try {
-      const { data: full } = await api.get('/config');
-      await api.put('/config', { ...full, encomendaNote });
+      await api.patch('/config/encomenda-note', { encomendaNote });
       toast.success('Texto salvo!');
     } catch {
       toast.error('Erro ao salvar');

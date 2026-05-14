@@ -97,6 +97,22 @@ router.put('/', adminMiddleware, async (req, res) => {
   }
 });
 
+router.patch('/encomenda-note', adminMiddleware, async (req, res) => {
+  const { encomendaNote } = req.body;
+  try {
+    await prisma.$executeRaw`
+      UPDATE "store_config"
+      SET "encomendaNote" = ${encomendaNote ?? ''}, "updatedAt" = NOW()
+      WHERE id = 'default'
+    `;
+    cache.del(CONFIG_CACHE_KEY);
+    res.json({ message: 'Salvo' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao salvar' });
+  }
+});
+
 router.post('/banner', adminMiddleware, upload.single('banner'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Imagem obrigatória' });
