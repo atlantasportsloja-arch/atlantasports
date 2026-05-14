@@ -33,6 +33,7 @@ function cacheKey(url, params) {
 
 function shouldCache(url, config) {
   if (config?.headers?.Authorization) return false;
+  if (url.startsWith('/products/')) return false; // página de produto sempre fresca
   return CACHEABLE.some(p => url.startsWith(p));
 }
 
