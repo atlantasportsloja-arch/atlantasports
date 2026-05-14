@@ -38,6 +38,8 @@ const DEFAULT_TERMS = `<h2>1. Aceitação dos Termos</h2>
 <h2>11. Contato</h2>
 <p>Dúvidas sobre estes termos? Entre em contato pelo e-mail <a href="mailto:atlantasportsloja@gmail.com">atlantasportsloja@gmail.com</a> ou via WhatsApp no horário de atendimento.</p>`;
 
+const DEFAULT_ENCOMENDA = '⚠️ Este produto é feito sob encomenda. O prazo de produção e entrega pode ser de até 45 dias.';
+
 const DEFAULT = {
   storeName: 'Atlanta Sports', storeSlogan: 'Veste quem joga de verdade',
   heroBadge: 'Nova coleção 2025', heroTitle: 'Veste quem joga de verdade',
@@ -53,6 +55,7 @@ const DEFAULT = {
   banners: [],
   footerLinks: [],
   termsContent: DEFAULT_TERMS,
+  encomendaNote: DEFAULT_ENCOMENDA,
 };
 
 function Field({ label, hint, value, onChange, textarea }) {
@@ -85,6 +88,7 @@ export default function ConfiguracoesPage() {
   const [backupStatus, setBackupStatus] = useState(null);
   const [runningBackup, setRunningBackup] = useState(false);
   const [termsPreview, setTermsPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState('geral');
   const bannerRef = useRef();
 
   useEffect(() => {
@@ -185,6 +189,67 @@ export default function ConfiguracoesPage() {
           {saving ? 'Salvando...' : 'Salvar tudo'}
         </button>
       </div>
+
+      {/* TABS */}
+      <div className="flex gap-1 border-b border-gray-200">
+        {[
+          { id: 'geral', label: '⚙️ Geral' },
+          { id: 'personalizacao', label: '✏️ Personalização' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
+              activeTab === tab.id
+                ? 'border-orange-500 text-orange-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'personalizacao' && (
+        <div className="card p-6 space-y-4">
+          <h2 className="font-black text-base border-b pb-2">📋 Observação — Sob Encomenda</h2>
+          <p className="text-xs text-gray-400 -mt-2">
+            Este texto aparece na página do produto quando a disponibilidade é <span className="font-mono bg-gray-100 px-1 rounded">Sob Encomenda</span>.
+            Use <span className="font-mono bg-gray-100 px-1 rounded">Enter</span> para quebrar linha.
+          </p>
+          <textarea
+            className="input resize-y text-sm leading-relaxed"
+            rows={5}
+            value={config.encomendaNote ?? DEFAULT_ENCOMENDA}
+            onChange={e => setConfig(c => ({ ...c, encomendaNote: e.target.value }))}
+            placeholder="Ex: ⚠️ Este produto é feito sob encomenda..."
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm('Restaurar o texto padrão?')) {
+                  setConfig(c => ({ ...c, encomendaNote: DEFAULT_ENCOMENDA }));
+                }
+              }}
+              className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Restaurar padrão
+            </button>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <p className="text-xs font-semibold text-yellow-700 mb-2">Pré-visualização:</p>
+            <p className="text-xs text-yellow-700 whitespace-pre-line">{config.encomendaNote || DEFAULT_ENCOMENDA}</p>
+          </div>
+          <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2">
+            <Save size={18} />
+            {saving ? 'Salvando...' : 'Salvar'}
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'geral' && <>
 
       {/* IDENTIDADE */}
       <Section title="🏪 Identidade da Loja">
@@ -465,6 +530,8 @@ export default function ConfiguracoesPage() {
         <Save size={18} />
         {saving ? 'Salvando...' : 'Salvar todas as configurações'}
       </button>
+
+      </> /* end activeTab === 'geral' */}
     </form>
   );
 }

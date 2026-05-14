@@ -228,8 +228,8 @@ export default function ProdutoPage({ params }) {
                 {product.availability === 'encomenda' ? '🕐 Sob Encomenda' : '✅ Pronta Entrega'}
               </span>
               {product.availability === 'encomenda' && (
-                <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
-                  ⚠️ Este produto é feito sob encomenda. O prazo de produção e entrega pode ser de <strong>até 45 dias</strong>.
+                <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 whitespace-pre-line">
+                  {config.encomendaNote || '⚠️ Este produto é feito sob encomenda. O prazo de produção e entrega pode ser de até 45 dias.'}
                 </p>
               )}
             </div>

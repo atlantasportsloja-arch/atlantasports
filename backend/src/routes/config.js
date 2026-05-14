@@ -47,7 +47,7 @@ router.put('/', adminMiddleware, async (req, res) => {
     whatsapp, footerEmail, footerHours, footerDesc,
     pixDiscount, pixKey, pixHolder, pixMessage, parceladoMessage,
     freeShippingThreshold, shippingZones, footerLinks,
-    termsContent, installments, cepOrigem,
+    termsContent, installments, cepOrigem, encomendaNote,
   } = req.body;
 
   try {
@@ -85,6 +85,7 @@ router.put('/', adminMiddleware, async (req, res) => {
         "termsContent" = ${termsContent || ''},
         "installments" = ${installments ? JSON.stringify(installments) : null}::jsonb,
         "cepOrigem" = ${cepOrigem || ''},
+        "encomendaNote" = ${encomendaNote || ''},
         "updatedAt" = NOW()
       WHERE id = 'default'
     `;

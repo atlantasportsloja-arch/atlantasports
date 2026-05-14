@@ -304,6 +304,7 @@ model StoreConfig {
   footerLinks          Json?     @default("[]")
   termsContent         String?   @default("")
   installments         Json?
+  encomendaNote        String?   @default("⚠️ Este produto é feito sob encomenda. O prazo de produção e entrega pode ser de até 45 dias.")
   updatedAt            DateTime? @default(now()) @db.Timestamp(6)
 
   @@map("store_config")
