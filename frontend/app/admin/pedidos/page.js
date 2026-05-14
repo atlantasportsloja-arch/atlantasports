@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Truck, Loader2, Search, X, Mail, Download, StickyNote, ChevronLeft, ChevronRight, History, Trash2 } from 'lucide-react';
+import { Truck, Loader2, Search, X, Mail, Download, StickyNote, ChevronLeft, ChevronRight, History, Trash2, Save } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
@@ -172,8 +172,77 @@ function TrackingModal({ order, onClose, onSave }) {
   );
 }
 
+const DEFAULT_ENCOMENDA = '⚠️ Este produto é feito sob encomenda. O prazo de produção e entrega pode ser de até 45 dias.';
+
+function PersonalizacaoTab() {
+  const [encomendaNote, setEncomendaNote] = useState('');
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.get('/config').then(r => {
+      setEncomendaNote(r.data.encomendaNote ?? DEFAULT_ENCOMENDA);
+      setLoaded(true);
+    }).catch(() => setLoaded(true));
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const { data: full } = await api.get('/config');
+      await api.put('/config', { ...full, encomendaNote });
+      toast.success('Texto salvo!');
+    } catch {
+      toast.error('Erro ao salvar');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!loaded) return <div className="card p-8 text-center text-gray-400 animate-pulse">Carregando...</div>;
+
+  return (
+    <div className="card p-6 space-y-4 max-w-2xl">
+      <h2 className="font-black text-base border-b pb-2">📋 Observação — Sob Encomenda</h2>
+      <p className="text-xs text-gray-400 -mt-2">
+        Este texto aparece na página do produto quando a disponibilidade é <span className="font-mono bg-gray-100 px-1 rounded">Sob Encomenda</span>.
+        Use <span className="font-mono bg-gray-100 px-1 rounded">Enter</span> para quebrar linha.
+      </p>
+      <textarea
+        className="input resize-y text-sm leading-relaxed"
+        rows={5}
+        value={encomendaNote}
+        onChange={e => setEncomendaNote(e.target.value)}
+        placeholder="Ex: ⚠️ Este produto é feito sob encomenda..."
+      />
+      <div className="flex items-center gap-3">
+        <button
+          onClick={save}
+          disabled={saving}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Save size={16} />
+          {saving ? 'Salvando...' : 'Salvar'}
+        </button>
+        <button
+          type="button"
+          onClick={() => { if (confirm('Restaurar o texto padrão?')) setEncomendaNote(DEFAULT_ENCOMENDA); }}
+          className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors"
+        >
+          Restaurar padrão
+        </button>
+      </div>
+      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+        <p className="text-xs font-semibold text-yellow-700 mb-2">Pré-visualização:</p>
+        <p className="text-xs text-yellow-700 whitespace-pre-line">{encomendaNote || DEFAULT_ENCOMENDA}</p>
+      </div>
+    </div>
+  );
+}
+
 function AdminPedidosInner() {
   const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState('pedidos');
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState(searchParams.get('status') || '');
   const [search, setSearch] = useState('');
@@ -310,6 +379,30 @@ function AdminPedidosInner() {
 
   return (
     <div className="space-y-6">
+      {/* TABS */}
+      <div className="flex gap-1 border-b border-gray-200">
+        {[
+          { id: 'pedidos', label: '📦 Pedidos' },
+          { id: 'personalizacao', label: '✏️ Personalização' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
+              activeTab === tab.id
+                ? 'border-orange-500 text-orange-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'personalizacao' && <PersonalizacaoTab />}
+
+      {activeTab === 'pedidos' && <>
       {trackingModal && (
         <TrackingModal
           order={trackingModal}
@@ -679,6 +772,7 @@ function AdminPedidosInner() {
           </div>
         </div>
       )}
+      </> /* end activeTab === 'pedidos' */}
     </div>
   );
 }
