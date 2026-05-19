@@ -4,6 +4,12 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import api from '@/lib/api';
 
+const GENEROS = [
+  { key: 'masculino', label: 'MASCULINO', icon: '👨' },
+  { key: 'feminino',  label: 'FEMININO',  icon: '👩' },
+  { key: 'infantil',  label: 'INFANTIL',  icon: '🧒' },
+];
+
 function ProductSkeleton() {
   return (
     <div className="card overflow-hidden animate-pulse">
@@ -22,8 +28,10 @@ export default function CategoriaPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const isEncomenda = slug === 'encomenda';
   const sort = searchParams.get('sort') || '';
   const page = Number(searchParams.get('page') || 1);
+  const genero = isEncomenda ? (searchParams.get('genero') || '') : '';
 
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
@@ -32,7 +40,15 @@ export default function CategoriaPage() {
 
   useEffect(() => {
     setLoading(true);
-    api.get('/products', { params: { category: slug, sort: sort || undefined, page, limit: 20 } })
+    api.get('/products', {
+      params: {
+        category: slug,
+        sort: sort || undefined,
+        page,
+        limit: 20,
+        search: genero || undefined,
+      },
+    })
       .then(r => {
         setProducts(r.data.products);
         setTotal(r.data.total);
@@ -40,11 +56,20 @@ export default function CategoriaPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [slug, sort, page]);
+  }, [slug, sort, page, genero]);
 
   function handleSort(e) {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
     if (e.target.value) params.set('sort', e.target.value);
+    else params.delete('sort');
+    params.delete('page');
+    router.push(`?${params.toString()}`);
+  }
+
+  function handleGenero(key) {
+    const params = new URLSearchParams();
+    if (sort) params.set('sort', sort);
+    if (key && key !== genero) params.set('genero', key);
     router.push(`?${params.toString()}`);
   }
 
@@ -67,6 +92,31 @@ export default function CategoriaPage() {
         </select>
       </div>
 
+      {isEncomenda && (
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {GENEROS.map(g => {
+            const ativo = genero === g.key;
+            return (
+              <button
+                key={g.key}
+                onClick={() => handleGenero(g.key)}
+                className={`flex flex-col items-center justify-center gap-2 py-6 rounded-2xl border-2 font-black text-sm sm:text-base transition-all duration-200 ${
+                  ativo
+                    ? 'border-primary-500 bg-primary-500 text-white shadow-lg scale-[1.02]'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-primary-400 hover:bg-primary-50'
+                }`}
+              >
+                <span className="text-3xl">{g.icon}</span>
+                <span className="tracking-widest">{g.label}</span>
+                {ativo && (
+                  <span className="text-xs font-normal opacity-80">filtro ativo — clique para remover</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)}
@@ -75,6 +125,14 @@ export default function CategoriaPage() {
         <div className="text-center py-20 text-gray-400">
           <div className="text-6xl mb-4">🏃</div>
           <p className="text-lg font-semibold">Nenhum produto nesta categoria</p>
+          {genero && (
+            <button
+              onClick={() => handleGenero('')}
+              className="mt-4 text-sm text-primary-500 underline"
+            >
+              Remover filtro {genero}
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -87,7 +145,11 @@ export default function CategoriaPage() {
           {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
             <button
               key={p}
-              onClick={() => router.push(`?page=${p}&sort=${sort}`)}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('page', p);
+                router.push(`?${params.toString()}`);
+              }}
               className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-colors ${
                 p === page ? 'bg-primary-500 text-white' : 'border border-gray-300 hover:bg-gray-50'
               }`}
