@@ -3,7 +3,7 @@ const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/auth');
 const adminMiddleware = require('../middleware/admin');
 const { sendMail } = require('../lib/mailer');
-const { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml } = require('../lib/emails');
+const { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml, newOrderAdminHtml } = require('../lib/emails');
 
 const router = express.Router();
 
@@ -163,13 +163,24 @@ router.post('/', authMiddleware, async (req, res) => {
 
     res.status(201).json(order);
 
-    // E-mail de confirmação (não bloqueia a resposta)
-    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { name: true, email: true } });
+    // E-mails (não bloqueiam a resposta)
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { name: true, email: true, phone: true } });
+
+    // Confirmação ao cliente
     sendMail({
       to: user.email,
       subject: `Pedido confirmado — #${orderNumber} ✅`,
       html: orderConfirmationHtml({ userName: user.name.split(' ')[0], order }),
     }).catch(err => console.error('[OrderMail] Erro ao enviar confirmação:', err.message));
+
+    // Notificação ao admin
+    if (process.env.EMAIL_USER) {
+      sendMail({
+        to: process.env.EMAIL_USER,
+        subject: `🛒 Novo pedido #${orderNumber} — R$ ${order.total.toFixed(2).replace('.', ',')} (${order.paymentMethod === 'pix' ? 'PIX' : 'Parcelado'})`,
+        html: newOrderAdminHtml({ order, userName: user.name, userEmail: user.email, userPhone: user.phone }),
+      }).catch(err => console.error('[AdminMail] Erro ao notificar admin:', err.message));
+    }
   } catch (err) {
     console.error('Erro ao criar pedido:', err?.message || err);
     res.status(500).json({ error: err?.message || 'Erro ao criar pedido' });

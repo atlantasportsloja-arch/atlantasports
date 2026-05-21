@@ -250,4 +250,59 @@ function welcomeHtml({ userName }) {
   `);
 }
 
-module.exports = { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml, welcomeHtml };
+function newOrderAdminHtml({ order, userName, userEmail, userPhone }) {
+  const codigo = order.orderNumber ? `#${order.orderNumber}` : `#${order.id.slice(0, 8).toUpperCase()}`;
+  const addr = order.shippingAddress;
+  const payLabel = order.paymentMethod === 'pix' ? '⚡ PIX' : '💳 Parcelado';
+  const adminUrl = `${FRONTEND_URL}/admin/pedidos`;
+
+  return wrap(`
+    <div style="background:#fef9c3;border:2px solid #fbbf24;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0;font-size:13px;font-weight:700;color:#92400e;">🛒 NOVO PEDIDO RECEBIDO</p>
+      <p style="margin:6px 0 0;font-size:28px;font-weight:900;color:#111;font-family:monospace;">${codigo}</p>
+      <p style="margin:4px 0 0;font-size:18px;font-weight:900;color:#f97316;">${fmtPrice(order.total)}</p>
+      <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#374151;background:#fff;display:inline-block;padding:3px 10px;border-radius:20px;border:1px solid #e5e7eb;">${payLabel}</p>
+    </div>
+
+    <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:20px;">
+      <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#374151;">👤 Cliente</p>
+      <p style="margin:0;font-size:14px;font-weight:600;color:#111;">${userName}</p>
+      <p style="margin:2px 0 0;font-size:13px;color:#6b7280;">${userEmail}</p>
+      ${userPhone ? `<p style="margin:2px 0 0;font-size:13px;color:#6b7280;">📱 ${userPhone}</p>` : ''}
+    </div>
+
+    <h3 style="margin:0 0 10px;color:#374151;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">📦 Itens do pedido</h3>
+    ${itemsTable(order.items || [])}
+
+    <div style="margin-top:14px;padding-top:14px;border-top:2px solid #f3f4f6;">
+      ${order.shippingCost === 0
+        ? `<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="color:#6b7280;font-size:13px;">Frete</span><span style="color:#16a34a;font-weight:600;font-size:13px;">Grátis</span></div>`
+        : `<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="color:#6b7280;font-size:13px;">Frete</span><span style="color:#374151;font-size:13px;">${fmtPrice(order.shippingCost)}</span></div>`
+      }
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:#111;font-weight:700;">Total</span>
+        <span style="color:#f97316;font-weight:900;font-size:18px;">${fmtPrice(order.total)}</span>
+      </div>
+    </div>
+
+    ${addr ? `
+    <div style="margin-top:16px;background:#f9fafb;border-radius:10px;padding:14px;">
+      <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#374151;">📍 Endereço de entrega</p>
+      <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.6;">
+        ${addr.street}, ${addr.number}${addr.complement ? ` — ${addr.complement}` : ''}<br>
+        ${addr.neighborhood ? addr.neighborhood + ' — ' : ''}${addr.city}/${addr.state}<br>
+        CEP ${addr.zip}
+      </p>
+    </div>
+    ` : ''}
+
+    <div style="margin-top:24px;text-align:center;">
+      <a href="${adminUrl}"
+         style="display:inline-block;background:#f97316;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">
+        Ver pedido no painel →
+      </a>
+    </div>
+  `);
+}
+
+module.exports = { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml, welcomeHtml, newOrderAdminHtml };
