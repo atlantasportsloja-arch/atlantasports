@@ -56,6 +56,7 @@ export default function Footer() {
             <li><Link href="/login" className="hover:text-white">Entrar</Link></li>
             <li><Link href="/cadastro" className="hover:text-white">Criar conta</Link></li>
             <li><Link href="/minha-conta/pedidos" className="hover:text-white">Meus pedidos</Link></li>
+            <li><Link href="/rastreio" className="hover:text-white">Rastrear pedido</Link></li>
           </ul>
         </div>
         <div>

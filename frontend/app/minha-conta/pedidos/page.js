@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Package, ChevronDown, ChevronUp, ExternalLink, Star, Loader2, RotateCcw } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, ExternalLink, Star, Loader2, RotateCcw, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
@@ -274,19 +274,25 @@ export default function PedidosPage() {
 
                   {/* Rastreio */}
                   {order.trackingCode && (
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                      <p className="font-semibold text-orange-800 text-xs md:text-sm mb-1.5">📦 Código de rastreio</p>
-                      <div className="flex items-center gap-3">
-                        <code className="font-mono text-base font-bold text-orange-700 bg-orange-100 px-3 py-1.5 rounded">
+                    <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                      <p className="font-semibold text-orange-800 text-xs md:text-sm mb-2">📦 Código de rastreio</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <code className="font-mono text-base font-bold text-orange-700 bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-200">
                           {order.trackingCode}
                         </code>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(order.trackingCode).then(() => toast.success('Código copiado!')).catch(() => {})}
+                          className="flex items-center gap-1 text-xs font-semibold text-gray-600 border border-gray-300 hover:bg-gray-50 px-2.5 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Copy size={12} /> Copiar
+                        </button>
                         <a
                           href={`https://www.correios.com.br/rastreamento/busca?objetos=${order.trackingCode}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-orange-600 hover:text-orange-800 font-semibold"
+                          className="flex items-center gap-1 text-xs font-semibold text-orange-600 hover:text-orange-800 border border-orange-300 hover:bg-orange-100 px-2.5 py-1.5 rounded-lg transition-colors"
                         >
-                          Rastrear <ExternalLink size={14} />
+                          Correios <ExternalLink size={12} />
                         </a>
                       </div>
                     </div>

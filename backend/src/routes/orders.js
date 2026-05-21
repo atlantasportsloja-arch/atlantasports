@@ -7,6 +7,52 @@ const { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDelive
 
 const router = express.Router();
 
+// Rastreio público — sem login, valida por número + e-mail
+router.get('/track', async (req, res) => {
+  const { numero, email } = req.query;
+  if (!numero || !email) return res.status(400).json({ error: 'Informe o número do pedido e o e-mail' });
+
+  try {
+    const num = parseInt(numero.replace(/\D/g, ''), 10);
+    if (isNaN(num)) return res.status(400).json({ error: 'Número de pedido inválido' });
+
+    const order = await prisma.order.findFirst({
+      where: { orderNumber: num, user: { email: email.trim().toLowerCase() } },
+      include: {
+        items: { include: { product: { select: { name: true, images: true } }, variant: { select: { size: true } } } },
+      },
+    });
+
+    if (!order) return res.status(404).json({ error: 'Pedido não encontrado. Verifique o número e o e-mail cadastrado.' });
+
+    const history = await prisma.$queryRawUnsafe(
+      `SELECT to_status, changed_at FROM order_status_history WHERE order_id = $1 ORDER BY changed_at ASC`,
+      order.id
+    );
+
+    res.json({
+      orderNumber: order.orderNumber,
+      status: order.status,
+      trackingCode: order.trackingCode || null,
+      total: order.total,
+      shippingCost: order.shippingCost,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      items: order.items.map(i => ({
+        name: i.product?.name || '—',
+        image: i.product?.images?.[0] || null,
+        size: i.variant?.size || null,
+        quantity: i.quantity,
+        price: i.price,
+      })),
+      history,
+    });
+  } catch (err) {
+    console.error('[Track]', err.message);
+    res.status(500).json({ error: 'Erro ao buscar pedido' });
+  }
+});
+
 router.post('/', authMiddleware, async (req, res) => {
   const { shippingAddress, shippingCost = 0, couponCode, paymentMethod } = req.body;
 
