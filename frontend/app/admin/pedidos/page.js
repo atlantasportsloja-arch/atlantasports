@@ -300,6 +300,19 @@ function AdminPedidosInner() {
     }
   }
 
+  async function deleteOrder(order) {
+    const num = `#${order.orderNumber ?? order.id.slice(0, 8).toUpperCase()}`;
+    if (!confirm(`Excluir pedido ${num}?\n\nEssa ação NÃO pode ser desfeita.`)) return;
+    try {
+      await api.delete(`/orders/admin/${order.id}`);
+      toast.success(`Pedido ${num} excluído`);
+      setOrders(prev => prev.filter(o => o.id !== order.id));
+      setExpanded(null);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao excluir pedido');
+    }
+  }
+
   async function resetAllOrders() {
     const confirmed = confirm(
       'ATENÇÃO: Isso vai APAGAR TODOS os pedidos permanentemente e a numeração vai reiniciar em #1000.\n\nEssa ação NÃO pode ser desfeita!\n\nDeseja continuar?'
@@ -624,12 +637,18 @@ function AdminPedidosInner() {
                           </div>
 
                           <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
-                          <div className="mt-3 pt-3 border-t flex items-start gap-4 flex-wrap">
+                          <div className="mt-3 pt-3 border-t flex items-center justify-between flex-wrap gap-3">
                             <button
                               onClick={e => { e.stopPropagation(); resendEmail(o.id); }}
                               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary-600 transition-colors"
                             >
                               <Mail size={13} /> Reenviar e-mail de confirmação
+                            </button>
+                            <button
+                              onClick={e => { e.stopPropagation(); deleteOrder(o); }}
+                              className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={13} /> Excluir pedido
                             </button>
                           </div>
                           <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
@@ -714,6 +733,12 @@ function AdminPedidosInner() {
                     <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
                     <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
                     <StatusHistory orderId={o.id} />
+                    <button
+                      onClick={() => deleteOrder(o)}
+                      className="w-full flex items-center justify-center gap-2 text-xs text-red-500 border border-red-200 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={13} /> Excluir este pedido
+                    </button>
                   </div>
                 )}
 

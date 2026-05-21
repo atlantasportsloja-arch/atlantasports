@@ -383,6 +383,24 @@ router.delete('/admin/reset-all', adminMiddleware, async (req, res) => {
   res.json({ message: 'Todos os pedidos foram apagados. Próximo pedido começará em #1001.' });
 });
 
+router.delete('/admin/:id', adminMiddleware, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    if (!order) return res.status(404).json({ error: 'Pedido não encontrado' });
+
+    await prisma.$transaction([
+      prisma.orderStatusHistory.deleteMany({ where: { orderId: order.id } }),
+      prisma.orderItem.deleteMany({ where: { orderId: order.id } }),
+      prisma.order.delete({ where: { id: order.id } }),
+    ]);
+
+    res.json({ message: `Pedido #${order.orderNumber ?? order.id.slice(0, 8).toUpperCase()} excluído.` });
+  } catch (err) {
+    console.error('[Admin] Erro ao excluir pedido:', err.message);
+    res.status(500).json({ error: 'Erro ao excluir pedido' });
+  }
+});
+
 router.post('/admin/:id/resend-confirmation', adminMiddleware, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
