@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
 import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
 import { sortSizes } from '@/lib/sortSizes';
+import { cldUrl } from '@/lib/cldUrl';
 import ProductCard from '@/components/ProductCard';
 
 const ESTADOS_BR = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
@@ -181,7 +182,7 @@ export default function ProdutoPage({ params }) {
           <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
             {product.images?.[activeImg] && !imgErrors[activeImg] ? (
               <Image
-                src={product.images[activeImg]}
+                src={cldUrl(product.images[activeImg], 900)}
                 alt={product.name}
                 fill
                 priority
@@ -205,7 +206,7 @@ export default function ProdutoPage({ params }) {
                 >
                   {img && !imgErrors[i] ? (
                     <Image
-                      src={img}
+                      src={cldUrl(img, 128)}
                       alt=""
                       fill
                       sizes="64px"

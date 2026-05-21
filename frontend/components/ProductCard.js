@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore, useCartStore } from '@/lib/store';
 import { useConfig, pixPrice, fmt } from '@/lib/useConfig';
+import { cldUrl } from '@/lib/cldUrl';
 
 export default function ProductCard({ product, priority = false }) {
   const { pixDiscount } = useConfig();
@@ -44,7 +45,7 @@ export default function ProductCard({ product, priority = false }) {
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
         {product.images?.[0] && !imgError ? (
           <Image
-            src={product.images[0]}
+            src={cldUrl(product.images[0], 400)}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"

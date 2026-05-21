@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import ImageUpload from '@/components/ImageUpload';
 import { sortVariants } from '@/lib/sortSizes';
+import { cldUrl } from '@/lib/cldUrl';
 
 const EMPTY = { name: '', description: '', price: '', comparePrice: '', costPrice: '', availability: 'pronta_entrega', keywords: '', active: true, categoryIds: [], images: [], allowPersonalization: false, personalizationNameEnabled: false, personalizationNameMaxLength: 10, personalizationNamePrice: '', personalizationNumberEnabled: false, personalizationNumberMaxDigits: 3, personalizationNumberPrice: '' };
 const EMPTY_VARIANT = { size: '', stock: '' };
@@ -661,7 +662,7 @@ export default function AdminProdutos() {
                     <td className="px-4 py-3">
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                         {p.images?.[0] ? (
-                          <Image src={p.images[0]} alt={p.name} fill className="object-cover" />
+                          <Image src={cldUrl(p.images[0], 80)} alt={p.name} fill className="object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">📦</div>
                         )}

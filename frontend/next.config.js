@@ -9,10 +9,8 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: '**.amazonaws.com' },
     ],
-    formats: ['image/webp'],
+    unoptimized: true,
     minimumCacheTTL: 86400,
-    deviceSizes: [390, 768, 1080, 1920],
-    imageSizes: [64, 128, 256, 512],
   },
   async headers() {
     return [
