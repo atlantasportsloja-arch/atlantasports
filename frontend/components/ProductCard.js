@@ -14,7 +14,17 @@ export default function ProductCard({ product, priority = false }) {
   const { token } = useAuthStore();
   const { setCart } = useCartStore();
   const [adding, setAdding] = useState(false);
-  const [imgError, setImgError] = useState(false);
+  const [imgSrc, setImgSrc] = useState(() => cldUrl(product.images?.[0], 400));
+  const [imgFailed, setImgFailed] = useState(false);
+
+  function handleImgError() {
+    const original = product.images?.[0];
+    if (original && imgSrc !== original) {
+      setImgSrc(original); // fallback para URL original se a otimizada falhar
+    } else {
+      setImgFailed(true);
+    }
+  }
 
   async function addToCart(e) {
     e.preventDefault();
@@ -43,15 +53,15 @@ export default function ProductCard({ product, priority = false }) {
   return (
     <Link href={`/produto/${product.slug}`} className="card group overflow-hidden flex flex-col hover:shadow-md transition-all duration-200">
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
-        {product.images?.[0] && !imgError ? (
+        {imgSrc && !imgFailed ? (
           <Image
-            src={cldUrl(product.images[0], 400)}
+            src={imgSrc}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             priority={priority}
-            onError={() => setImgError(true)}
+            onError={handleImgError}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">👕</div>

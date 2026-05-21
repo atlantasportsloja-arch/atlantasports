@@ -62,6 +62,18 @@ export default function ProdutoPage({ params }) {
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [selectedSize, setSelectedSize] = useState(null);
   const [imgErrors, setImgErrors] = useState({});
+  const [imgFallbacks, setImgFallbacks] = useState({});
+
+  function handleImgError(index, originalSrc) {
+    const optimizedSrc = index === activeImg
+      ? cldUrl(originalSrc, 900)
+      : cldUrl(originalSrc, 128);
+    if (!imgFallbacks[index] && optimizedSrc !== originalSrc) {
+      setImgFallbacks(prev => ({ ...prev, [index]: true }));
+    } else {
+      setImgErrors(prev => ({ ...prev, [index]: true }));
+    }
+  }
   const [personName, setPersonName] = useState('');
   const [personNumber, setPersonNumber] = useState('');
 
@@ -182,13 +194,13 @@ export default function ProdutoPage({ params }) {
           <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
             {product.images?.[activeImg] && !imgErrors[activeImg] ? (
               <Image
-                src={cldUrl(product.images[activeImg], 900)}
+                src={imgFallbacks[activeImg] ? product.images[activeImg] : cldUrl(product.images[activeImg], 900)}
                 alt={product.name}
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
-                onError={() => setImgErrors(prev => ({ ...prev, [activeImg]: true }))}
+                onError={() => handleImgError(activeImg, product.images[activeImg])}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-8xl">👕</div>
@@ -206,12 +218,12 @@ export default function ProdutoPage({ params }) {
                 >
                   {img && !imgErrors[i] ? (
                     <Image
-                      src={cldUrl(img, 128)}
+                      src={imgFallbacks[i] ? img : cldUrl(img, 128)}
                       alt=""
                       fill
                       sizes="64px"
                       className="object-cover"
-                      onError={() => setImgErrors(prev => ({ ...prev, [i]: true }))}
+                      onError={() => handleImgError(i, img)}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300 text-xl">👕</div>
