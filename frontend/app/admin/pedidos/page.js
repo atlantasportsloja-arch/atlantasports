@@ -11,15 +11,19 @@ const STATUS_LABEL = { PENDING: 'Pendente', PAID: 'Pago', PROCESSING: 'Processan
 const STATUS_COLOR = { PENDING: 'bg-yellow-100 text-yellow-700', PAID: 'bg-blue-100 text-blue-700', PROCESSING: 'bg-purple-100 text-purple-700', SHIPPED: 'bg-orange-100 text-orange-700', DELIVERED: 'bg-green-100 text-green-700', CANCELLED: 'bg-red-100 text-red-700' };
 const STATUS_BORDER = { PENDING: 'border-yellow-400', PAID: 'border-blue-400', PROCESSING: 'border-purple-400', SHIPPED: 'border-orange-400', DELIVERED: 'border-green-400', CANCELLED: 'border-red-400' };
 
-function TrackingField({ orderId, initialCode }) {
+function TrackingField({ orderId, initialCode, onSaved }) {
   const [code, setCode] = useState(initialCode);
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
     try {
-      await api.put(`/orders/admin/${orderId}/tracking`, { trackingCode: code });
-      toast.success('Código de rastreio atualizado');
+      const { data } = await api.put(`/orders/admin/${orderId}/tracking`, { trackingCode: code });
+      const msg = !initialCode && code
+        ? 'Código salvo e e-mail enviado ao cliente! 📧'
+        : 'Código de rastreio atualizado';
+      toast.success(msg);
+      if (onSaved) onSaved(data);
     } catch {
       toast.error('Erro ao salvar rastreio');
     } finally {
@@ -636,7 +640,7 @@ function AdminPedidosInner() {
                             </div>
                           </div>
 
-                          <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
+                          <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} onSaved={load} />
                           <div className="mt-3 pt-3 border-t flex items-center justify-between flex-wrap gap-3">
                             <button
                               onClick={e => { e.stopPropagation(); resendEmail(o.id); }}
@@ -730,7 +734,7 @@ function AdminPedidosInner() {
                         </p>
                       )}
                     </div>
-                    <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} />
+                    <TrackingField orderId={o.id} initialCode={o.trackingCode || ''} onSaved={load} />
                     <NoteField orderId={o.id} initialNote={o.adminNote || ''} />
                     <StatusHistory orderId={o.id} />
                     <button

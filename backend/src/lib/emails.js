@@ -115,19 +115,27 @@ function orderConfirmationHtml({ userName, order }) {
 
 function orderShippedHtml({ userName, order, trackingCode }) {
   const codigo = order.orderNumber ? `#${order.orderNumber}` : `#${order.id.slice(0, 8).toUpperCase()}`;
+  const rastreioUrl = `${FRONTEND_URL}/rastreio?numero=${order.orderNumber || ''}&email=${encodeURIComponent(order.user?.email || '')}`;
 
   return wrap(`
     <h2 style="margin:0 0 4px;color:#111;font-size:20px;">Seu pedido foi enviado! 📦</h2>
     <p style="color:#6b7280;margin:0 0 24px;">Olá, ${userName}! Seu pedido ${codigo} saiu para entrega.</p>
 
     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center;">
-      <p style="margin:0 0 8px;color:#c2410c;font-size:13px;font-weight:600;">Código de rastreio</p>
-      <p style="margin:0 0 12px;color:#9a3412;font-size:22px;font-weight:900;font-family:monospace;letter-spacing:0.1em;">${trackingCode}</p>
-      <a href="https://www.correios.com.br/rastreamento/busca?objetos=${trackingCode}"
-         target="_blank"
-         style="display:inline-block;background:#f97316;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">
-        Rastrear entrega →
-      </a>
+      <p style="margin:0 0 8px;color:#c2410c;font-size:13px;font-weight:600;">📬 Código de rastreio</p>
+      <p style="margin:0 0 16px;color:#9a3412;font-size:26px;font-weight:900;font-family:monospace;letter-spacing:0.12em;background:#fef3c7;padding:10px 16px;border-radius:8px;display:inline-block;">${trackingCode}</p>
+      <br>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <a href="${rastreioUrl}"
+           style="display:inline-block;background:#f97316;color:#fff;padding:11px 22px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">
+          📦 Rastrear meu pedido →
+        </a>
+        <a href="https://www.correios.com.br/rastreamento/busca?objetos=${trackingCode}"
+           target="_blank"
+           style="display:inline-block;background:#fff;color:#f97316;border:2px solid #f97316;padding:9px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">
+          Correios
+        </a>
+      </div>
     </div>
 
     <h3 style="margin:0 0 12px;color:#374151;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Itens enviados</h3>

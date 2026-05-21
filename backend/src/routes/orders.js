@@ -319,12 +319,35 @@ router.put('/admin/bulk-status', adminMiddleware, async (req, res) => {
 router.put('/admin/:id/tracking', adminMiddleware, async (req, res) => {
   const { trackingCode } = req.body;
   try {
-    await prisma.order.update({
+    const current = await prisma.order.findUnique({
       where: { id: req.params.id },
-      data: { trackingCode: trackingCode || null },
+      include: { user: true, items: { include: { product: true, variant: true } } },
     });
-    res.json({ ok: true });
-  } catch {
+    if (!current) return res.status(404).json({ error: 'Pedido não encontrado' });
+
+    const order = await prisma.order.update({
+      where: { id: req.params.id },
+      data: {
+        trackingCode: trackingCode || null,
+        // Avança para SHIPPED automaticamente se ainda não estava
+        ...(trackingCode && current.status !== 'SHIPPED' && current.status !== 'DELIVERED'
+          ? { status: 'SHIPPED' }
+          : {}),
+      },
+      include: { user: true, items: { include: { product: true, variant: true } } },
+    });
+
+    res.json({ ok: true, status: order.status });
+
+    // Envia e-mail ao cliente somente quando código é adicionado pela primeira vez
+    if (trackingCode && !current.trackingCode && order.user) {
+      sendMail({
+        to: order.user.email,
+        subject: `Seu pedido foi enviado! 📦 Rastreie agora`,
+        html: orderShippedHtml({ userName: order.user.name.split(' ')[0], order, trackingCode }),
+      }).catch(err => console.error('[TrackingMail] Erro:', err.message));
+    }
+  } catch (err) {
     res.status(500).json({ error: 'Erro ao salvar rastreio' });
   }
 });
