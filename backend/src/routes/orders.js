@@ -388,16 +388,29 @@ router.delete('/admin/:id', adminMiddleware, async (req, res) => {
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: 'Pedido não encontrado' });
 
-    await prisma.$transaction([
-      prisma.orderStatusHistory.deleteMany({ where: { orderId: order.id } }),
-      prisma.orderItem.deleteMany({ where: { orderId: order.id } }),
-      prisma.order.delete({ where: { id: order.id } }),
-    ]);
+    const orderId = order.id;
+
+    // Busca os itens para deletar return_items vinculados
+    const items = await prisma.orderItem.findMany({ where: { orderId }, select: { id: true } });
+    const itemIds = items.map(i => i.id);
+
+    // 1. return_items (referencia order_items)
+    if (itemIds.length > 0) {
+      await prisma.returnItem.deleteMany({ where: { orderItemId: { in: itemIds } } });
+    }
+    // 2. returns (referencia orders)
+    await prisma.return.deleteMany({ where: { orderId } });
+    // 3. order_status_history (tabela SQL pura, sem model Prisma)
+    await prisma.$executeRawUnsafe(`DELETE FROM order_status_history WHERE order_id = $1`, orderId);
+    // 4. order_items
+    await prisma.orderItem.deleteMany({ where: { orderId } });
+    // 5. order
+    await prisma.order.delete({ where: { id: orderId } });
 
     res.json({ message: `Pedido #${order.orderNumber ?? order.id.slice(0, 8).toUpperCase()} excluído.` });
   } catch (err) {
     console.error('[Admin] Erro ao excluir pedido:', err.message);
-    res.status(500).json({ error: 'Erro ao excluir pedido' });
+    res.status(500).json({ error: err.message || 'Erro ao excluir pedido' });
   }
 });
 
