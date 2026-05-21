@@ -184,6 +184,8 @@ export default function ProdutoPage({ params }) {
                 src={product.images[activeImg]}
                 alt={product.name}
                 fill
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={() => setImgErrors(prev => ({ ...prev, [activeImg]: true }))}
               />
@@ -206,6 +208,7 @@ export default function ProdutoPage({ params }) {
                       src={img}
                       alt=""
                       fill
+                      sizes="64px"
                       className="object-cover"
                       onError={() => setImgErrors(prev => ({ ...prev, [i]: true }))}
                     />
