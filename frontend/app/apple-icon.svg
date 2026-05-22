@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <rect width="180" height="180" rx="40" fill="#f97316"/>
+  <!-- left leg -->
+  <polygon points="90,22 107,22 68,158 51,158" fill="white"/>
+  <!-- right leg -->
+  <polygon points="73,22 90,22 129,158 112,158" fill="white"/>
+  <!-- crossbar -->
+  <rect x="59" y="98" width="62" height="17" fill="white"/>
+</svg>
