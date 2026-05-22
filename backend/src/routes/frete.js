@@ -35,16 +35,17 @@ const CEP_ZONA = {
   '90': 3, '91': 3, '92': 3, '93': 3, '94': 3, '95': 3, '96': 3, '97': 3, '98': 3, '99': 3, // RS
 };
 
-// Preços base (300g) e prazos por zona — tabela Correios 2024 (origem SP)
+// Preços base (300g) e prazos por zona — tabela Correios vigente a partir de 12/04/2026
+// Reajuste 2026: +4,2643% sobre tabela de abril/2025 (que já teve +9,6% sobre 2024)
 // pacPreco e sedexPreco em R$, pacDias e sedexDias em dias úteis
 const ZONA_CONFIG = {
-  1: { label: 'São Paulo',           pacPreco: 16.10, pacDias: 3,  sedexPreco: 27.50, sedexDias: 1 },
-  2: { label: 'RJ / MG / PR',        pacPreco: 21.40, pacDias: 5,  sedexPreco: 34.80, sedexDias: 2 },
-  3: { label: 'ES / SC / RS / GO / DF / MS', pacPreco: 23.90, pacDias: 6,  sedexPreco: 39.50, sedexDias: 2 },
-  4: { label: 'BA / MT / SE',        pacPreco: 27.40, pacDias: 8,  sedexPreco: 45.20, sedexDias: 3 },
-  5: { label: 'PE / AL / PB / RN / CE / PI / TO', pacPreco: 30.90, pacDias: 10, sedexPreco: 52.30, sedexDias: 4 },
-  6: { label: 'MA / PI / PA',        pacPreco: 36.50, pacDias: 12, sedexPreco: 62.80, sedexDias: 5 },
-  7: { label: 'AM / AC / RR / AP',   pacPreco: 43.20, pacDias: 15, sedexPreco: 74.50, sedexDias: 6 },
+  1: { label: 'São Paulo',                         pacPreco: 19.90, pacDias: 3,  sedexPreco: 26.50, sedexDias: 1 },
+  2: { label: 'RJ / MG / PR',                      pacPreco: 24.90, pacDias: 5,  sedexPreco: 34.90, sedexDias: 2 },
+  3: { label: 'ES / SC / RS / GO / DF / MS',       pacPreco: 28.50, pacDias: 6,  sedexPreco: 40.90, sedexDias: 2 },
+  4: { label: 'BA / MT / SE',                      pacPreco: 32.90, pacDias: 8,  sedexPreco: 47.90, sedexDias: 3 },
+  5: { label: 'PE / AL / PB / RN / CE / PI / TO', pacPreco: 37.90, pacDias: 10, sedexPreco: 56.90, sedexDias: 4 },
+  6: { label: 'MA / PA / RO',                      pacPreco: 44.90, pacDias: 12, sedexPreco: 68.90, sedexDias: 5 },
+  7: { label: 'AM / AC / RR / AP',                 pacPreco: 52.90, pacDias: 15, sedexPreco: 84.90, sedexDias: 6 },
 };
 
 // Multiplicador de preço por faixas de peso (Correios cobra por faixa)
