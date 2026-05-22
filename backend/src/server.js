@@ -74,6 +74,7 @@ async function migrate() {
   await run(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS "adminNote" TEXT DEFAULT ''`);
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "cepOrigem" TEXT DEFAULT ''`);
   await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "encomendaNote" TEXT DEFAULT '⚠️ Este produto é feito sob encomenda. O prazo de produção e entrega pode ser de até 45 dias.'`);
+  await run(`ALTER TABLE "store_config" ADD COLUMN IF NOT EXISTS "faviconUrl" TEXT DEFAULT ''`);
   await run(`
     CREATE TABLE IF NOT EXISTS order_status_history (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

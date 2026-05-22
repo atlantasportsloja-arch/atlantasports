@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Save, ImagePlus, Trash2, RefreshCw, Plus, X, DatabaseBackup, CheckCircle2, AlertCircle, Clock, FileText, Eye, EyeOff } from 'lucide-react';
+import { Save, ImagePlus, Trash2, RefreshCw, Plus, X, DatabaseBackup, CheckCircle2, AlertCircle, Clock, FileText, Eye, EyeOff, Globe, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -85,10 +85,12 @@ export default function ConfiguracoesPage() {
   const [config, setConfig] = useState(DEFAULT);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [backupStatus, setBackupStatus] = useState(null);
   const [runningBackup, setRunningBackup] = useState(false);
   const [termsPreview, setTermsPreview] = useState(false);
   const bannerRef = useRef();
+  const faviconRef = useRef();
 
   useEffect(() => {
     api.get('/config').then(r => {
@@ -160,6 +162,37 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  async function uploadFavicon(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingFavicon(true);
+    try {
+      const formData = new FormData();
+      formData.append('favicon', file);
+      const { data } = await api.post('/config/favicon', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setConfig(c => ({ ...c, faviconUrl: data.faviconUrl }));
+      toast.success('Favicon atualizado! As alterações aparecem no navegador em até 1h.');
+    } catch {
+      toast.error('Erro ao enviar favicon');
+    } finally {
+      setUploadingFavicon(false);
+      e.target.value = '';
+    }
+  }
+
+  async function removeFavicon() {
+    if (!confirm('Remover o favicon personalizado e voltar ao padrão?')) return;
+    try {
+      await api.delete('/config/favicon');
+      setConfig(c => ({ ...c, faviconUrl: '' }));
+      toast.success('Favicon removido. Padrão restaurado.');
+    } catch {
+      toast.error('Erro ao remover favicon');
+    }
+  }
+
   async function triggerBackup() {
     if (!confirm('Iniciar backup manual agora? O arquivo será enviado por e-mail.')) return;
     setRunningBackup(true);
@@ -193,6 +226,70 @@ export default function ConfiguracoesPage() {
       <Section title="🏪 Identidade da Loja">
         <Field label="Nome da loja" hint="Aparece no header e rodapé" value={config.storeName} onChange={set('storeName')} />
         <Field label="Descrição do rodapé" hint="Texto abaixo do nome no footer" value={config.footerDesc} onChange={set('footerDesc')} textarea />
+      </Section>
+
+      {/* FAVICON */}
+      <Section title="🌐 Ícone do Navegador (Favicon)">
+        <p className="text-xs text-gray-400 -mt-2">
+          Imagem exibida na aba do navegador e em favoritos. Tamanho ideal: <span className="font-semibold text-gray-600">32×32px ou 64×64px</span>. Formatos aceitos: PNG, SVG, ICO.
+        </p>
+        <div className="flex items-center gap-5 flex-wrap">
+          {/* Preview */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-xl border-2 border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center">
+              {config.faviconUrl ? (
+                <img src={config.faviconUrl} alt="Favicon" className="w-12 h-12 object-contain" />
+              ) : (
+                <Globe size={28} className="text-gray-300" />
+              )}
+            </div>
+            <span className="text-xs text-gray-400">{config.faviconUrl ? 'Atual' : 'Padrão'}</span>
+          </div>
+
+          {/* Simulação de aba */}
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold text-gray-500">Prévia na aba do navegador:</p>
+            <div className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded-t-lg px-3 py-2 w-44">
+              {config.faviconUrl ? (
+                <img src={config.faviconUrl} alt="" className="w-4 h-4 object-contain shrink-0" />
+              ) : (
+                <div className="w-4 h-4 rounded bg-orange-500 flex items-center justify-center shrink-0">
+                  <span className="text-white font-black text-[8px]">A</span>
+                </div>
+              )}
+              <span className="text-xs text-gray-700 truncate font-medium">Atlanta Sports</span>
+            </div>
+          </div>
+
+          {/* Ações */}
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => faviconRef.current?.click()}
+              disabled={uploadingFavicon}
+              className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {uploadingFavicon ? <Loader2 size={15} className="animate-spin" /> : <ImagePlus size={15} />}
+              {uploadingFavicon ? 'Enviando...' : config.faviconUrl ? 'Trocar favicon' : 'Enviar favicon'}
+            </button>
+            {config.faviconUrl && (
+              <button
+                type="button"
+                onClick={removeFavicon}
+                className="flex items-center gap-2 text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:bg-red-50"
+              >
+                <Trash2 size={15} /> Remover / usar padrão
+              </button>
+            )}
+            <input ref={faviconRef} type="file" accept="image/*,.ico,.svg" className="hidden" onChange={uploadFavicon} />
+          </div>
+        </div>
+
+        {config.faviconUrl && (
+          <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            O favicon é atualizado no navegador em até 1 hora (cache do browser). Para ver imediatamente, abra uma aba anônima.
+          </p>
+        )}
       </Section>
 
       {/* HERO */}

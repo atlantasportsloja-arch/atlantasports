@@ -47,7 +47,7 @@ router.put('/', adminMiddleware, async (req, res) => {
     whatsapp, footerEmail, footerHours, footerDesc,
     pixDiscount, pixKey, pixHolder, pixMessage, parceladoMessage,
     freeShippingThreshold, shippingZones, footerLinks,
-    termsContent, installments, cepOrigem, encomendaNote,
+    termsContent, installments, cepOrigem, encomendaNote, faviconUrl,
   } = req.body;
 
   try {
@@ -86,6 +86,7 @@ router.put('/', adminMiddleware, async (req, res) => {
         "installments" = ${installments ? JSON.stringify(installments) : null}::jsonb,
         "cepOrigem" = ${cepOrigem || ''},
         "encomendaNote" = ${encomendaNote || ''},
+        "faviconUrl" = ${faviconUrl || ''},
         "updatedAt" = NOW()
       WHERE id = 'default'
     `;
@@ -144,6 +145,36 @@ router.delete('/banner', adminMiddleware, async (req, res) => {
     res.json({ banners: newBanners });
   } catch {
     res.status(500).json({ error: 'Erro ao remover banner' });
+  }
+});
+
+router.post('/favicon', adminMiddleware, upload.single('favicon'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Imagem obrigatória' });
+    const url = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'atlanta-sports/favicon', quality: 'auto', fetch_format: 'auto', overwrite: true, public_id: 'favicon' },
+        (err, result) => err ? reject(err) : resolve(result.secure_url)
+      );
+      stream.end(req.file.buffer);
+    });
+    await prisma.$executeRaw`UPDATE "store_config" SET "faviconUrl" = ${url}, "updatedAt" = NOW() WHERE id = 'default'`;
+    cache.del(CONFIG_CACHE_KEY);
+    res.json({ faviconUrl: url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao enviar favicon' });
+  }
+});
+
+router.delete('/favicon', adminMiddleware, async (req, res) => {
+  try {
+    await prisma.$executeRaw`UPDATE "store_config" SET "faviconUrl" = '', "updatedAt" = NOW() WHERE id = 'default'`;
+    cache.del(CONFIG_CACHE_KEY);
+    res.json({ faviconUrl: '' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao remover favicon' });
   }
 });
 
