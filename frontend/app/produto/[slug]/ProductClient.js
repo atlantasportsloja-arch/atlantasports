@@ -12,7 +12,7 @@ import { sortSizes } from '@/lib/sortSizes';
 import { cldUrl } from '@/lib/cldUrl';
 import ProductCard from '@/components/ProductCard';
 
-const ESTADOS_BR = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+const ESTADOS_BR = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO','BR'];
 
 const WA_ICON = (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 shrink-0">
