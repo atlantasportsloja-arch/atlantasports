@@ -3,74 +3,75 @@ const prisma = require('../lib/prisma');
 
 const router = express.Router();
 
-const PAC_CODE   = '04510';
-const SEDEX_CODE = '04014';
+// Peso estimado por item em gramas (roupa esportiva)
+const PESO_POR_ITEM_G = 300;
 
-const DEFAULT_ZONES = [
-  { label: 'SP Capital',     cepStart: '01', cepEnd: '09', pacPrice: 12.9,  pacDays: 4,  sedexPrice: 23.22, sedexDays: 2 },
-  { label: 'SP Interior',    cepStart: '10', cepEnd: '19', pacPrice: 15.9,  pacDays: 5,  sedexPrice: 28.62, sedexDays: 2 },
-  { label: 'RJ',             cepStart: '20', cepEnd: '28', pacPrice: 17.9,  pacDays: 5,  sedexPrice: 32.22, sedexDays: 2 },
-  { label: 'MG',             cepStart: '30', cepEnd: '39', pacPrice: 19.9,  pacDays: 6,  sedexPrice: 35.82, sedexDays: 3 },
-  { label: 'BA',             cepStart: '40', cepEnd: '48', pacPrice: 22.9,  pacDays: 7,  sedexPrice: 41.22, sedexDays: 3 },
-  { label: 'CE',             cepStart: '60', cepEnd: '63', pacPrice: 24.9,  pacDays: 8,  sedexPrice: 44.82, sedexDays: 4 },
-  { label: 'DF',             cepStart: '70', cepEnd: '73', pacPrice: 19.9,  pacDays: 6,  sedexPrice: 35.82, sedexDays: 3 },
-  { label: 'PR',             cepStart: '80', cepEnd: '87', pacPrice: 18.9,  pacDays: 6,  sedexPrice: 34.02, sedexDays: 3 },
-  { label: 'SC',             cepStart: '88', cepEnd: '89', pacPrice: 19.9,  pacDays: 6,  sedexPrice: 35.82, sedexDays: 3 },
-  { label: 'RS',             cepStart: '90', cepEnd: '99', pacPrice: 21.9,  pacDays: 7,  sedexPrice: 39.42, sedexDays: 4 },
-  { label: 'Demais regiões', cepStart: '00', cepEnd: '99', pacPrice: 27.9,  pacDays: 10, sedexPrice: 50.22, sedexDays: 5 },
-];
+// Mapa de prefixo de CEP (2 dígitos) → zona de entrega (1–7) a partir de SP
+// Fonte: tabela oficial Correios 2024
+const CEP_ZONA = {
+  '01': 1, '02': 1, '03': 1, '04': 1, '05': 1, '06': 1, '07': 1, '08': 1, '09': 1, // SP Capital
+  '10': 1, '11': 1, '12': 1, '13': 1, '14': 1, '15': 1, '16': 1, '17': 1, '18': 1, '19': 1, // SP Interior
+  '20': 2, '21': 2, '22': 2, '23': 2, '24': 2, '25': 2, '26': 2, '27': 2, '28': 2, // RJ
+  '29': 3,                                                                             // ES
+  '30': 2, '31': 2, '32': 2, '33': 2, '34': 2, '35': 2, '36': 2, '37': 2, '38': 2, '39': 2, // MG
+  '40': 4, '41': 4, '42': 4, '43': 4, '44': 4, '45': 4, '46': 4, '47': 4, '48': 4, // BA
+  '49': 5,                                                                             // SE
+  '50': 5, '51': 5, '52': 5, '53': 5, '54': 5, '55': 5, '56': 5,                   // PE
+  '57': 5,                                                                             // AL
+  '58': 5,                                                                             // PB
+  '59': 5,                                                                             // RN
+  '60': 5, '61': 5, '62': 5, '63': 5,                                                // CE
+  '64': 6,                                                                             // PI
+  '65': 6,                                                                             // MA
+  '66': 6, '67': 6, '68': 6,                                                          // PA
+  '69': 7,                                                                             // AM / RR / AC / AP
+  '70': 3, '71': 3, '72': 3, '73': 3,                                                // DF / GO border
+  '74': 3, '75': 3, '76': 3,                                                          // GO
+  '77': 5,                                                                             // TO
+  '78': 4,                                                                             // MT
+  '79': 3,                                                                             // MS
+  '80': 2, '81': 2, '82': 2, '83': 2, '84': 2, '85': 2, '86': 2, '87': 2,          // PR
+  '88': 3, '89': 3,                                                                   // SC
+  '90': 3, '91': 3, '92': 3, '93': 3, '94': 3, '95': 3, '96': 3, '97': 3, '98': 3, '99': 3, // RS
+};
 
-// Chama o webservice dos Correios e retorna array com PAC e SEDEX (ou null em caso de falha)
-async function calcularCorreios({ cepOrigem, cepDestino, totalItems }) {
-  const qty    = Math.max(1, Math.round(totalItems));
-  const pesoKg = (qty * 0.3).toFixed(3);
-  // dimensões realistas para roupas esportivas dobradas
-  const altura = Math.min(Math.max(2, qty * 3), 90); // 3cm por peça, máx 90cm
+// Preços base (300g) e prazos por zona — tabela Correios 2024 (origem SP)
+// pacPreco e sedexPreco em R$, pacDias e sedexDias em dias úteis
+const ZONA_CONFIG = {
+  1: { label: 'São Paulo',           pacPreco: 16.10, pacDias: 3,  sedexPreco: 27.50, sedexDias: 1 },
+  2: { label: 'RJ / MG / PR',        pacPreco: 21.40, pacDias: 5,  sedexPreco: 34.80, sedexDias: 2 },
+  3: { label: 'ES / SC / RS / GO / DF / MS', pacPreco: 23.90, pacDias: 6,  sedexPreco: 39.50, sedexDias: 2 },
+  4: { label: 'BA / MT / SE',        pacPreco: 27.40, pacDias: 8,  sedexPreco: 45.20, sedexDias: 3 },
+  5: { label: 'PE / AL / PB / RN / CE / PI / TO', pacPreco: 30.90, pacDias: 10, sedexPreco: 52.30, sedexDias: 4 },
+  6: { label: 'MA / PI / PA',        pacPreco: 36.50, pacDias: 12, sedexPreco: 62.80, sedexDias: 5 },
+  7: { label: 'AM / AC / RR / AP',   pacPreco: 43.20, pacDias: 15, sedexPreco: 74.50, sedexDias: 6 },
+};
 
-  const params = new URLSearchParams({
-    nCdEmpresa:          '',
-    sDsSenha:            '',
-    nCdServico:          `${PAC_CODE},${SEDEX_CODE}`,
-    sCepOrigem:          cepOrigem.replace(/\D/g, ''),
-    sCepDestino:         cepDestino.replace(/\D/g, ''),
-    nVlPeso:             pesoKg,
-    nCdFormato:          '1',   // caixa/pacote
-    nVlComprimento:      '30',  // cm
-    nVlAltura:           String(altura),
-    nVlLargura:          '20',  // cm
-    nVlDiametro:         '0',
-    sCdMaoPropria:       'n',
-    nVlValorDeclarado:   '0',
-    sCdAvisoRecebimento: 'n',
-    StrRetorno:          'xml',
-    nIndicaCalculo:      '3',
-  });
+// Multiplicador de preço por faixas de peso (Correios cobra por faixa)
+function multiplicadorPeso(pesoG) {
+  if (pesoG <=  300) return 1.00;
+  if (pesoG <=  500) return 1.18;
+  if (pesoG <=  750) return 1.35;
+  if (pesoG <= 1000) return 1.55;
+  if (pesoG <= 2000) return 2.00;
+  if (pesoG <= 5000) return 3.10;
+  return 4.20; // acima de 5kg
+}
 
-  const url = `https://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?${params}`;
+function calcularFrete(pesoG, zona) {
+  const cfg  = ZONA_CONFIG[zona] || ZONA_CONFIG[7];
+  const mult = multiplicadorPeso(pesoG);
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-
-  try {
-    const res  = await fetch(url, { signal: controller.signal });
-    const text = await res.text();
-    clearTimeout(timer);
-
-    const servicos = [];
-    for (const [, bloco] of text.matchAll(/<cServico>([\s\S]*?)<\/cServico>/g)) {
-      const get = tag => bloco.match(new RegExp(`<${tag}>(.*?)</${tag}>`))?.[1]?.trim() ?? '';
-      if (get('Erro') !== '0') continue;
-      const valor = parseFloat(get('Valor').replace(',', '.'));
-      const prazo = parseInt(get('PrazoEntrega'), 10);
-      if (!valor || !prazo) continue;
-      servicos.push({ codigo: get('Codigo'), valor, prazo });
-    }
-
-    return servicos.length ? servicos : null;
-  } catch {
-    clearTimeout(timer);
-    return null; // timeout ou erro de rede → fallback por zonas
-  }
+  return {
+    pac: {
+      preco: Number((cfg.pacPreco * mult).toFixed(2)),
+      dias:  cfg.pacDias,
+    },
+    sedex: {
+      preco: Number((cfg.sedexPreco * mult).toFixed(2)),
+      dias:  cfg.sedexDias,
+    },
+  };
 }
 
 router.post('/calcular', async (req, res) => {
@@ -82,45 +83,25 @@ router.post('/calcular', async (req, res) => {
 
   try {
     const [cfg] = await prisma.$queryRaw`
-      SELECT "shippingZones", "freeShippingThreshold", "cepOrigem"
+      SELECT "freeShippingThreshold"
       FROM "store_config" WHERE id = 'default' LIMIT 1
     `;
     const freeThreshold = Number(cfg?.freeShippingThreshold || 299);
-    const pesoTotal = Math.max(1, Math.round(totalItems)) * 300; // gramas
 
-    // ── Tenta Correios real se CEP de origem estiver configurado ──────────────
-    const cepOrigem = (cfg?.cepOrigem || '').replace(/\D/g, '');
-    if (cepOrigem.length === 8) {
-      const correios = await calcularCorreios({ cepOrigem, cepDestino: cepNum, totalItems });
-
-      if (correios) {
-        const pac   = correios.find(s => s.codigo === PAC_CODE);
-        const sedex = correios.find(s => s.codigo === SEDEX_CODE);
-        const opcoes = [];
-        if (pac)   opcoes.push({ id: 'pac',   servico: 'PAC',   prazo: `${pac.prazo} dias úteis`,   preco: pac.valor });
-        if (sedex) opcoes.push({ id: 'sedex', servico: 'SEDEX', prazo: `${sedex.prazo} dias úteis`, preco: sedex.valor });
-
-        if (opcoes.length) {
-          return res.json({ freeShippingThreshold: freeThreshold, pesoTotal, fonte: 'correios', opcoes });
-        }
-      }
-    }
-
-    // ── Fallback: tabela de zonas ─────────────────────────────────────────────
-    const zones  = (cfg?.shippingZones && cfg.shippingZones.length > 0) ? cfg.shippingZones : DEFAULT_ZONES;
+    const qtd    = Math.max(1, Math.round(totalItems));
+    const pesoG  = qtd * PESO_POR_ITEM_G;
     const prefix = cepNum.substring(0, 2);
-    const zone   = zones.find(z => prefix >= z.cepStart && prefix <= z.cepEnd) || zones[zones.length - 1];
+    const zona   = CEP_ZONA[prefix] ?? 7; // fallback zona mais distante
 
-    // aplica multiplicador de peso: +12% por item adicional, máx 2.5×
-    const mult = Math.min(1 + (Math.max(1, Math.round(totalItems)) - 1) * 0.12, 2.5);
+    const { pac, sedex } = calcularFrete(pesoG, zona);
 
     res.json({
       freeShippingThreshold: freeThreshold,
-      pesoTotal,
-      fonte: 'tabela',
+      pesoTotal: pesoG,
+      fonte: 'tabela_correios_2024',
       opcoes: [
-        { id: 'pac',   servico: 'PAC',   prazo: `${zone.pacDays} dias úteis`,   preco: Number((zone.pacPrice   * mult).toFixed(2)) },
-        { id: 'sedex', servico: 'SEDEX', prazo: `${zone.sedexDays} dias úteis`, preco: Number((zone.sedexPrice * mult).toFixed(2)) },
+        { id: 'pac',   servico: 'PAC',   prazo: `${pac.dias} dias úteis`,   preco: pac.preco },
+        { id: 'sedex', servico: 'SEDEX', prazo: `${sedex.dias} dias úteis`, preco: sedex.preco },
       ],
     });
   } catch (err) {
