@@ -100,7 +100,7 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
       ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
     };
 
-    const [products, salesData, ordersRevenue] = await Promise.all([
+    const [products, salesData, ordersRevenue, orderItemsCost] = await Promise.all([
       prisma.product.findMany({
         where: { active: true },
         select: {
@@ -119,6 +119,10 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
       prisma.order.aggregate({
         _sum: { total: true, shippingCost: true },
         where: orderWhere,
+      }),
+      prisma.orderItem.findMany({
+        where: { order: orderWhere },
+        select: { quantity: true, price: true, product: { select: { costPrice: true } } },
       }),
     ]);
 
@@ -154,9 +158,14 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
     const margemMedia = comCusto.length > 0
       ? (comCusto.reduce((s, p) => s + p.margem, 0) / comCusto.length).toFixed(1) : null;
     const totalReceitaReal = (ordersRevenue._sum.total || 0) - (ordersRevenue._sum.shippingCost || 0);
-    const totalLucroReal = comCusto.reduce((s, p) => s + (p.lucroVendas ?? 0), 0);
     const totalVendaEstoque = data.reduce((s, p) => s + p.price * p.estoqueEfetivo, 0);
-    const totalCustoVendas = comCusto.reduce((s, p) => s + (p.costPrice * p.qtdVendida), 0);
+    // Custo e lucro calculados a partir dos itens reais (inclui produtos inativos)
+    const totalCustoVendas = orderItemsCost.reduce((s, i) => {
+      return i.product.costPrice != null ? s + i.product.costPrice * i.quantity : s;
+    }, 0);
+    const totalLucroReal = orderItemsCost.reduce((s, i) => {
+      return i.product.costPrice != null ? s + (i.price - i.product.costPrice) * i.quantity : s;
+    }, 0);
 
     res.json({
       products: data,
