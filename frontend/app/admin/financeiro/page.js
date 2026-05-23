@@ -81,21 +81,6 @@ export default function FinanceiroPage() {
     return sortDir === 'desc' ? vb - va : va - vb;
   }) : [];
 
-  const byCategory = data ? (() => {
-    const map = {};
-    data.products.forEach(p => {
-      const cats = p.categories?.length ? p.categories : [{ id: '__sem__', name: 'Sem categoria' }];
-      cats.forEach(c => {
-        if (!map[c.id]) map[c.id] = { name: c.name, receita: 0, lucro: 0, qtd: 0, count: 0 };
-        map[c.id].receita += p.receitaVendas || 0;
-        map[c.id].lucro += p.lucroVendas || 0;
-        map[c.id].qtd += p.qtdVendida || 0;
-        map[c.id].count += 1;
-      });
-    });
-    return Object.values(map).sort((a, b) => b.receita - a.receita);
-  })() : [];
-
   const semCusto = data ? data.products.filter(p => p.costPrice == null).length : 0;
   const comCusto = data ? data.products.length - semCusto : 0;
 
@@ -211,37 +196,6 @@ export default function FinanceiroPage() {
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Resumo por categoria */}
-          {byCategory.length > 0 && byCategory.some(c => c.receita > 0) && (
-            <div className="card overflow-hidden">
-              <div className="px-6 py-4 border-b bg-gray-50">
-                <h2 className="font-black text-sm">Receita por categoria</h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      {['Categoria', 'Produtos', 'Qtd. vendida', 'Receita', 'Lucro estimado'].map(h => (
-                        <th key={h} className="text-left px-4 py-3 font-semibold text-gray-500 text-xs whitespace-nowrap">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {byCategory.map(c => (
-                      <tr key={c.name} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-semibold">{c.name}</td>
-                        <td className="px-4 py-3 text-gray-500">{c.count}</td>
-                        <td className="px-4 py-3">{c.qtd}</td>
-                        <td className="px-4 py-3 font-semibold text-green-600">{c.receita > 0 ? `R$ ${fmt(c.receita)}` : '—'}</td>
-                        <td className="px-4 py-3 text-primary-600">{c.lucro > 0 ? `R$ ${fmt(c.lucro)}` : '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
           )}
 
