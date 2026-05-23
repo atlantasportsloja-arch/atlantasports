@@ -156,12 +156,13 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
     const totalReceitaReal = (ordersRevenue._sum.total || 0) - (ordersRevenue._sum.shippingCost || 0);
     const totalLucroReal = comCusto.reduce((s, p) => s + (p.lucroVendas ?? 0), 0);
     const totalVendaEstoque = data.reduce((s, p) => s + p.price * p.estoqueEfetivo, 0);
+    const totalCustoVendas = comCusto.reduce((s, p) => s + (p.costPrice * p.qtdVendida), 0);
 
     res.json({
       products: data,
       totalProdutos: data.length,
       totalCusto, totalReceita, totalLucro, margemMedia,
-      totalReceitaReal, totalLucroReal, totalVendaEstoque,
+      totalReceitaReal, totalLucroReal, totalVendaEstoque, totalCustoVendas,
     });
   } catch {
     res.status(500).json({ error: 'Erro ao buscar dados financeiros' });

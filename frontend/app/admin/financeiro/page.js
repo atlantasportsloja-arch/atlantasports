@@ -135,6 +135,49 @@ export default function FinanceiroPage() {
             <Card icon={<TrendingUp size={20} />} label="Lucro real estimado" value={semCusto > 0 ? `R$ ${fmt(data.totalLucroReal)}` : `R$ ${fmt(data.totalLucroReal)}`} sub={semCusto > 0 ? `${semCusto} prod. sem custo` : 'baseado nos custos cadastrados'} color="text-primary-500" />
           </div>
 
+          {/* Valor total em vendas */}
+          <div className="card p-6">
+            <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide mb-4">Valor total em vendas</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-green-50 text-green-500"><DollarSign size={22} /></div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Receita bruta de vendas</p>
+                  <p className="text-2xl font-black text-green-600">R$ {fmt(data.totalReceitaReal)}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">pedidos pagos · sem frete</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-red-50 text-red-500"><DollarSign size={22} /></div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Custo dos produtos vendidos</p>
+                  <p className="text-2xl font-black text-red-500">R$ {fmt(data.totalCustoVendas ?? 0)}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {semCusto > 0 ? `${semCusto} produto(s) sem custo cadastrado` : 'baseado nos custos cadastrados'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            {data.totalCustoVendas > 0 && (
+              <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Lucro real estimado</p>
+                  <p className={`text-lg font-black ${data.totalLucroReal >= 0 ? 'text-primary-500' : 'text-red-500'}`}>
+                    R$ {fmt(data.totalLucroReal)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Margem sobre vendas</p>
+                  <p className="text-lg font-black text-gray-700">
+                    {data.totalReceitaReal > 0
+                      ? `${((data.totalLucroReal / data.totalReceitaReal) * 100).toFixed(1)}%`
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Valor total em estoque — apenas em "todo período" */}
           {period === 'tudo' && (
             <div className="card p-6">
