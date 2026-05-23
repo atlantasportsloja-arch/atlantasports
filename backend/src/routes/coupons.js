@@ -35,13 +35,30 @@ router.post('/validate', authMiddleware, async (req, res) => {
 });
 
 router.get('/', adminMiddleware, async (req, res) => {
-  const coupons = await prisma.coupon.findMany({ orderBy: { createdAt: 'desc' } });
-  res.json(coupons);
+  try {
+    const coupons = await prisma.coupon.findMany({ orderBy: { id: 'desc' } });
+    res.json(coupons);
+  } catch {
+    res.status(500).json({ error: 'Erro ao buscar cupons' });
+  }
 });
+
+function sanitizeCoupon(body) {
+  const d = {};
+  if (body.code !== undefined) d.code = String(body.code).toUpperCase().trim();
+  if (body.discount !== undefined) d.discount = Number(body.discount);
+  if (body.type !== undefined) d.type = body.type;
+  if (body.minValue !== undefined) d.minValue = Number(body.minValue) || 0;
+  if (body.maxUses !== undefined) d.maxUses = body.maxUses ? Number(body.maxUses) : null;
+  if (body.expiresAt !== undefined) d.expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
+  if (body.onePerUser !== undefined) d.onePerUser = Boolean(body.onePerUser);
+  if (body.active !== undefined) d.active = Boolean(body.active);
+  return d;
+}
 
 router.post('/', adminMiddleware, async (req, res) => {
   try {
-    const coupon = await prisma.coupon.create({ data: req.body });
+    const coupon = await prisma.coupon.create({ data: sanitizeCoupon(req.body) });
     res.status(201).json(coupon);
   } catch (err) {
     if (err.code === 'P2002') return res.status(400).json({ error: 'Código já existe' });
@@ -51,7 +68,7 @@ router.post('/', adminMiddleware, async (req, res) => {
 
 router.put('/:id', adminMiddleware, async (req, res) => {
   try {
-    const coupon = await prisma.coupon.update({ where: { id: req.params.id }, data: req.body });
+    const coupon = await prisma.coupon.update({ where: { id: req.params.id }, data: sanitizeCoupon(req.body) });
     res.json(coupon);
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar cupom' });
