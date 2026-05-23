@@ -153,7 +153,7 @@ export default function FinanceiroPage() {
           {period === 'tudo' && (
             <div className="card p-6">
               <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide mb-4">Valor total em estoque</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-xl bg-red-50 text-red-500"><DollarSign size={22} /></div>
                   <div>
@@ -174,21 +174,14 @@ export default function FinanceiroPage() {
                     <p className="text-xs text-gray-400 mt-0.5">{data.products.length} produto(s) · se vender tudo em estoque</p>
                   </div>
                 </div>
-              </div>
-              {data.totalCusto > 0 && (
-                <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${data.totalLucro >= 0 ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}><TrendingUp size={22} /></div>
                   <div>
                     <p className="text-xs text-gray-400 mb-0.5">Lucro potencial</p>
-                    <p className={`text-lg font-black ${data.totalLucro >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                      R$ {fmt(data.totalLucro)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Margem média</p>
-                    <p className="text-lg font-black text-primary-500">{data.margemMedia ? `${data.margemMedia}%` : '—'}</p>
+                    <p className={`text-2xl font-black ${data.totalLucro >= 0 ? 'text-green-600' : 'text-red-500'}`}>R$ {fmt(data.totalLucro ?? 0)}</p>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
