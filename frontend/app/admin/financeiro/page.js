@@ -162,9 +162,6 @@ export default function FinanceiroPage() {
                 <div>
                   <p className="text-xs text-gray-400 mb-0.5">Lucro real estimado</p>
                   <p className={`text-2xl font-black ${data.totalLucroReal >= 0 ? 'text-primary-500' : 'text-red-500'}`}>R$ {fmt(data.totalLucroReal)}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {data.totalReceitaReal > 0 ? `margem ${((data.totalLucroReal / data.totalReceitaReal) * 100).toFixed(1)}%` : '—'}
-                  </p>
                 </div>
               </div>
             </div>
