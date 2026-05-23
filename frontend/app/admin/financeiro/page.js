@@ -5,18 +5,6 @@ import api from '@/lib/api';
 
 function fmt(v) { return Number(v).toFixed(2).replace('.', ','); }
 
-function Card({ icon, label, value, sub, color = 'text-gray-900' }) {
-  return (
-    <div className="card p-5 flex items-center gap-4">
-      <div className={`p-3 rounded-xl bg-gray-100 ${color}`}>{icon}</div>
-      <div>
-        <p className="text-xs text-gray-400 font-medium">{label}</p>
-        <p className={`text-xl font-black ${color}`}>{value}</p>
-        {sub && <p className="text-xs text-gray-400">{sub}</p>}
-      </div>
-    </div>
-  );
-}
 
 const PERIODS = [
   { key: 'tudo', label: 'Todo período' },
@@ -129,12 +117,6 @@ export default function FinanceiroPage() {
         <div className="text-red-500 p-8">Erro ao carregar dados.</div>
       ) : (
         <>
-          {/* Receita real */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card icon={<DollarSign size={20} />} label="Receita real (pedidos pagos)" value={`R$ ${fmt(data.totalReceitaReal)}`} sub="vendas confirmadas" color="text-green-600" />
-            <Card icon={<TrendingUp size={20} />} label="Lucro real estimado" value={semCusto > 0 ? `R$ ${fmt(data.totalLucroReal)}` : `R$ ${fmt(data.totalLucroReal)}`} sub={semCusto > 0 ? `${semCusto} prod. sem custo` : 'baseado nos custos cadastrados'} color="text-primary-500" />
-          </div>
-
           {/* Valor total em vendas */}
           <div className="card p-6">
             <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide mb-4">Valor total em vendas</h2>
