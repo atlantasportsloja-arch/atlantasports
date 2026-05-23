@@ -159,15 +159,13 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
       ? (comCusto.reduce((s, p) => s + p.margem, 0) / comCusto.length).toFixed(1) : null;
     const totalReceitaReal = (ordersRevenue._sum.total || 0) - (ordersRevenue._sum.shippingCost || 0);
     const totalVendaEstoque = data.reduce((s, p) => s + p.price * p.estoqueEfetivo, 0);
-    // Custo e lucro calculados a partir dos itens reais (snapshot salvo ao entregar, ou custo atual)
+    // Custo calculado a partir dos itens reais (snapshot salvo ao entregar, ou custo atual)
     const totalCustoVendas = orderItemsCost.reduce((s, i) => {
       const custo = i.costPrice ?? i.product.costPrice;
       return custo != null ? s + custo * i.quantity : s;
     }, 0);
-    const totalLucroReal = orderItemsCost.reduce((s, i) => {
-      const custo = i.costPrice ?? i.product.costPrice;
-      return custo != null ? s + (i.price - custo) * i.quantity : s;
-    }, 0);
+    // Lucro = receita real (já com descontos) - custo total
+    const totalLucroReal = totalReceitaReal - totalCustoVendas;
 
     res.json({
       products: data,
