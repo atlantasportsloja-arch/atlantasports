@@ -122,7 +122,7 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
       }),
       prisma.orderItem.findMany({
         where: { order: orderWhere },
-        select: { quantity: true, price: true, product: { select: { costPrice: true } } },
+        select: { quantity: true, price: true, costPrice: true, product: { select: { costPrice: true } } },
       }),
     ]);
 
@@ -159,12 +159,14 @@ router.get('/admin/financeiro', adminMiddleware, async (req, res) => {
       ? (comCusto.reduce((s, p) => s + p.margem, 0) / comCusto.length).toFixed(1) : null;
     const totalReceitaReal = (ordersRevenue._sum.total || 0) - (ordersRevenue._sum.shippingCost || 0);
     const totalVendaEstoque = data.reduce((s, p) => s + p.price * p.estoqueEfetivo, 0);
-    // Custo e lucro calculados a partir dos itens reais (inclui produtos inativos)
+    // Custo e lucro calculados a partir dos itens reais (snapshot salvo ao entregar, ou custo atual)
     const totalCustoVendas = orderItemsCost.reduce((s, i) => {
-      return i.product.costPrice != null ? s + i.product.costPrice * i.quantity : s;
+      const custo = i.costPrice ?? i.product.costPrice;
+      return custo != null ? s + custo * i.quantity : s;
     }, 0);
     const totalLucroReal = orderItemsCost.reduce((s, i) => {
-      return i.product.costPrice != null ? s + (i.price - i.product.costPrice) * i.quantity : s;
+      const custo = i.costPrice ?? i.product.costPrice;
+      return custo != null ? s + (i.price - custo) * i.quantity : s;
     }, 0);
 
     res.json({

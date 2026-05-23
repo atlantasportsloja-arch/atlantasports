@@ -435,6 +435,18 @@ router.put('/admin/:id/status', adminMiddleware, async (req, res) => {
         }).catch(err => console.error('[DeliveredMail] Erro:', err.message));
       }
     }
+
+    // Ao entregar: snapshot do custo de cada produto no item do pedido
+    if (status === 'DELIVERED' && current.status !== 'DELIVERED') {
+      for (const item of order.items) {
+        if (item.product?.costPrice != null) {
+          await prisma.orderItem.update({
+            where: { id: item.id },
+            data: { costPrice: item.product.costPrice },
+          }).catch(() => {});
+        }
+      }
+    }
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar pedido' });
   }

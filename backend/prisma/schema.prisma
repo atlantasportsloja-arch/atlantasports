@@ -147,6 +147,7 @@ model OrderItem {
   variantId       String?
   quantity        Int
   price           Float
+  costPrice       Float?
   personalization Json?
 
   order       Order           @relation(fields: [orderId], references: [id])
