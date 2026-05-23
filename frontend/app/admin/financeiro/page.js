@@ -138,7 +138,7 @@ export default function FinanceiroPage() {
           {/* Valor total em vendas */}
           <div className="card p-6">
             <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide mb-4">Valor total em vendas</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-xl bg-green-50 text-green-500"><DollarSign size={22} /></div>
                 <div>
@@ -157,25 +157,17 @@ export default function FinanceiroPage() {
                   </p>
                 </div>
               </div>
-            </div>
-            {data.totalCustoVendas > 0 && (
-              <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${data.totalLucroReal >= 0 ? 'bg-blue-50 text-blue-500' : 'bg-red-50 text-red-500'}`}><TrendingUp size={22} /></div>
                 <div>
                   <p className="text-xs text-gray-400 mb-0.5">Lucro real estimado</p>
-                  <p className={`text-lg font-black ${data.totalLucroReal >= 0 ? 'text-primary-500' : 'text-red-500'}`}>
-                    R$ {fmt(data.totalLucroReal)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Margem sobre vendas</p>
-                  <p className="text-lg font-black text-gray-700">
-                    {data.totalReceitaReal > 0
-                      ? `${((data.totalLucroReal / data.totalReceitaReal) * 100).toFixed(1)}%`
-                      : '—'}
+                  <p className={`text-2xl font-black ${data.totalLucroReal >= 0 ? 'text-primary-500' : 'text-red-500'}`}>R$ {fmt(data.totalLucroReal)}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {data.totalReceitaReal > 0 ? `margem ${((data.totalLucroReal / data.totalReceitaReal) * 100).toFixed(1)}%` : '—'}
                   </p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Valor total em estoque — apenas em "todo período" */}
