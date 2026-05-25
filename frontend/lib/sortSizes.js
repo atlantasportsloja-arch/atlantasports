@@ -5,7 +5,7 @@ function sizeIndex(size) {
   const li = LETTER_ORDER.indexOf(s);
   if (li !== -1) return li;                    // P=0, M=1, G=2, GG=3, GGG=4
   const n = parseFloat(s);
-  if (!isNaN(n)) return 10000 - n;             // numérico decrescente: 44 → 9956, 36 → 9964
+  if (!isNaN(n)) return n;                      // numérico crescente: 02 → 2, 14 → 14
   return 9999;                                 // desconhecido: vai pro final
 }
 
