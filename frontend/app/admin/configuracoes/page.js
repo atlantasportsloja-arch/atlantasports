@@ -292,20 +292,6 @@ export default function ConfiguracoesPage() {
         )}
       </Section>
 
-      {/* HERO */}
-      <Section title="🎯 Banner Principal (Hero)">
-        <p className="text-xs text-gray-400 -mt-2">Aparece quando não há banners de promoção cadastrados</p>
-        <Field label="Etiqueta do badge" hint='Ex: "Nova coleção 2025"' value={config.heroBadge} onChange={set('heroBadge')} />
-        <Field label="Título principal" value={config.heroTitle} onChange={set('heroTitle')} />
-        <Field label="Subtítulo / descrição" value={config.heroSubtitle} onChange={set('heroSubtitle')} textarea />
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Botão 1 — texto" value={config.heroBtnPrimary} onChange={set('heroBtnPrimary')} />
-          <Field label="Botão 1 — link" hint='Ex: /categoria/camisas' value={config.heroBtnPrimaryLink} onChange={set('heroBtnPrimaryLink')} />
-          <Field label="Botão 2 — texto" value={config.heroBtnSecondary} onChange={set('heroBtnSecondary')} />
-          <Field label="Botão 2 — link" hint='Ex: /categoria/tenis' value={config.heroBtnSecondaryLink} onChange={set('heroBtnSecondaryLink')} />
-        </div>
-      </Section>
-
       {/* BENEFÍCIOS */}
       <Section title="✅ Faixa de Benefícios">
         <p className="text-xs text-gray-400 -mt-2">4 itens que aparecem na faixa laranja abaixo do banner. Use emojis!</p>
