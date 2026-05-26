@@ -159,6 +159,27 @@ router.get('/users', async (req, res) => {
   }
 });
 
+router.put('/users/:id', async (req, res) => {
+  const { name, email, phone } = req.body;
+  if (!name?.trim() || !email?.trim()) return res.status(400).json({ error: 'Nome e e-mail são obrigatórios' });
+
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone?.trim() || null,
+      },
+      select: { id: true, name: true, email: true, phone: true, role: true },
+    });
+    res.json(user);
+  } catch (e) {
+    if (e.code === 'P2002') return res.status(400).json({ error: 'E-mail já cadastrado' });
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+});
+
 router.put('/users/:id/role', async (req, res) => {
   const { role } = req.body;
   if (!['ADMIN', 'CUSTOMER'].includes(role)) return res.status(400).json({ error: 'Role inválido' });

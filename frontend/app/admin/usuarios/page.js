@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, X, ShoppingBag, ChevronDown, ChevronRight } from 'lucide-react';
+import { Search, X, ShoppingBag, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -38,6 +38,73 @@ function UserOrders({ userId }) {
   );
 }
 
+function EditModal({ user, onClose, onSaved }) {
+  const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone || '' });
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!form.name.trim() || !form.email.trim()) return toast.error('Nome e e-mail são obrigatórios');
+    setSaving(true);
+    try {
+      await api.put(`/admin/users/${user.id}`, form);
+      toast.success('Usuário atualizado!');
+      onSaved();
+      onClose();
+    } catch (e) {
+      toast.error(e.response?.data?.error || 'Erro ao salvar');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-lg font-bold">Editar usuário</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Nome</label>
+            <input
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">E-mail</label>
+            <input
+              type="email"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Telefone</label>
+            <input
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={form.phone}
+              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              placeholder="(11) 99999-9999"
+            />
+          </div>
+        </div>
+        <div className="flex gap-3 px-6 pb-6">
+          <button onClick={onClose} className="flex-1 border border-gray-300 rounded-xl py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button onClick={save} disabled={saving} className="flex-1 bg-gray-900 hover:bg-gray-800 text-white rounded-xl py-2.5 text-sm font-bold disabled:opacity-50">
+            {saving ? 'Salvando...' : 'Salvar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminUsuarios() {
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
@@ -45,6 +112,7 @@ export default function AdminUsuarios() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
+  const [editing, setEditing] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setQuery(search), 350);
@@ -78,6 +146,8 @@ export default function AdminUsuarios() {
 
   return (
     <div className="space-y-6">
+      {editing && <EditModal user={editing} onClose={() => setEditing(null)} onSaved={load} />}
+
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-black">Usuários ({total})</h1>
         <div className="relative">
@@ -140,12 +210,20 @@ export default function AdminUsuarios() {
                         {new Date(u.createdAt).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => toggleRole(u.id, u.role)}
-                          className="text-xs text-blue-500 hover:underline whitespace-nowrap"
-                        >
-                          {u.role === 'ADMIN' ? 'Remover admin' : 'Tornar admin'}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setEditing(u)}
+                            className="text-xs text-gray-500 hover:text-gray-800 flex items-center gap-1"
+                          >
+                            <Pencil size={12} /> Editar
+                          </button>
+                          <button
+                            onClick={() => toggleRole(u.id, u.role)}
+                            className="text-xs text-blue-500 hover:underline whitespace-nowrap"
+                          >
+                            {u.role === 'ADMIN' ? 'Remover admin' : 'Tornar admin'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     {expanded === u.id && (
