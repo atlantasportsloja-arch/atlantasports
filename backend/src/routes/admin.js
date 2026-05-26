@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const prisma = require('../lib/prisma');
 const adminMiddleware = require('../middleware/admin');
 const { runBackup, loadStatus } = require('../jobs/backupJob');
@@ -160,17 +161,21 @@ router.get('/users', async (req, res) => {
 });
 
 router.put('/users/:id', async (req, res) => {
-  const { name, email, phone } = req.body;
+  const { name, email, phone, password } = req.body;
   if (!name?.trim() || !email?.trim()) return res.status(400).json({ error: 'Nome e e-mail são obrigatórios' });
+  if (password && password.length < 6) return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres' });
 
   try {
+    const data = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone?.trim() || null,
+    };
+    if (password) data.password = await bcrypt.hash(password, 10);
+
     const user = await prisma.user.update({
       where: { id: req.params.id },
-      data: {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone?.trim() || null,
-      },
+      data,
       select: { id: true, name: true, email: true, phone: true, role: true },
     });
     res.json(user);

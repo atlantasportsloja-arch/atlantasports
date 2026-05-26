@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, X, ShoppingBag, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
+import { Search, X, ShoppingBag, ChevronDown, ChevronRight, Pencil, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -39,11 +39,13 @@ function UserOrders({ userId }) {
 }
 
 function EditModal({ user, onClose, onSaved }) {
-  const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone || '' });
+  const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone || '', password: '' });
+  const [showPass, setShowPass] = useState(false);
   const [saving, setSaving] = useState(false);
 
   async function save() {
     if (!form.name.trim() || !form.email.trim()) return toast.error('Nome e e-mail são obrigatórios');
+    if (form.password && form.password.length < 6) return toast.error('A senha deve ter pelo menos 6 caracteres');
     setSaving(true);
     try {
       await api.put(`/admin/users/${user.id}`, form);
@@ -90,6 +92,27 @@ function EditModal({ user, onClose, onSaved }) {
               onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
               placeholder="(11) 99999-9999"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Nova senha <span className="text-gray-400 font-normal">(deixe em branco para não alterar)</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showPass ? 'text' : 'password'}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                placeholder="Mínimo 6 caracteres"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(s => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
           </div>
         </div>
         <div className="flex gap-3 px-6 pb-6">
