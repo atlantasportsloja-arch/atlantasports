@@ -16,8 +16,10 @@ model User {
   password  String
   role      Role     @default(CUSTOMER)
   phone     String?
-  blocked   Boolean  @default(false)
-  createdAt DateTime @default(now())
+  blocked           Boolean   @default(false)
+  resetToken        String?   @unique
+  resetTokenExpires DateTime?
+  createdAt         DateTime  @default(now())
   updatedAt DateTime @updatedAt
 
   orders       Order[]

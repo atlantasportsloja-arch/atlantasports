@@ -1,11 +1,12 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const prisma = require('../lib/prisma');
 const authMiddleware = require('../middleware/auth');
 const { sendMail } = require('../lib/mailer');
-const { welcomeHtml } = require('../lib/emails');
+const { welcomeHtml, resetPasswordHtml } = require('../lib/emails');
 
 const router = express.Router();
 
@@ -116,6 +117,57 @@ router.put('/me', authMiddleware, [
     res.json(updated);
   } catch {
     res.status(500).json({ error: 'Erro ao atualizar perfil' });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'E-mail obrigatório' });
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.json({ ok: true }); // não revelar se e-mail existe
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetToken: token, resetTokenExpires: expires },
+    });
+
+    sendMail({
+      to: email,
+      subject: 'Redefinição de senha — Atlanta Sports',
+      html: resetPasswordHtml({ userName: user.name.split(' ')[0], token }),
+    }).catch(err => console.error('[ResetMail]', err.message));
+
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Erro ao processar solicitação' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Dados inválidos' });
+  if (password.length < 6) return res.status(400).json({ error: 'Senha mínimo 6 caracteres' });
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: { resetToken: token, resetTokenExpires: { gt: new Date() } },
+    });
+    if (!user) return res.status(400).json({ error: 'Link inválido ou expirado' });
+
+    const hashed = await bcrypt.hash(password, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed, resetToken: null, resetTokenExpires: null },
+    });
+
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Erro ao redefinir senha' });
   }
 });
 

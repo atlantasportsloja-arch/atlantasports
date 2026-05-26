@@ -303,4 +303,28 @@ function newOrderAdminHtml({ order, userName, userEmail, userPhone }) {
   `);
 }
 
-module.exports = { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml, welcomeHtml, newOrderAdminHtml };
+function resetPasswordHtml({ userName, token }) {
+  const link = `${FRONTEND_URL}/redefinir-senha/${token}`;
+  return wrap(`
+    <h2 style="margin:0 0 4px;color:#111;font-size:20px;">Redefinição de senha 🔑</h2>
+    <p style="color:#6b7280;margin:0 0 24px;">Olá, ${userName}! Recebemos uma solicitação para redefinir a senha da sua conta.</p>
+
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:20px;margin-bottom:24px;">
+      <p style="margin:0;color:#92400e;font-size:14px;">⚠️ Este link é válido por <strong>1 hora</strong>. Se você não solicitou a redefinição, ignore este e-mail.</p>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="${link}"
+         style="display:inline-block;background:#f97316;color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">
+        Redefinir minha senha →
+      </a>
+    </div>
+
+    <p style="color:#9ca3af;font-size:12px;margin-top:24px;text-align:center;">
+      Se o botão não funcionar, copie e cole este link no navegador:<br/>
+      <a href="${link}" style="color:#f97316;word-break:break-all;">${link}</a>
+    </p>
+  `);
+}
+
+module.exports = { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml, welcomeHtml, newOrderAdminHtml, resetPasswordHtml };
