@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, X, ShoppingBag, ChevronDown, ChevronRight, Pencil, Eye, EyeOff } from 'lucide-react';
+import { Search, X, ShoppingBag, ChevronDown, ChevronRight, Pencil, Eye, EyeOff, Ban, Trash2, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -167,6 +167,25 @@ export default function AdminUsuarios() {
     } catch { toast.error('Erro ao atualizar'); }
   }
 
+  async function toggleBlock(id, blocked) {
+    const acao = blocked ? 'desbloquear' : 'bloquear';
+    if (!confirm(`Deseja ${acao} este usuário?`)) return;
+    try {
+      await api.put(`/admin/users/${id}/block`);
+      toast.success(blocked ? 'Usuário desbloqueado' : 'Usuário bloqueado');
+      load();
+    } catch (e) { toast.error(e.response?.data?.error || 'Erro ao atualizar'); }
+  }
+
+  async function deleteUser(id, name) {
+    if (!confirm(`Excluir permanentemente "${name}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await api.delete(`/admin/users/${id}`);
+      toast.success('Usuário excluído');
+      load();
+    } catch (e) { toast.error(e.response?.data?.error || 'Erro ao excluir'); }
+  }
+
   return (
     <div className="space-y-6">
       {editing && <EditModal user={editing} onClose={() => setEditing(null)} onSaved={load} />}
@@ -200,7 +219,7 @@ export default function AdminUsuarios() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
-                <tr>{['', 'Nome', 'E-mail', 'Telefone', 'Pedidos', 'Função', 'Cadastro', 'Ações'].map(h => (
+                <tr>{['', 'Nome', 'E-mail', 'Telefone', 'Pedidos', 'Função', 'Status', 'Cadastro', 'Ações'].map(h => (
                   <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">{h}</th>
                 ))}</tr>
               </thead>
@@ -229,29 +248,37 @@ export default function AdminUsuarios() {
                           {u.role}
                         </span>
                       </td>
+                      <td className="px-4 py-3">
+                        {u.blocked
+                          ? <span className="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-600">Bloqueado</span>
+                          : <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-600">Ativo</span>
+                        }
+                      </td>
                       <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
                         {new Date(u.createdAt).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => setEditing(u)}
-                            className="text-xs text-gray-500 hover:text-gray-800 flex items-center gap-1"
-                          >
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <button onClick={() => setEditing(u)} className="text-xs text-gray-500 hover:text-gray-800 flex items-center gap-1">
                             <Pencil size={12} /> Editar
                           </button>
-                          <button
-                            onClick={() => toggleRole(u.id, u.role)}
-                            className="text-xs text-blue-500 hover:underline whitespace-nowrap"
-                          >
+                          <button onClick={() => toggleRole(u.id, u.role)} className="text-xs text-blue-500 hover:underline whitespace-nowrap">
                             {u.role === 'ADMIN' ? 'Remover admin' : 'Tornar admin'}
                           </button>
+                          <button onClick={() => toggleBlock(u.id, u.blocked)} className={`text-xs flex items-center gap-1 whitespace-nowrap ${u.blocked ? 'text-green-600 hover:text-green-800' : 'text-orange-500 hover:text-orange-700'}`}>
+                            {u.blocked ? <><ShieldCheck size={12} /> Desbloquear</> : <><Ban size={12} /> Bloquear</>}
+                          </button>
+                          {u.role !== 'ADMIN' && (
+                            <button onClick={() => deleteUser(u.id, u.name)} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
+                              <Trash2 size={12} /> Excluir
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
                     {expanded === u.id && (
                       <tr key={`${u.id}-orders`}>
-                        <td colSpan={8} className="px-6 py-4 bg-gray-50 border-b">
+                        <td colSpan={9} className="px-6 py-4 bg-gray-50 border-b">
                           <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Pedidos de {u.name.split(' ')[0]}</p>
                           <UserOrders userId={u.id} />
                         </td>

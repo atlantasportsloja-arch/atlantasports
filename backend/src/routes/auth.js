@@ -59,6 +59,7 @@ router.post('/login', [
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Credenciais inválidas' });
+    if (user.blocked) return res.status(403).json({ error: 'Conta bloqueada. Entre em contato com o suporte.' });
 
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',

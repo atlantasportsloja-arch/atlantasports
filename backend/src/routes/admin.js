@@ -147,7 +147,7 @@ router.get('/users', async (req, res) => {
         take: Number(limit),
         where,
         select: {
-          id: true, name: true, email: true, role: true, phone: true, createdAt: true,
+          id: true, name: true, email: true, role: true, phone: true, blocked: true, createdAt: true,
           _count: { select: { orders: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -182,6 +182,40 @@ router.put('/users/:id', async (req, res) => {
   } catch (e) {
     if (e.code === 'P2002') return res.status(400).json({ error: 'E-mail já cadastrado' });
     res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+});
+
+router.put('/users/:id/block', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: { blocked: true, role: true } });
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+    if (user.role === 'ADMIN') return res.status(400).json({ error: 'Não é possível bloquear um administrador' });
+
+    const updated = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { blocked: !user.blocked },
+      select: { id: true, blocked: true },
+    });
+    res.json(updated);
+  } catch {
+    res.status(500).json({ error: 'Erro ao bloquear usuário' });
+  }
+});
+
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: { role: true, _count: { select: { orders: true } } },
+    });
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+    if (user.role === 'ADMIN') return res.status(400).json({ error: 'Não é possível excluir um administrador' });
+    if (user._count.orders > 0) return res.status(400).json({ error: 'Usuário possui pedidos e não pode ser excluído. Use o bloqueio.' });
+
+    await prisma.user.delete({ where: { id: req.params.id } });
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Erro ao excluir usuário' });
   }
 });
 
