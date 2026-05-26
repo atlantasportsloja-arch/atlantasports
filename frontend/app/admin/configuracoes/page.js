@@ -42,7 +42,7 @@ const DEFAULT_ENCOMENDA = '⚠️ Este produto é feito sob encomenda. O prazo d
 
 const DEFAULT = {
   storeName: 'Atlanta Sports', storeSlogan: 'Veste quem joga de verdade',
-  heroBadge: 'Nova coleção 2025', heroTitle: 'Veste quem joga de verdade',
+  heroBadge: '', heroTitle: 'Veste quem joga de verdade',
   heroSubtitle: '',
   heroBtnPrimary: 'Ver coleção', heroBtnPrimaryLink: '/categoria/camisas',
   heroBtnSecondary: 'Ver tênis', heroBtnSecondaryLink: '/categoria/tenis',
