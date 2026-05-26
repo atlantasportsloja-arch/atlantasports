@@ -43,7 +43,7 @@ const DEFAULT_ENCOMENDA = '⚠️ Este produto é feito sob encomenda. O prazo d
 const DEFAULT = {
   storeName: 'Atlanta Sports', storeSlogan: 'Veste quem joga de verdade',
   heroBadge: 'Nova coleção 2025', heroTitle: 'Veste quem joga de verdade',
-  heroSubtitle: 'Camisas oficiais, tênis de performance e acessórios fitness. Frete grátis acima de R$ 299.',
+  heroSubtitle: '',
   heroBtnPrimary: 'Ver coleção', heroBtnPrimaryLink: '/categoria/camisas',
   heroBtnSecondary: 'Ver tênis', heroBtnSecondaryLink: '/categoria/tenis',
   benefit1: '🚚 Frete Grátis\nacima R$ 299,00', benefit2: '🔒 Compra\n100% Segura',

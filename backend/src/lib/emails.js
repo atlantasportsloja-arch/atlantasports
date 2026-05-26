@@ -229,9 +229,7 @@ function welcomeHtml({ userName }) {
     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:20px;margin-bottom:24px;">
       <p style="margin:0 0 12px;color:#111;font-weight:700;">O que você encontra na nossa loja:</p>
       <ul style="margin:0;padding-left:20px;color:#6b7280;font-size:14px;line-height:2;">
-        <li>👕 Camisas oficiais dos seus times favoritos</li>
-        <li>👟 Tênis esportivos de alta performance</li>
-        <li>💪 Acessórios fitness e treino</li>
+        <li>👕 Confira nossos produtos</li>
         <li>🚚 Frete grátis acima de R$ 299</li>
         <li>⚡ Desconto especial no pagamento via PIX</li>
       </ul>
