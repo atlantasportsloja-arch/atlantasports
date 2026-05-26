@@ -41,8 +41,8 @@ const DEFAULT_TERMS = `<h2>1. Aceitação dos Termos</h2>
 const DEFAULT_ENCOMENDA = '⚠️ Este produto é feito sob encomenda. O prazo de produção e entrega pode ser de até 45 dias.';
 
 const DEFAULT = {
-  storeName: 'Atlanta Sports', storeSlogan: 'Veste quem joga de verdade',
-  heroBadge: '', heroTitle: 'Veste quem joga de verdade',
+  storeName: 'Atlanta Sports', storeSlogan: '',
+  heroBadge: '', heroTitle: '',
   heroSubtitle: '',
   heroBtnPrimary: 'Ver coleção', heroBtnPrimaryLink: '/categoria/camisas',
   heroBtnSecondary: 'Ver tênis', heroBtnSecondaryLink: '/categoria/tenis',

@@ -4,7 +4,7 @@ import BannerSlider from '@/components/BannerSlider';
 
 const DEFAULT_CONFIG = {
   storeName: 'Atlanta Sports', heroBadge: '',
-  heroTitle: 'Veste quem joga de verdade', heroSubtitle: '',
+  heroTitle: '', heroSubtitle: '',
   benefit1: '🚚 Frete Grátis\nacima R$ 299,00',
   benefit2: '🔒 Compra\n100% Segura',
   benefit3: '📱 Atendimento\nDiferenciado',
