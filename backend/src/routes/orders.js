@@ -135,6 +135,12 @@ router.post('/', authMiddleware, async (req, res) => {
       include: { items: { include: { product: true } } },
     });
 
+    // Resetar flag de carrinho abandonado para não enviar e-mail após compra
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { abandonedCartEmailSentAt: null },
+    }).catch(() => {});
+
     // Atribuir número sequencial com advisory lock para evitar duplicatas em pedidos simultâneos
     let orderNumber;
     await prisma.$transaction(async (tx) => {

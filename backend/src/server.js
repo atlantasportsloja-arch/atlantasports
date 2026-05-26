@@ -4,6 +4,7 @@ const app = require('./app');
 const prisma = require('./lib/prisma');
 const { startReviewReminderJob } = require('./jobs/reviewReminder');
 const { startBackupJob } = require('./jobs/backupJob');
+const { startAbandonedCartJob } = require('./jobs/abandonedCartJob');
 
 const PORT = process.env.PORT || 3001;
 
@@ -91,6 +92,7 @@ migrate().then(() => {
     console.log(`Atlanta Sports API rodando na porta ${PORT}`);
     startReviewReminderJob();
     startBackupJob();
+    startAbandonedCartJob();
   });
 
   // Graceful shutdown: Railway envia SIGTERM ao reiniciar/deploys

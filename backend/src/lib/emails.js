@@ -303,6 +303,42 @@ function newOrderAdminHtml({ order, userName, userEmail, userPhone }) {
   `);
 }
 
+function abandonedCartHtml({ userName, items, cartUrl }) {
+  const itemCards = items.map(item => {
+    const price = item.variant?.price ?? item.product.price;
+    const img = item.product.images?.[0];
+    const size = item.variant?.size ? `<span style="font-size:12px;color:#6b7280;">Tamanho: ${item.variant.size}</span>` : '';
+    return `
+      <div style="display:flex;align-items:center;gap:16px;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px;">
+        ${img ? `<img src="${img}" width="64" height="64" style="border-radius:8px;object-fit:cover;flex-shrink:0;" />` : ''}
+        <div style="flex:1;min-width:0;">
+          <p style="margin:0 0 2px;font-weight:700;color:#111;font-size:14px;">${item.product.name}</p>
+          ${size}
+          <p style="margin:4px 0 0;color:#f97316;font-weight:700;">R$ ${Number(price).toFixed(2).replace('.', ',')} × ${item.quantity}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return wrap(`
+    <h2 style="margin:0 0 4px;color:#111;font-size:20px;">Você esqueceu algo! 🛒</h2>
+    <p style="color:#6b7280;margin:0 0 24px;">Olá, ${userName}! Você deixou itens no carrinho. Eles ainda estão te esperando:</p>
+
+    ${itemCards}
+
+    <div style="text-align:center;margin-top:24px;">
+      <a href="${cartUrl}"
+         style="display:inline-block;background:#f97316;color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">
+        Finalizar compra →
+      </a>
+    </div>
+
+    <p style="color:#9ca3af;font-size:12px;margin-top:24px;text-align:center;">
+      Não quer mais receber esses lembretes? Basta finalizar ou esvaziar seu carrinho.
+    </p>
+  `);
+}
+
 function resetPasswordHtml({ userName, token }) {
   const link = `${FRONTEND_URL}/redefinir-senha/${token}`;
   return wrap(`
@@ -327,4 +363,4 @@ function resetPasswordHtml({ userName, token }) {
   `);
 }
 
-module.exports = { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml, welcomeHtml, newOrderAdminHtml, resetPasswordHtml };
+module.exports = { orderConfirmationHtml, orderShippedHtml, orderCancelledHtml, orderDeliveredHtml, welcomeHtml, newOrderAdminHtml, resetPasswordHtml, abandonedCartHtml };
