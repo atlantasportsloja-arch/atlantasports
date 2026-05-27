@@ -91,9 +91,22 @@ async function migrate() {
   `);
 }
 
+// Pinga o banco a cada 4 minutos para evitar que o Neon suspenda a conexão
+function startDbKeepAlive() {
+  setInterval(async () => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (e) {
+      console.warn('[KeepAlive] Falha ao pingar banco:', e.message);
+    }
+  }, 4 * 60 * 1000);
+  console.log('[KeepAlive] Ping ao banco agendado a cada 4 minutos.');
+}
+
 migrate().then(() => {
   const server = app.listen(PORT, () => {
     console.log(`Atlanta Sports API rodando na porta ${PORT}`);
+    startDbKeepAlive();
     startReviewReminderJob();
     startBackupJob();
     startAbandonedCartJob();
