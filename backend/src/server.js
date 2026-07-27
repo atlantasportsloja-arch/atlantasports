@@ -103,45 +103,54 @@ function startDbKeepAlive() {
   console.log('[KeepAlive] Ping ao banco agendado a cada 4 minutos.');
 }
 
-migrate().then(() => {
-  const server = app.listen(PORT, () => {
-    console.log(`Atlanta Sports API rodando na porta ${PORT}`);
+// Sobe o servidor HTTP imediatamente para o healthcheck do Railway responder
+// mesmo se o Neon estiver "frio" e as migrações demorarem. As migrações e os
+// jobs em background rodam em seguida, sem bloquear o /health.
+const server = app.listen(PORT, () => {
+  console.log(`Atlanta Sports API rodando na porta ${PORT}`);
+});
+
+migrate()
+  .then(() => {
+    console.log('[Migrate] Migrações aplicadas com sucesso.');
     startDbKeepAlive();
     startReviewReminderJob();
     startBackupJob();
     startAbandonedCartJob();
+  })
+  .catch((e) => {
+    console.error('[Migrate] Erro ao rodar migrações:', e.message);
   });
 
-  // Graceful shutdown: Railway envia SIGTERM ao reiniciar/deploys
-  // Aguarda requisições ativas terminarem antes de encerrar
-  function shutdown(signal) {
-    console.log(`[Shutdown] ${signal} recebido. Encerrando servidor...`);
-    server.close(async () => {
-      try {
-        await prisma.$disconnect();
-        console.log('[Shutdown] Conexão DB encerrada. Processo finalizado.');
-      } catch (e) {
-        console.error('[Shutdown] Erro ao desconectar DB:', e.message);
-      }
-      process.exit(0);
-    });
-
-    // Força encerramento após 15s se alguma requisição travar
-    setTimeout(() => {
-      console.error('[Shutdown] Timeout forçado após 15s.');
-      process.exit(1);
-    }, 15000);
-  }
-
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
-
-  process.on('uncaughtException', (err) => {
-    console.error('[UncaughtException]', err);
-    shutdown('uncaughtException');
+// Graceful shutdown: Railway envia SIGTERM ao reiniciar/deploys
+// Aguarda requisições ativas terminarem antes de encerrar
+function shutdown(signal) {
+  console.log(`[Shutdown] ${signal} recebido. Encerrando servidor...`);
+  server.close(async () => {
+    try {
+      await prisma.$disconnect();
+      console.log('[Shutdown] Conexão DB encerrada. Processo finalizado.');
+    } catch (e) {
+      console.error('[Shutdown] Erro ao desconectar DB:', e.message);
+    }
+    process.exit(0);
   });
 
-  process.on('unhandledRejection', (reason) => {
-    console.error('[UnhandledRejection]', reason);
-  });
+  // Força encerramento após 15s se alguma requisição travar
+  setTimeout(() => {
+    console.error('[Shutdown] Timeout forçado após 15s.');
+    process.exit(1);
+  }, 15000);
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+process.on('uncaughtException', (err) => {
+  console.error('[UncaughtException]', err);
+  shutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[UnhandledRejection]', reason);
 });
