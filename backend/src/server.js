@@ -91,32 +91,6 @@ async function migrate() {
   `);
 }
 
-// Pinga o banco a cada 4 minutos para evitar que o Neon suspenda a conexão.
-// Se o pool de conexões travar (ex: Neon derrubou o socket e o driver não
-// reconecta sozinho), o /health continua respondendo OK pois não consulta o
-// banco — então o Railway nunca percebe e nunca reinicia. Depois de falhas
-// consecutivas, encerramos o processo para o restartPolicy "ALWAYS" subir
-// um processo novo com um pool limpo.
-let dbKeepAliveFailures = 0;
-const DB_KEEPALIVE_MAX_FAILURES = 3;
-
-function startDbKeepAlive() {
-  setInterval(async () => {
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      dbKeepAliveFailures = 0;
-    } catch (e) {
-      dbKeepAliveFailures++;
-      console.warn(`[KeepAlive] Falha ao pingar banco (${dbKeepAliveFailures}/${DB_KEEPALIVE_MAX_FAILURES}):`, e.message);
-      if (dbKeepAliveFailures >= DB_KEEPALIVE_MAX_FAILURES) {
-        console.error('[KeepAlive] Banco inacessível repetidamente. Reiniciando processo.');
-        process.exit(1);
-      }
-    }
-  }, 4 * 60 * 1000);
-  console.log('[KeepAlive] Ping ao banco agendado a cada 4 minutos.');
-}
-
 // Sobe o servidor HTTP imediatamente para o healthcheck do Railway responder
 // mesmo se o Neon estiver "frio" e as migrações demorarem. As migrações e os
 // jobs em background rodam em seguida, sem bloquear o /health.
@@ -127,7 +101,6 @@ const server = app.listen(PORT, () => {
 migrate()
   .then(() => {
     console.log('[Migrate] Migrações aplicadas com sucesso.');
-    startDbKeepAlive();
     startReviewReminderJob();
     startBackupJob();
     startAbandonedCartJob();
