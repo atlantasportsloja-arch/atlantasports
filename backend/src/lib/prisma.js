@@ -14,6 +14,13 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
+// Sem esse listener, um erro assíncrono num client ocioso do pool (ex: Neon
+// derrubando o socket) vira um evento 'error' sem handler e derruba o processo
+// de forma abrupta e silenciosa.
+pool.on('error', (err) => {
+  console.error('[DB Pool] Erro em conexão ociosa:', err.message);
+});
+
 const adapter = new PrismaNeon(pool);
 const prisma = new PrismaClient({ adapter });
 
