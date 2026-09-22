@@ -21,11 +21,14 @@ const returnsRoutes = require('./routes/returns');
 
 const app = express();
 
+// Necessario porque o Nginx do VPS fica na frente como proxy reverso: sem
+// isso, express-rate-limit rejeita o header X-Forwarded-For que o Nginx
+// injeta (ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
+app.set('trust proxy', 1);
+
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',
-  'https://atlantasports.vercel.app',
-  'https://atlanta-sports-loja.vercel.app',
   'https://www.atlantasports.com.br',
   'https://atlantasports.com.br',
 ].filter(Boolean);
