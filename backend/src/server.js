@@ -91,9 +91,9 @@ async function migrate() {
   `);
 }
 
-// Sobe o servidor HTTP imediatamente para o healthcheck do Railway responder
-// mesmo se o Neon estiver "frio" e as migrações demorarem. As migrações e os
-// jobs em background rodam em seguida, sem bloquear o /health.
+// Sobe o servidor HTTP imediatamente para o /health responder mesmo se as
+// migrações demorarem. As migrações e os jobs em background rodam em
+// seguida, sem bloquear o /health.
 const server = app.listen(PORT, () => {
   console.log(`Atlanta Sports API rodando na porta ${PORT}`);
 });
@@ -109,8 +109,7 @@ migrate()
     console.error('[Migrate] Erro ao rodar migrações:', e.message);
   });
 
-// Graceful shutdown: Railway envia SIGTERM ao reiniciar/deploys
-// Aguarda requisições ativas terminarem antes de encerrar
+// Graceful shutdown: aguarda requisições ativas terminarem antes de encerrar
 function shutdown(signal) {
   console.log(`[Shutdown] ${signal} recebido. Encerrando servidor...`);
   server.close(async () => {

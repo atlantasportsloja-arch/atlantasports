@@ -1,14 +1,8 @@
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
-const { PrismaNeon } = require('@prisma/adapter-neon');
-const { Pool, neonConfig } = require('@neondatabase/serverless');
-const ws = require('ws');
 const bcrypt = require('bcrypt');
 
-neonConfig.webSocketConstructor = ws;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaNeon(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   console.log('Iniciando seed...');
