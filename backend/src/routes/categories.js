@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 
   try {
     const categories = await prisma.category.findMany({
-      include: { _count: { select: { products: true } } },
+      include: { _count: { select: { products: { where: { active: true } } } } },
     });
     cache.set(CACHE_KEY, categories, CACHE_TTL);
     res.json(categories);
