@@ -187,42 +187,42 @@ export default function CheckoutPage() {
 
         <h1 className="text-lg md:text-2xl font-black mb-3 md:mb-6 text-center">Revise seu pedido</h1>
 
-        <div className="space-y-2 md:space-y-4">
+        <div className="space-y-1.5 md:space-y-4">
           {/* Itens */}
-          <div className="card p-3 md:p-5">
-            <h2 className="font-black mb-3 text-sm text-gray-500 uppercase tracking-wide">Itens ({items.length})</h2>
-            <div className="space-y-3">
+          <div className="card p-2 md:p-5">
+            <h2 className="font-black mb-1.5 md:mb-3 text-xs md:text-sm text-gray-500 uppercase tracking-wide">Itens ({items.length})</h2>
+            <div className="space-y-1.5 md:space-y-3">
               {items.map(item => {
                 const base = item.variant?.price ?? item.product.price;
                 const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
                             + (item.personalization?.number ? item.product.personalizationNumberPrice || 0 : 0);
                 return (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                  <div key={item.id} className="flex items-center gap-1.5 md:gap-3">
+                    <div className="relative w-9 h-9 md:w-12 md:h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                       {item.product?.images?.[0]
                         ? <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center text-xl">👕</div>}
+                        : <div className="w-full h-full flex items-center justify-center text-sm md:text-xl">👕</div>}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{item.product.name}</p>
-                      {item.variant?.size && <p className="text-xs text-gray-400">Tamanho: {item.variant.size}</p>}
-                      <p className="text-xs text-gray-400">Qtd: {item.quantity}</p>
+                      <p className="text-[10px] md:text-sm font-semibold truncate">{item.product.name}</p>
+                      {item.variant?.size && <p className="text-[9px] md:text-xs text-gray-400">Tamanho: {item.variant.size}</p>}
+                      <p className="text-[9px] md:text-xs text-gray-400">Qtd: {item.quantity}</p>
                       {(item.personalization?.name || item.personalization?.number) && (
-                        <div className="flex flex-wrap gap-1 mt-1">
+                        <div className="flex flex-wrap gap-1 mt-0.5 md:mt-1">
                           {item.personalization.name && (
-                            <span className="text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                            <span className="text-[9px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1 py-0.5 rounded">
                               ✏️ {item.personalization.name}
                             </span>
                           )}
                           {item.personalization.number && (
-                            <span className="text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                            <span className="text-[9px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1 py-0.5 rounded">
                               🔢 {item.personalization.number}
                             </span>
                           )}
                         </div>
                       )}
                     </div>
-                    <p className="font-bold text-sm shrink-0">{fmt((base + extra) * item.quantity)}</p>
+                    <p className="font-bold text-[10px] md:text-sm shrink-0">{fmt((base + extra) * item.quantity)}</p>
                   </div>
                 );
               })}
@@ -230,30 +230,30 @@ export default function CheckoutPage() {
           </div>
 
           {/* Endereço */}
-          <div className="card p-3 md:p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <MapPin size={16} className="text-primary-500" />
-              <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide">Entrega</h2>
-              <button onClick={() => setStep(1)} className="ml-auto text-xs text-primary-500 hover:underline">Editar</button>
+          <div className="card p-2 md:p-5">
+            <div className="flex items-center gap-2 mb-1.5 md:mb-2">
+              <MapPin size={14} className="text-primary-500 md:w-4 md:h-4" />
+              <h2 className="font-black text-xs md:text-sm text-gray-500 uppercase tracking-wide">Entrega</h2>
+              <button onClick={() => setStep(1)} className="ml-auto text-[10px] md:text-xs text-primary-500 hover:underline">Editar</button>
             </div>
-            <p className="text-sm text-gray-700">
+            <p className="text-[11px] md:text-sm text-gray-700">
               {address.street}, {address.number}{address.complement ? ` — ${address.complement}` : ''}
             </p>
-            <p className="text-sm text-gray-500">{address.neighborhood} · {address.city}/{address.state} · CEP {address.zip}</p>
+            <p className="text-[11px] md:text-sm text-gray-500">{address.neighborhood} · {address.city}/{address.state} · CEP {address.zip}</p>
             {freteSelecionado && !isFreeShipping && (
-              <p className="text-sm text-primary-600 font-semibold mt-1">
+              <p className="text-[11px] md:text-sm text-primary-600 font-semibold mt-1">
                 {freteSelecionado.servico} — {freteSelecionado.prazo} · {fmt(freteSelecionado.preco)}
               </p>
             )}
-            {isFreeShipping && <p className="text-sm text-green-600 font-semibold mt-1">🎉 Frete grátis</p>}
+            {isFreeShipping && <p className="text-[11px] md:text-sm text-green-600 font-semibold mt-1">🎉 Frete grátis</p>}
           </div>
 
           {/* Pagamento */}
-          <div className="card p-3 md:p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <CreditCard size={16} className="text-primary-500" />
-              <h2 className="font-black text-sm text-gray-500 uppercase tracking-wide">Pagamento</h2>
-              <button onClick={() => setStep(1)} className="ml-auto text-xs text-primary-500 hover:underline">Editar</button>
+          <div className="card p-2 md:p-5">
+            <div className="flex items-center gap-2 mb-1.5 md:mb-2">
+              <CreditCard size={14} className="text-primary-500 md:w-4 md:h-4" />
+              <h2 className="font-black text-xs md:text-sm text-gray-500 uppercase tracking-wide">Pagamento</h2>
+              <button onClick={() => setStep(1)} className="ml-auto text-[10px] md:text-xs text-primary-500 hover:underline">Editar</button>
             </div>
             {paymentMethod === 'pix' ? (
               <div className="space-y-3">
@@ -325,7 +325,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Totais */}
-          <div className="card p-3 md:p-5 space-y-1.5 md:space-y-2 text-sm">
+          <div className="card p-2 md:p-5 space-y-1 md:space-y-2 text-[11px] md:text-sm">
             <div className="flex justify-between text-gray-500">
               <span>Subtotal</span><span>{fmt(total)}</span>
             </div>
@@ -345,18 +345,18 @@ export default function CheckoutPage() {
                 {isFreeShipping ? 'Grátis' : shippingCost !== null ? fmt(shippingCost) : '—'}
               </span>
             </div>
-            <div className="border-t pt-2 flex justify-between font-black text-base md:text-xl">
+            <div className="border-t pt-1.5 md:pt-2 flex justify-between font-black text-sm md:text-xl">
               <span>Total</span>
               <span className="text-primary-600">{fmt(finalTotal)}</span>
             </div>
           </div>
 
           {/* Botões */}
-          <div className="flex flex-col gap-2 md:gap-3 pt-1 md:pt-2">
+          <div className="flex flex-col gap-1.5 md:gap-3 pt-1 md:pt-2">
             <button
               onClick={confirmOrder}
               disabled={loading}
-              className={`w-full flex items-center justify-center gap-2 text-sm md:text-base py-3 md:py-4 font-bold rounded-xl text-white transition-colors disabled:opacity-60 ${
+              className={`w-full flex items-center justify-center gap-2 text-xs md:text-base py-2.5 md:py-4 font-bold rounded-xl text-white transition-colors disabled:opacity-60 ${
                 paymentMethod === 'pix' ? 'bg-green-500 hover:bg-green-600' : 'bg-green-600 hover:bg-green-700'
               }`}
             >
@@ -368,7 +368,7 @@ export default function CheckoutPage() {
                 <>{WHATSAPP_ICON} Confirmar pedido</>
               )}
             </button>
-            <button onClick={() => setStep(1)} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-4 py-2 md:py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm md:text-base">
+            <button onClick={() => setStep(1)} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs md:text-base">
               <ArrowLeft size={15} /> Voltar e editar
             </button>
           </div>
