@@ -70,46 +70,46 @@ export default function CarrinhoPage() {
   const finalTotal = total - discount;
 
   return (
-    <div className="max-w-7xl mx-auto px-2 md:px-4 py-3 md:py-8">
-      <h1 className="text-base md:text-2xl font-black mb-3 md:mb-8">
+    <div className="max-w-7xl mx-auto px-2 md:px-4 py-2 md:py-8">
+      <h1 className="text-sm md:text-2xl font-black mb-2 md:mb-8">
         Carrinho ({items.length} {items.length === 1 ? 'item' : 'itens'})
       </h1>
 
-      <div className="grid md:grid-cols-3 gap-2 md:gap-8">
+      <div className="grid md:grid-cols-3 gap-1.5 md:gap-8">
 
         {/* ITENS */}
-        <div className="md:col-span-2 space-y-1.5 md:space-y-4">
+        <div className="md:col-span-2 space-y-1 md:space-y-4">
           {items.map(item => (
-            <div key={item.id} className="card p-2 md:p-4 flex gap-2 md:gap-4">
-              <div className="relative w-14 h-14 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+            <div key={item.id} className="card p-1.5 md:p-4 flex gap-1.5 md:gap-4">
+              <div className="relative w-11 h-11 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                 {item.product.images?.[0] ? (
                   <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xl">👕</div>
+                  <div className="w-full h-full flex items-center justify-center text-base">👕</div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-xs md:text-base leading-tight truncate">{item.product.name}</p>
+                <p className="font-semibold text-[11px] md:text-base leading-tight truncate">{item.product.name}</p>
                 {item.variant?.size && (
-                  <span className="inline-block text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium mt-0.5">
+                  <span className="inline-block text-[9px] bg-gray-100 text-gray-600 px-1 py-0.5 rounded font-medium mt-0.5">
                     {item.variant.size}
                   </span>
                 )}
                 {(item.personalization?.name || item.personalization?.number) && (
-                  <div className="flex flex-wrap gap-1 mt-1">
+                  <div className="flex flex-wrap gap-1 mt-0.5">
                     {item.personalization.name && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                      <span className="inline-flex items-center gap-0.5 text-[9px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1 py-0.5 rounded">
                         ✏️ {item.personalization.name}
                       </span>
                     )}
                     {item.personalization.number && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                      <span className="inline-flex items-center gap-0.5 text-[9px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1 py-0.5 rounded">
                         🔢 {item.personalization.number}
                       </span>
                     )}
                   </div>
                 )}
-                <p className="text-primary-500 font-bold text-xs md:text-sm mt-0.5">
+                <p className="text-primary-500 font-bold text-[11px] md:text-sm mt-0.5">
                   R$ {(() => {
                     const base = item.variant?.price ?? item.product.price;
                     const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
@@ -117,19 +117,19 @@ export default function CarrinhoPage() {
                     return (base + extra).toFixed(2).replace('.', ',');
                   })()}
                 </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex items-center border border-gray-300 rounded overflow-hidden text-xs">
-                    <button className="px-1.5 py-0.5 hover:bg-gray-100 font-bold" onClick={() => updateQty(item.id, Math.max(1, item.quantity - 1))}>−</button>
-                    <span className="px-2 border-x border-gray-300">{item.quantity}</span>
-                    <button className="px-1.5 py-0.5 hover:bg-gray-100 font-bold" onClick={() => updateQty(item.id, item.quantity + 1)}>+</button>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="flex items-center border border-gray-300 rounded overflow-hidden text-[10px]">
+                    <button className="px-1 py-0.5 hover:bg-gray-100 font-bold" onClick={() => updateQty(item.id, Math.max(1, item.quantity - 1))}>−</button>
+                    <span className="px-1.5 border-x border-gray-300">{item.quantity}</span>
+                    <button className="px-1 py-0.5 hover:bg-gray-100 font-bold" onClick={() => updateQty(item.id, item.quantity + 1)}>+</button>
                   </div>
                   <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600">
-                    <Trash2 size={13} />
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </div>
               <div className="text-right flex-shrink-0 flex flex-col justify-between">
-                <p className="font-black text-xs md:text-base">
+                <p className="font-black text-[11px] md:text-base">
                   R$ {(() => {
                     const base = item.variant?.price ?? item.product.price;
                     const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
@@ -143,29 +143,29 @@ export default function CarrinhoPage() {
         </div>
 
         {/* RESUMO + CUPOM */}
-        <div className="space-y-2 md:space-y-4">
+        <div className="space-y-1.5 md:space-y-4">
 
           {/* Cupom */}
-          <div className="card p-2.5 md:p-4">
-            <p className="font-semibold text-xs md:text-sm mb-1.5">Cupom de desconto</p>
+          <div className="card p-2 md:p-4">
+            <p className="font-semibold text-[11px] md:text-sm mb-1">Cupom de desconto</p>
             <div className="flex gap-1.5">
               <input
                 value={coupon}
                 onChange={e => setCoupon(e.target.value.toUpperCase())}
                 placeholder="CODIGO"
-                className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="flex-1 border border-gray-300 rounded-lg px-2 py-1 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
-              <button onClick={validateCoupon} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-3 py-1.5 rounded-lg text-xs md:text-sm transition-colors">
+              <button onClick={validateCoupon} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-2.5 py-1 rounded-lg text-[11px] md:text-sm transition-colors">
                 Aplicar
               </button>
             </div>
           </div>
 
           {/* Resumo */}
-          <div className="card p-2.5 md:p-6 space-y-2 md:space-y-4">
-            <h2 className="font-black text-sm md:text-lg">Resumo do pedido</h2>
+          <div className="card p-2 md:p-6 space-y-1.5 md:space-y-4">
+            <h2 className="font-black text-xs md:text-lg">Resumo do pedido</h2>
 
-            <div className="space-y-1.5 text-xs md:text-sm">
+            <div className="space-y-1 text-[11px] md:text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Subtotal</span>
                 <span>R$ {total.toFixed(2).replace('.', ',')}</span>
@@ -182,19 +182,19 @@ export default function CarrinhoPage() {
               </div>
             </div>
 
-            <div className="border-t pt-2 flex justify-between font-black text-sm md:text-lg">
+            <div className="border-t pt-1.5 flex justify-between font-black text-xs md:text-lg">
               <span>Total</span>
               <span>R$ {finalTotal.toFixed(2).replace('.', ',')}</span>
             </div>
 
             {/* PIX */}
             {config?.pixKey && config?.pixDiscount > 0 && (
-              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-2 py-1.5">
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-2 py-1">
                 <div className="flex items-center gap-1">
-                  <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">PIX</span>
-                  <span className="text-green-700 font-black text-xs md:text-sm">R$ {fmt(pixPrice(finalTotal, config.pixDiscount))}</span>
+                  <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PIX</span>
+                  <span className="text-green-700 font-black text-[11px] md:text-sm">R$ {fmt(pixPrice(finalTotal, config.pixDiscount))}</span>
                 </div>
-                <span className="text-green-600 text-[10px] font-semibold">{config.pixDiscount}% off</span>
+                <span className="text-green-600 text-[9px] font-semibold">{config.pixDiscount}% off</span>
               </div>
             )}
 
@@ -208,7 +208,7 @@ export default function CarrinhoPage() {
                   <button
                     type="button"
                     onClick={() => setShowInstallments(v => !v)}
-                    className="w-full flex items-center justify-between text-xs md:text-sm text-gray-600 hover:text-gray-800"
+                    className="w-full flex items-center justify-between text-[11px] md:text-sm text-gray-600 hover:text-gray-800"
                   >
                     <span>
                       ou <span className="font-black text-gray-900">{best.n}x</span> de{' '}
@@ -244,10 +244,10 @@ export default function CarrinhoPage() {
               );
             })()}
 
-            <Link href="/checkout" className="bg-primary-500 hover:bg-primary-600 text-white font-semibold px-4 py-2.5 md:py-3 rounded-lg transition-colors block text-center text-sm md:text-base">
+            <Link href="/checkout" className="bg-primary-500 hover:bg-primary-600 text-white font-semibold px-4 py-2 md:py-3 rounded-lg transition-colors block text-center text-xs md:text-base">
               Finalizar compra
             </Link>
-            <Link href="/" className="block text-center text-xs md:text-sm text-primary-500 hover:underline">
+            <Link href="/" className="block text-center text-[11px] md:text-sm text-primary-500 hover:underline">
               Continuar comprando
             </Link>
           </div>
