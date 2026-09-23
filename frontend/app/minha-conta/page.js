@@ -102,11 +102,11 @@ export default function MinhaContaPage() {
           <form onSubmit={saveInfo} className="space-y-2 border-t pt-3 mt-1">
             <div>
               <label className="block text-xs md:text-sm font-medium mb-0.5">Nome</label>
-              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" value={infoForm.name} onChange={e => setInfoForm(f => ({ ...f, name: e.target.value }))} required />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" value={infoForm.name} onChange={e => setInfoForm(f => ({ ...f, name: e.target.value }))} required />
             </div>
             <div>
               <label className="block text-xs md:text-sm font-medium mb-0.5">Telefone <span className="text-gray-400 font-normal">(opcional)</span></label>
-              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" value={infoForm.phone} onChange={e => setInfoForm(f => ({ ...f, phone: e.target.value }))} placeholder="(11) 99999-9999" />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" value={infoForm.phone} onChange={e => setInfoForm(f => ({ ...f, phone: e.target.value }))} placeholder="(11) 99999-9999" />
             </div>
             <div className="flex gap-2 pt-1">
               <button type="submit" disabled={savingInfo} className="bg-primary-500 hover:bg-primary-600 text-white font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-1.5 disabled:opacity-50 transition-colors">
@@ -146,7 +146,7 @@ export default function MinhaContaPage() {
               <div key={field}>
                 <label className="block text-xs md:text-sm font-medium mb-0.5">{label}</label>
                 <div className="relative">
-                  <input type={show ? 'text' : 'password'} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm pr-9 focus:outline-none focus:ring-2 focus:ring-primary-500" value={pwdForm[field]} onChange={e => setPwdForm(f => ({ ...f, [field]: e.target.value }))} required minLength={field === 'newPassword' ? 6 : undefined} />
+                  <input type={show ? 'text' : 'password'} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm pr-9 focus:outline-none focus:ring-2 focus:ring-primary-500" value={pwdForm[field]} onChange={e => setPwdForm(f => ({ ...f, [field]: e.target.value }))} required minLength={field === 'newPassword' ? 6 : undefined} />
                   <button type="button" onClick={toggle} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400">
                     {show ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
@@ -155,7 +155,7 @@ export default function MinhaContaPage() {
             ))}
             <div>
               <label className="block text-xs md:text-sm font-medium mb-0.5">Confirmar nova senha</label>
-              <input type="password" className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${pwdForm.confirmPassword && pwdForm.newPassword !== pwdForm.confirmPassword ? 'border-red-400' : 'border-gray-300'}`} value={pwdForm.confirmPassword} onChange={e => setPwdForm(f => ({ ...f, confirmPassword: e.target.value }))} required />
+              <input type="password" className={`w-full border rounded-lg px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${pwdForm.confirmPassword && pwdForm.newPassword !== pwdForm.confirmPassword ? 'border-red-400' : 'border-gray-300'}`} value={pwdForm.confirmPassword} onChange={e => setPwdForm(f => ({ ...f, confirmPassword: e.target.value }))} required />
               {pwdForm.confirmPassword && pwdForm.newPassword !== pwdForm.confirmPassword && (
                 <p className="text-red-500 text-xs mt-0.5">As senhas não coincidem</p>
               )}

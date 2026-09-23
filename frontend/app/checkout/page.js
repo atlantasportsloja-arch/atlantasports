@@ -487,7 +487,7 @@ export default function CheckoutPage() {
               </div>
             ) : (
               <div className="flex gap-2">
-                <input value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyCoupon())} placeholder="CÓDIGO DO CUPOM" className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                <input value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyCoupon())} placeholder="CÓDIGO DO CUPOM" className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
                 <button type="button" onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-3 py-2 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50 transition-colors">
                   {couponLoading ? <Loader2 size={13} className="animate-spin" /> : 'Aplicar'}
                 </button>

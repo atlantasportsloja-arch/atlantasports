@@ -46,7 +46,7 @@ function ReviewForm({ productId, productName, onDone }) {
     <form onSubmit={submit} className="mt-3 bg-yellow-50 border border-yellow-200 rounded-xl p-3 space-y-2">
       <p className="text-sm font-semibold text-gray-700">Avaliar: <span className="text-primary-500">{productName}</span></p>
       <StarPicker value={rating} onChange={setRating} />
-      <textarea className="input resize-none text-sm" rows={2} value={comment}
+      <textarea className="input resize-none text-base md:text-sm" rows={2} value={comment}
         onChange={e => setComment(e.target.value)} placeholder="Como foi o produto? (opcional)" />
       <div className="flex gap-2">
         <button type="submit" disabled={loading} className="btn-primary text-sm flex items-center gap-1.5 py-2">
