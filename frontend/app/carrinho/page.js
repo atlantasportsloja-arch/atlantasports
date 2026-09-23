@@ -153,7 +153,7 @@ export default function CarrinhoPage() {
                 value={coupon}
                 onChange={e => setCoupon(e.target.value.toUpperCase())}
                 placeholder="CODIGO"
-                className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
               <button onClick={validateCoupon} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-3 py-1.5 rounded-lg text-xs md:text-sm transition-colors">
                 Aplicar
