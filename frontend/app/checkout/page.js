@@ -250,76 +250,96 @@ export default function CheckoutPage() {
 
           {/* Pagamento */}
           <div className="card p-2 md:p-5">
-            <div className="flex items-center gap-2 mb-1.5 md:mb-2">
+            <div className="flex items-center gap-2 mb-1.5 md:mb-3">
               <CreditCard size={14} className="text-primary-500 md:w-4 md:h-4" />
               <h2 className="font-black text-xs md:text-sm text-gray-500 uppercase tracking-wide">Pagamento</h2>
-              <button onClick={() => setStep(1)} className="ml-auto text-[10px] md:text-xs text-primary-500 hover:underline">Editar</button>
             </div>
-            {paymentMethod === 'pix' ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">⚡</span>
-                  <p className="font-bold">PIX{pixDiscount > 0 ? ` — ${pixDiscount}% off` : ''}</p>
-                </div>
-                {pixKey && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
-                    <p className="text-xs font-bold text-green-700 uppercase tracking-wide">Como pagar com PIX</p>
-                    <ol className="space-y-2">
-                      {[
-                        'Confirme o pedido clicando no botão abaixo',
-                        'Copie a chave PIX',
-                        'Abra o app do seu banco → PIX → Pagar → Cole a chave',
-                        `Valor a pagar: R$ ${fmt(finalTotal)}`,
-                        whatsappNumber ? 'Envie o comprovante pelo WhatsApp para confirmarmos' : 'Aguarde a confirmação por e-mail',
-                      ].map((step, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-green-800">
-                          <span className="w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
-                          {step}
-                        </li>
-                      ))}
-                    </ol>
-                    <div className="border-t border-green-200 pt-3 space-y-2">
-                      {pixHolder && (
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-green-700 font-semibold">Destinatário:</p>
-                          <p className="font-bold text-green-900 text-sm">{pixHolder}</p>
-                        </div>
-                      )}
-                      <p className="text-xs text-green-700 font-semibold">Chave PIX:</p>
-                      <div className="flex items-center gap-2">
-                        <p className="font-mono font-bold text-green-900 break-all text-sm flex-1">{pixKey}</p>
-                        <button type="button" onClick={copyPix} className="flex items-center gap-1 text-xs text-green-700 border border-green-400 bg-white rounded-lg px-2.5 py-1.5 font-bold shrink-0 hover:bg-green-100 transition-colors">
-                          <Copy size={12} /> Copiar
-                        </button>
+            <div className="space-y-1.5 md:space-y-3">
+              {pixKey && (
+                <label className={`block border-2 rounded-xl cursor-pointer transition-colors overflow-hidden ${paymentMethod === 'pix' ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input type="radio" name="payment" value="pix" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} className="sr-only" />
+                  <div className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 ${paymentMethod === 'pix' ? 'bg-green-50' : ''}`}>
+                    <span className="text-base md:text-xl">⚡</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-[11px] md:text-sm">PIX</p>
+                        {pixDiscount > 0 && <span className="text-[9px] md:text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full">{pixDiscount}% off</span>}
                       </div>
+                      <p className="text-[10px] md:text-xs text-gray-500">Pagamento instantâneo</p>
                     </div>
+                    {paymentMethod === 'pix' && <CheckCircle size={16} className="text-green-500 shrink-0" />}
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-500">{WHATSAPP_ICON}</span>
-                  <p className="font-bold">Parcelado via WhatsApp</p>
+                </label>
+              )}
+              {whatsappNumber && (
+                <label className={`block border-2 rounded-xl cursor-pointer transition-colors overflow-hidden ${paymentMethod === 'parcelado' ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input type="radio" name="payment" value="parcelado" checked={paymentMethod === 'parcelado'} onChange={() => setPaymentMethod('parcelado')} className="sr-only" />
+                  <div className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 ${paymentMethod === 'parcelado' ? 'bg-green-50' : ''}`}>
+                    <span className="text-green-500 flex items-center">{WHATSAPP_ICON}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-[11px] md:text-sm">Parcelado via WhatsApp</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Pagamento em até 12x com juros</p>
+                    </div>
+                    {paymentMethod === 'parcelado' && <CheckCircle size={16} className="text-green-500 shrink-0" />}
+                  </div>
+                </label>
+              )}
+              {!pixKey && !whatsappNumber && (
+                <p className="text-[11px] md:text-sm text-gray-500 text-center py-3">Nenhuma forma de pagamento disponível.</p>
+              )}
+            </div>
+
+            {paymentMethod === 'pix' && pixKey && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 md:p-4 space-y-2 md:space-y-3 mt-1.5 md:mt-3">
+                <p className="text-[10px] md:text-xs font-bold text-green-700 uppercase tracking-wide">Como pagar com PIX</p>
+                <ol className="space-y-1.5 md:space-y-2">
+                  {[
+                    'Confirme o pedido clicando no botão abaixo',
+                    'Copie a chave PIX',
+                    'Abra o app do seu banco → PIX → Pagar → Cole a chave',
+                    `Valor a pagar: R$ ${fmt(finalTotal)}`,
+                    whatsappNumber ? 'Envie o comprovante pelo WhatsApp para confirmarmos' : 'Aguarde a confirmação por e-mail',
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[11px] md:text-sm text-green-800">
+                      <span className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-green-500 text-white text-[9px] md:text-xs flex items-center justify-center font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+                <div className="border-t border-green-200 pt-2 md:pt-3 space-y-1.5 md:space-y-2">
+                  {pixHolder && (
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] md:text-xs text-green-700 font-semibold">Destinatário:</p>
+                      <p className="font-bold text-green-900 text-[11px] md:text-sm">{pixHolder}</p>
+                    </div>
+                  )}
+                  <p className="text-[10px] md:text-xs text-green-700 font-semibold">Chave PIX:</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-mono font-bold text-green-900 break-all text-[11px] md:text-sm flex-1">{pixKey}</p>
+                    <button type="button" onClick={copyPix} className="flex items-center gap-1 text-[10px] md:text-xs text-green-700 border border-green-400 bg-white rounded-lg px-2 py-1 md:px-2.5 md:py-1.5 font-bold shrink-0 hover:bg-green-100 transition-colors">
+                      <Copy size={12} /> Copiar
+                    </button>
+                  </div>
                 </div>
-                {whatsappNumber && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
-                    <p className="text-xs font-bold text-green-700 uppercase tracking-wide">Como funciona</p>
-                    <ol className="space-y-2">
-                      {[
-                        'Confirme o pedido clicando no botão abaixo',
-                        'Você receberá uma mensagem no WhatsApp',
-                        'Combine as parcelas e a forma de pagamento com a loja',
-                        'Aguarde a confirmação para começar a separação',
-                      ].map((s, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-green-800">
-                          <span className="w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
-                          {s}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
+              </div>
+            )}
+
+            {paymentMethod === 'parcelado' && whatsappNumber && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 md:p-4 space-y-1.5 md:space-y-2 mt-1.5 md:mt-3">
+                <p className="text-[10px] md:text-xs font-bold text-green-700 uppercase tracking-wide">Como funciona</p>
+                <ol className="space-y-1.5 md:space-y-2">
+                  {[
+                    'Confirme o pedido clicando no botão abaixo',
+                    'Você receberá uma mensagem no WhatsApp',
+                    'Combine as parcelas e a forma de pagamento com a loja',
+                    'Aguarde a confirmação para começar a separação',
+                  ].map((s, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[11px] md:text-sm text-green-800">
+                      <span className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-green-500 text-white text-[9px] md:text-xs flex items-center justify-center font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
+                      {s}
+                    </li>
+                  ))}
+                </ol>
               </div>
             )}
           </div>
@@ -493,56 +513,6 @@ export default function CheckoutPage() {
                 </button>
               </div>
             )}
-          </div>
-
-          {/* Pagamento */}
-          <div className="card p-2 md:p-6">
-            <h2 className="font-black mb-1.5 md:mb-4 text-xs md:text-base">Forma de pagamento</h2>
-            <div className="space-y-1.5 md:space-y-3">
-              {pixKey && (
-                <label className={`block border-2 rounded-xl cursor-pointer transition-colors overflow-hidden ${paymentMethod === 'pix' ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'}`}>
-                  <input type="radio" name="payment" value="pix" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} className="sr-only" />
-                  <div className={`flex items-center gap-2 md:gap-3 p-2 md:p-4 ${paymentMethod === 'pix' ? 'bg-green-50' : ''}`}>
-                    <span className="text-base md:text-2xl">⚡</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold text-[11px] md:text-base">PIX</p>
-                        {pixDiscount > 0 && <span className="text-[9px] md:text-xs font-bold bg-green-500 text-white px-1.5 py-0.5 md:px-2 rounded-full">{pixDiscount}% off</span>}
-                      </div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Pagamento instantâneo</p>
-                    </div>
-                    {paymentMethod === 'pix' && <CheckCircle size={18} className="text-green-500 shrink-0" />}
-                  </div>
-                  {paymentMethod === 'pix' && pixKey && (
-                    <div className="border-t border-green-200 bg-white px-3 py-2 md:px-4 md:py-3">
-                      <p className="text-[10px] md:text-xs text-gray-500 mb-1">Chave PIX:</p>
-                      <div className="flex items-center gap-2">
-                        <p className="font-mono font-bold text-gray-800 break-all text-[11px] md:text-sm flex-1">{pixKey}</p>
-                        <button type="button" onClick={copyPix} className="flex items-center gap-1 text-[10px] md:text-xs text-green-600 border border-green-300 rounded-lg px-2 py-1 font-semibold shrink-0">
-                          <Copy size={12} /> Copiar
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </label>
-              )}
-              {whatsappNumber && (
-                <label className={`block border-2 rounded-xl cursor-pointer transition-colors overflow-hidden ${paymentMethod === 'parcelado' ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'}`}>
-                  <input type="radio" name="payment" value="parcelado" checked={paymentMethod === 'parcelado'} onChange={() => setPaymentMethod('parcelado')} className="sr-only" />
-                  <div className={`flex items-center gap-2 md:gap-3 p-2 md:p-4 ${paymentMethod === 'parcelado' ? 'bg-green-50' : ''}`}>
-                    <span className="text-green-500 flex items-center">{WHATSAPP_ICON}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-[11px] md:text-base">Parcelado via WhatsApp</p>
-                      <p className="text-[10px] md:text-xs text-gray-500">Pagamento em até 12x com juros</p>
-                    </div>
-                    {paymentMethod === 'parcelado' && <CheckCircle size={18} className="text-green-500 shrink-0" />}
-                  </div>
-                </label>
-              )}
-              {!pixKey && !whatsappNumber && (
-                <p className="text-[11px] md:text-sm text-gray-500 text-center py-4">Nenhuma forma de pagamento disponível.</p>
-              )}
-            </div>
           </div>
 
           {/* Botão → revisão */}
