@@ -26,7 +26,7 @@ router.get('/track', async (req, res) => {
     if (!order) return res.status(404).json({ error: 'Pedido não encontrado. Verifique o número e o e-mail cadastrado.' });
 
     const history = await prisma.$queryRawUnsafe(
-      `SELECT to_status, changed_at FROM order_status_history WHERE order_id = $1 ORDER BY changed_at ASC`,
+      `SELECT to_status, changed_at FROM order_status_history WHERE order_id = $1::uuid ORDER BY changed_at ASC`,
       order.id
     );
 
@@ -258,7 +258,7 @@ router.get('/admin/all', adminMiddleware, async (req, res) => {
       try {
         const ids = orders.map(o => o.id);
         const notes = await prisma.$queryRawUnsafe(
-          `SELECT id, "adminNote" FROM orders WHERE id = ANY($1::uuid[])`,
+          `SELECT id, "adminNote" FROM orders WHERE id = ANY($1::text[])`,
           ids
         );
         const noteMap = Object.fromEntries(notes.map(n => [n.id, n.adminNote || '']));
@@ -499,7 +499,7 @@ router.delete('/admin/:id', adminMiddleware, async (req, res) => {
     // 2. returns (referencia orders)
     await prisma.return.deleteMany({ where: { orderId } });
     // 3. order_status_history (tabela SQL pura, sem model Prisma)
-    await prisma.$executeRawUnsafe(`DELETE FROM order_status_history WHERE order_id = $1`, orderId);
+    await prisma.$executeRawUnsafe(`DELETE FROM order_status_history WHERE order_id = $1::uuid`, orderId);
     // 4. order_items
     await prisma.orderItem.deleteMany({ where: { orderId } });
     // 5. order
