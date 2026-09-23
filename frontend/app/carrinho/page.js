@@ -71,27 +71,27 @@ export default function CarrinhoPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-2 md:px-4 py-2 md:py-8">
-      <h1 className="text-sm md:text-2xl font-black mb-2 md:mb-8">
+      <h1 className="text-xs md:text-2xl font-black mb-1.5 md:mb-8">
         Carrinho ({items.length} {items.length === 1 ? 'item' : 'itens'})
       </h1>
 
-      <div className="grid md:grid-cols-3 gap-1.5 md:gap-8">
+      <div className="grid md:grid-cols-3 gap-1 md:gap-8">
 
         {/* ITENS */}
-        <div className="md:col-span-2 space-y-1 md:space-y-4">
+        <div className="md:col-span-2 space-y-0.5 md:space-y-4">
           {items.map(item => (
-            <div key={item.id} className="card p-1.5 md:p-4 flex gap-1.5 md:gap-4">
-              <div className="relative w-11 h-11 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+            <div key={item.id} className="card p-1 md:p-4 flex gap-1 md:gap-4">
+              <div className="relative w-9 h-9 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                 {item.product.images?.[0] ? (
                   <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-base">👕</div>
+                  <div className="w-full h-full flex items-center justify-center text-sm">👕</div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[11px] md:text-base leading-tight truncate">{item.product.name}</p>
+                <p className="font-semibold text-[10px] md:text-base leading-tight truncate">{item.product.name}</p>
                 {item.variant?.size && (
-                  <span className="inline-block text-[9px] bg-gray-100 text-gray-600 px-1 py-0.5 rounded font-medium mt-0.5">
+                  <span className="inline-block text-[9px] bg-gray-100 text-gray-600 px-1 py-0.5 rounded font-medium mt-0.5 leading-none">
                     {item.variant.size}
                   </span>
                 )}
@@ -109,7 +109,7 @@ export default function CarrinhoPage() {
                     )}
                   </div>
                 )}
-                <p className="text-primary-500 font-bold text-[11px] md:text-sm mt-0.5">
+                <p className="text-primary-500 font-bold text-[10px] md:text-sm mt-0.5">
                   R$ {(() => {
                     const base = item.variant?.price ?? item.product.price;
                     const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
@@ -117,19 +117,19 @@ export default function CarrinhoPage() {
                     return (base + extra).toFixed(2).replace('.', ',');
                   })()}
                 </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="flex items-center border border-gray-300 rounded overflow-hidden text-[10px]">
+                <div className="flex items-center gap-1 mt-0.5">
+                  <div className="flex items-center border border-gray-300 rounded overflow-hidden text-[9px] leading-none">
                     <button className="px-1 py-0.5 hover:bg-gray-100 font-bold" onClick={() => updateQty(item.id, Math.max(1, item.quantity - 1))}>−</button>
-                    <span className="px-1.5 border-x border-gray-300">{item.quantity}</span>
+                    <span className="px-1 border-x border-gray-300">{item.quantity}</span>
                     <button className="px-1 py-0.5 hover:bg-gray-100 font-bold" onClick={() => updateQty(item.id, item.quantity + 1)}>+</button>
                   </div>
                   <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600">
-                    <Trash2 size={12} />
+                    <Trash2 size={11} />
                   </button>
                 </div>
               </div>
               <div className="text-right flex-shrink-0 flex flex-col justify-between">
-                <p className="font-black text-[11px] md:text-base">
+                <p className="font-black text-[10px] md:text-base">
                   R$ {(() => {
                     const base = item.variant?.price ?? item.product.price;
                     const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
@@ -143,7 +143,7 @@ export default function CarrinhoPage() {
         </div>
 
         {/* RESUMO + CUPOM */}
-        <div className="space-y-1.5 md:space-y-4">
+        <div className="space-y-1 md:space-y-4">
 
           {/* Cupom */}
           <div className="card p-2 md:p-4">
