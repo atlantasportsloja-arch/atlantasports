@@ -85,7 +85,7 @@ export default function CheckoutPage() {
 
   const fmt = (v) => `R$ ${Number(v).toFixed(2).replace('.', ',')}`;
   const inputClass = (field) =>
-    `w-full border rounded-lg px-3 py-2 md:px-4 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${errors[field] ? 'border-red-400 focus:ring-red-200' : 'border-gray-300'}`;
+    `w-full border rounded-lg px-3 py-2 md:px-4 md:py-3 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${errors[field] ? 'border-red-400 focus:ring-red-200' : 'border-gray-300'}`;
 
   async function fetchCep(cep) {
     const digits = cep.replace(/\D/g, '');
@@ -382,113 +382,113 @@ export default function CheckoutPage() {
     <div className="max-w-5xl mx-auto px-2 md:px-4 py-3 md:py-8">
       <StepBar current={1} />
 
-      <div className="grid md:grid-cols-3 gap-2 md:gap-8">
-        <form onSubmit={goToReview} className="md:col-span-2 space-y-2 md:space-y-4">
+      <div className="grid md:grid-cols-3 gap-1.5 md:gap-8">
+        <form onSubmit={goToReview} className="md:col-span-2 space-y-1.5 md:space-y-4">
 
           {/* Endereço */}
-          <div className="card p-3 md:p-6">
-            <div className="flex items-center justify-between mb-2 md:mb-4">
-              <h2 className="font-black text-sm md:text-base">Endereço de entrega</h2>
+          <div className="card p-2 md:p-6">
+            <div className="flex items-center justify-between mb-1.5 md:mb-4">
+              <h2 className="font-black text-xs md:text-base">Endereço de entrega</h2>
               {lastAddressUsed && (
-                <span className="text-xs text-green-600 bg-green-50 border border-green-200 px-2 py-1 rounded-lg font-medium">
+                <span className="text-[10px] md:text-xs text-green-600 bg-green-50 border border-green-200 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg font-medium">
                   ✓ Último endereço usado
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-2 md:gap-4">
+            <div className="grid grid-cols-2 gap-1.5 md:gap-4">
               <div className="col-span-2 sm:col-span-1">
-                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">CEP</label>
+                <label className="block text-[10px] md:text-sm font-medium mb-0.5 md:mb-1">CEP</label>
                 <div className="relative">
                   <input className={inputClass('zip')} value={address.zip} onChange={handleZipChange} placeholder="00000-000" maxLength={9} />
                   {cepLoading && <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-gray-400" />}
                 </div>
-                {errors.zip && <p className="text-red-500 text-xs mt-1">{errors.zip}</p>}
+                {errors.zip && <p className="text-red-500 text-[10px] mt-1">{errors.zip}</p>}
               </div>
               <div className="col-span-2">
-                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Rua</label>
+                <label className="block text-[10px] md:text-sm font-medium mb-0.5 md:mb-1">Rua</label>
                 <input className={inputClass('street')} value={address.street} onChange={e => fieldChange('street', e.target.value)} placeholder="Nome da rua" />
-                {errors.street && <p className="text-red-500 text-xs mt-0.5">{errors.street}</p>}
+                {errors.street && <p className="text-red-500 text-[10px] mt-0.5">{errors.street}</p>}
               </div>
               <div>
-                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Número</label>
+                <label className="block text-[10px] md:text-sm font-medium mb-0.5 md:mb-1">Número</label>
                 <input className={inputClass('number')} value={address.number} onChange={e => fieldChange('number', e.target.value)} placeholder="123" />
-                {errors.number && <p className="text-red-500 text-xs mt-0.5">{errors.number}</p>}
+                {errors.number && <p className="text-red-500 text-[10px] mt-0.5">{errors.number}</p>}
               </div>
               <div>
-                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Complemento <span className="text-gray-400 font-normal">(opcional)</span></label>
+                <label className="block text-[10px] md:text-sm font-medium mb-0.5 md:mb-1">Complemento <span className="text-gray-400 font-normal">(opcional)</span></label>
                 <input className={inputClass('')} value={address.complement} onChange={e => fieldChange('complement', e.target.value)} placeholder="Apto, bloco..." />
               </div>
               <div>
-                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Bairro</label>
+                <label className="block text-[10px] md:text-sm font-medium mb-0.5 md:mb-1">Bairro</label>
                 <input className={inputClass('neighborhood')} value={address.neighborhood} onChange={e => fieldChange('neighborhood', e.target.value)} />
-                {errors.neighborhood && <p className="text-red-500 text-xs mt-0.5">{errors.neighborhood}</p>}
+                {errors.neighborhood && <p className="text-red-500 text-[10px] mt-0.5">{errors.neighborhood}</p>}
               </div>
               <div>
-                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Cidade</label>
+                <label className="block text-[10px] md:text-sm font-medium mb-0.5 md:mb-1">Cidade</label>
                 <input className={inputClass('city')} value={address.city} onChange={e => fieldChange('city', e.target.value)} />
-                {errors.city && <p className="text-red-500 text-xs mt-0.5">{errors.city}</p>}
+                {errors.city && <p className="text-red-500 text-[10px] mt-0.5">{errors.city}</p>}
               </div>
               <div className="col-span-2 sm:col-span-1">
-                <label className="block text-xs md:text-sm font-medium mb-0.5 md:mb-1">Estado (UF)</label>
+                <label className="block text-[10px] md:text-sm font-medium mb-0.5 md:mb-1">Estado (UF)</label>
                 <input className={inputClass('state')} value={address.state} onChange={e => fieldChange('state', e.target.value.toUpperCase().slice(0, 2))} placeholder="SP" maxLength={2} />
-                {errors.state && <p className="text-red-500 text-xs mt-0.5">{errors.state}</p>}
+                {errors.state && <p className="text-red-500 text-[10px] mt-0.5">{errors.state}</p>}
               </div>
             </div>
           </div>
 
           {/* Frete */}
-          <div className="card p-3 md:p-6">
-            <h2 className="font-black mb-2 md:mb-4 text-sm md:text-base flex items-center gap-2">
-              <Truck size={16} className="text-primary-500" /> Frete
+          <div className="card p-2 md:p-6">
+            <h2 className="font-black mb-1.5 md:mb-4 text-xs md:text-base flex items-center gap-1.5 md:gap-2">
+              <Truck size={14} className="text-primary-500 md:w-4 md:h-4" /> Frete
             </h2>
             {isFreeShipping ? (
-              <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-                <span className="text-green-600 text-xl">🎉</span>
+              <div className="flex items-center gap-2 md:gap-3 bg-green-50 border border-green-200 rounded-xl px-3 py-2 md:px-4 md:py-3">
+                <span className="text-green-600 text-base md:text-xl">🎉</span>
                 <div>
-                  <p className="font-bold text-green-700">Frete grátis!</p>
-                  <p className="text-xs text-green-600">Pedido acima de {fmt(freeShippingThreshold)}</p>
+                  <p className="font-bold text-green-700 text-[11px] md:text-base">Frete grátis!</p>
+                  <p className="text-[10px] md:text-xs text-green-600">Pedido acima de {fmt(freeShippingThreshold)}</p>
                 </div>
               </div>
             ) : freteOpcoes ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5 md:space-y-2">
                 {freteOpcoes.map(op => (
-                  <label key={op.id} className={`flex items-center gap-3 border-2 rounded-xl p-3 cursor-pointer transition-colors ${freteSelecionado?.id === op.id ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <label key={op.id} className={`flex items-center gap-2 md:gap-3 border-2 rounded-xl p-2 md:p-3 cursor-pointer transition-colors ${freteSelecionado?.id === op.id ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'}`}>
                     <input type="radio" name="frete" className="sr-only" checked={freteSelecionado?.id === op.id} onChange={() => setFreteSelecionado(op)} />
                     <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${freteSelecionado?.id === op.id ? 'border-primary-500' : 'border-gray-300'}`}>
                       {freteSelecionado?.id === op.id && <div className="w-2 h-2 rounded-full bg-primary-500" />}
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm">{op.servico}</p>
-                      <p className="text-xs text-gray-500">{op.prazo}</p>
+                      <p className="font-bold text-[11px] md:text-sm">{op.servico}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">{op.prazo}</p>
                     </div>
-                    <p className="font-black text-primary-600">{fmt(op.preco)}</p>
+                    <p className="font-black text-primary-600 text-[11px] md:text-base">{fmt(op.preco)}</p>
                   </label>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400 py-2">Preencha o CEP para calcular o frete.</p>
+              <p className="text-[11px] md:text-sm text-gray-400 py-2">Preencha o CEP para calcular o frete.</p>
             )}
           </div>
 
           {/* Cupom */}
-          <div className="card p-3 md:p-6">
-            <h2 className="font-black mb-2 md:mb-4 text-sm md:text-base flex items-center gap-2">
-              <Tag size={16} className="text-primary-500" /> Cupom de desconto
+          <div className="card p-2 md:p-6">
+            <h2 className="font-black mb-1.5 md:mb-4 text-xs md:text-base flex items-center gap-1.5 md:gap-2">
+              <Tag size={14} className="text-primary-500 md:w-4 md:h-4" /> Cupom de desconto
             </h2>
             {couponCode ? (
-              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2 md:px-4 md:py-3">
                 <div>
-                  <p className="font-bold text-green-700 font-mono">{couponCode}</p>
-                  <p className="text-xs text-green-600">− {fmt(discount)} de desconto</p>
+                  <p className="font-bold text-green-700 font-mono text-[11px] md:text-base">{couponCode}</p>
+                  <p className="text-[10px] md:text-xs text-green-600">− {fmt(discount)} de desconto</p>
                 </div>
                 <button type="button" onClick={() => { clearCoupon(); setCouponInput(''); }} className="text-gray-400 hover:text-red-500">
                   <X size={18} />
                 </button>
               </div>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 md:gap-2">
                 <input value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyCoupon())} placeholder="CÓDIGO DO CUPOM" className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-                <button type="button" onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-3 py-2 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50 transition-colors">
+                <button type="button" onClick={applyCoupon} disabled={couponLoading || !couponInput.trim()} className="border border-primary-500 text-primary-500 hover:bg-primary-50 font-semibold px-3 py-2 rounded-lg text-[11px] md:text-sm flex items-center gap-1 disabled:opacity-50 transition-colors">
                   {couponLoading ? <Loader2 size={13} className="animate-spin" /> : 'Aplicar'}
                 </button>
               </div>
@@ -496,29 +496,29 @@ export default function CheckoutPage() {
           </div>
 
           {/* Pagamento */}
-          <div className="card p-3 md:p-6">
-            <h2 className="font-black mb-2 md:mb-4 text-sm md:text-base">Forma de pagamento</h2>
-            <div className="space-y-2 md:space-y-3">
+          <div className="card p-2 md:p-6">
+            <h2 className="font-black mb-1.5 md:mb-4 text-xs md:text-base">Forma de pagamento</h2>
+            <div className="space-y-1.5 md:space-y-3">
               {pixKey && (
                 <label className={`block border-2 rounded-xl cursor-pointer transition-colors overflow-hidden ${paymentMethod === 'pix' ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'}`}>
                   <input type="radio" name="payment" value="pix" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} className="sr-only" />
-                  <div className={`flex items-center gap-2 md:gap-3 p-3 md:p-4 ${paymentMethod === 'pix' ? 'bg-green-50' : ''}`}>
-                    <span className="text-xl md:text-2xl">⚡</span>
+                  <div className={`flex items-center gap-2 md:gap-3 p-2 md:p-4 ${paymentMethod === 'pix' ? 'bg-green-50' : ''}`}>
+                    <span className="text-base md:text-2xl">⚡</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold text-sm md:text-base">PIX</p>
-                        {pixDiscount > 0 && <span className="text-xs font-bold bg-green-500 text-white px-2 py-0.5 rounded-full">{pixDiscount}% off</span>}
+                        <p className="font-bold text-[11px] md:text-base">PIX</p>
+                        {pixDiscount > 0 && <span className="text-[9px] md:text-xs font-bold bg-green-500 text-white px-1.5 py-0.5 md:px-2 rounded-full">{pixDiscount}% off</span>}
                       </div>
-                      <p className="text-xs text-gray-500">Pagamento instantâneo</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Pagamento instantâneo</p>
                     </div>
                     {paymentMethod === 'pix' && <CheckCircle size={18} className="text-green-500 shrink-0" />}
                   </div>
                   {paymentMethod === 'pix' && pixKey && (
-                    <div className="border-t border-green-200 bg-white px-4 py-3">
-                      <p className="text-xs text-gray-500 mb-1">Chave PIX:</p>
+                    <div className="border-t border-green-200 bg-white px-3 py-2 md:px-4 md:py-3">
+                      <p className="text-[10px] md:text-xs text-gray-500 mb-1">Chave PIX:</p>
                       <div className="flex items-center gap-2">
-                        <p className="font-mono font-bold text-gray-800 break-all text-sm flex-1">{pixKey}</p>
-                        <button type="button" onClick={copyPix} className="flex items-center gap-1 text-xs text-green-600 border border-green-300 rounded-lg px-2 py-1 font-semibold shrink-0">
+                        <p className="font-mono font-bold text-gray-800 break-all text-[11px] md:text-sm flex-1">{pixKey}</p>
+                        <button type="button" onClick={copyPix} className="flex items-center gap-1 text-[10px] md:text-xs text-green-600 border border-green-300 rounded-lg px-2 py-1 font-semibold shrink-0">
                           <Copy size={12} /> Copiar
                         </button>
                       </div>
@@ -529,18 +529,18 @@ export default function CheckoutPage() {
               {whatsappNumber && (
                 <label className={`block border-2 rounded-xl cursor-pointer transition-colors overflow-hidden ${paymentMethod === 'parcelado' ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'}`}>
                   <input type="radio" name="payment" value="parcelado" checked={paymentMethod === 'parcelado'} onChange={() => setPaymentMethod('parcelado')} className="sr-only" />
-                  <div className={`flex items-center gap-2 md:gap-3 p-3 md:p-4 ${paymentMethod === 'parcelado' ? 'bg-green-50' : ''}`}>
+                  <div className={`flex items-center gap-2 md:gap-3 p-2 md:p-4 ${paymentMethod === 'parcelado' ? 'bg-green-50' : ''}`}>
                     <span className="text-green-500 flex items-center">{WHATSAPP_ICON}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm md:text-base">Parcelado via WhatsApp</p>
-                      <p className="text-xs text-gray-500">Pagamento em até 12x com juros</p>
+                      <p className="font-bold text-[11px] md:text-base">Parcelado via WhatsApp</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Pagamento em até 12x com juros</p>
                     </div>
                     {paymentMethod === 'parcelado' && <CheckCircle size={18} className="text-green-500 shrink-0" />}
                   </div>
                 </label>
               )}
               {!pixKey && !whatsappNumber && (
-                <p className="text-sm text-gray-500 text-center py-4">Nenhuma forma de pagamento disponível.</p>
+                <p className="text-[11px] md:text-sm text-gray-500 text-center py-4">Nenhuma forma de pagamento disponível.</p>
               )}
             </div>
           </div>
@@ -549,7 +549,7 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={!pixKey && !whatsappNumber}
-            className="w-full flex items-center justify-center gap-2 text-sm md:text-base py-3 md:py-4 font-bold rounded-xl bg-gray-900 hover:bg-gray-800 text-white transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 text-xs md:text-base py-2.5 md:py-4 font-bold rounded-xl bg-gray-900 hover:bg-gray-800 text-white transition-colors disabled:opacity-60"
           >
             Revisar pedido <ChevronRight size={16} />
           </button>
@@ -557,15 +557,15 @@ export default function CheckoutPage() {
 
         {/* Resumo lateral */}
         <div>
-          <div className="card p-3 md:p-6 space-y-2 md:space-y-4 sticky top-24">
-            <h2 className="font-black">Resumo</h2>
-            <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+          <div className="card p-2 md:p-6 space-y-1.5 md:space-y-4 md:sticky md:top-24">
+            <h2 className="font-black text-xs md:text-base">Resumo</h2>
+            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
               {items.map(item => {
                 const base = item.variant?.price ?? item.product.price;
                 const extra = (item.personalization?.name ? item.product.personalizationNamePrice || 0 : 0)
                             + (item.personalization?.number ? item.product.personalizationNumberPrice || 0 : 0);
                 return (
-                  <div key={item.id} className="text-sm space-y-0.5">
+                  <div key={item.id} className="text-[11px] md:text-sm space-y-0.5">
                     <div className="flex justify-between gap-2">
                       <span className="truncate text-gray-600 flex-1 min-w-0">
                         {item.product.name}
@@ -577,12 +577,12 @@ export default function CheckoutPage() {
                     {(item.personalization?.name || item.personalization?.number) && (
                       <div className="flex flex-wrap gap-1">
                         {item.personalization.name && (
-                          <span className="text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1 py-0.5 rounded">
                             ✏️ {item.personalization.name}
                           </span>
                         )}
                         {item.personalization.number && (
-                          <span className="text-[10px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] bg-purple-50 border border-purple-200 text-purple-700 font-semibold px-1 py-0.5 rounded">
                             🔢 {item.personalization.number}
                           </span>
                         )}
@@ -592,23 +592,23 @@ export default function CheckoutPage() {
                 );
               })}
             </div>
-            <div className="border-t pt-3 space-y-2 text-sm">
+            <div className="border-t pt-2 md:pt-3 space-y-1 md:space-y-2 text-[11px] md:text-sm">
               <div className="flex justify-between"><span>Subtotal</span><span>{fmt(total)}</span></div>
               {discount > 0 && <div className="flex justify-between text-green-600"><span>Cupom ({couponCode})</span><span>− {fmt(discount)}</span></div>}
               {pixDiscountAmount > 0 && <div className="flex justify-between text-green-600 font-semibold"><span>⚡ PIX ({pixDiscount}%)</span><span>− {fmt(pixDiscountAmount)}</span></div>}
               <div className="flex justify-between">
                 <span>Frete{freteSelecionado && !isFreeShipping ? ` (${freteSelecionado.servico})` : ''}</span>
-                <span className={isFreeShipping ? 'text-green-600 font-semibold' : shippingCost === null ? 'text-gray-400 text-xs' : ''}>
+                <span className={isFreeShipping ? 'text-green-600 font-semibold' : shippingCost === null ? 'text-gray-400 text-[10px]' : ''}>
                   {isFreeShipping ? 'Grátis' : shippingCost === null ? 'a calcular' : fmt(shippingCost)}
                 </span>
               </div>
             </div>
-            <div className="border-t pt-2 flex justify-between font-black text-base md:text-lg">
+            <div className="border-t pt-1.5 md:pt-2 flex justify-between font-black text-sm md:text-lg">
               <span>Total</span>
               <span className="text-primary-600">{shippingCost === null && !isFreeShipping ? '—' : fmt(finalTotal)}</span>
             </div>
             {!isFreeShipping && total < freeShippingThreshold && (
-              <p className="text-xs text-gray-400 text-center">
+              <p className="text-[10px] md:text-xs text-gray-400 text-center">
                 Faltam <span className="font-semibold text-primary-500">{fmt(freeShippingThreshold - total)}</span> para frete grátis
               </p>
             )}
