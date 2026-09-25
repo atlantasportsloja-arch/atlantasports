@@ -11,10 +11,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
       return cb(new Error('Apenas imagens são permitidas'));
@@ -23,7 +25,17 @@ const upload = multer({
   },
 });
 
-router.post('/produto', adminMiddleware, upload.array('images', 6), async (req, res) => {
+function handleUploadErrors(err, req, res, next) {
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: `Imagem muito grande. Máximo de ${MAX_FILE_SIZE / (1024 * 1024)}MB por imagem.` });
+  }
+  if (err) {
+    return res.status(400).json({ error: err.message || 'Erro ao processar imagem' });
+  }
+  next();
+}
+
+router.post('/produto', adminMiddleware, upload.array('images', 6), handleUploadErrors, async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'Nenhuma imagem enviada' });

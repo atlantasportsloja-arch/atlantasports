@@ -28,8 +28,8 @@ export default function ImageUpload({ images = [], onChange, maxImages = 6 }) {
 
       onChange([...images, ...data.urls]);
       toast.success(`${data.urls.length} imagem(ns) enviada(s)`);
-    } catch {
-      toast.error('Erro ao enviar imagens');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao enviar imagens');
     } finally {
       setUploading(false);
       e.target.value = '';

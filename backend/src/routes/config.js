@@ -1,9 +1,16 @@
 const express = require('express');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
+const { Prisma } = require('@prisma/client');
 const prisma = require('../lib/prisma');
 const adminMiddleware = require('../middleware/admin');
 const cache = require('../lib/cache');
+
+function bannersArraySql(banners) {
+  return banners.length
+    ? Prisma.sql`ARRAY[${Prisma.join(banners)}]::text[]`
+    : Prisma.sql`ARRAY[]::text[]`;
+}
 
 const CONFIG_CACHE_KEY = 'store:config';
 const CONFIG_TTL = 120; // 2 minutos
@@ -16,13 +23,25 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (_, file, cb) => {
-    file.mimetype.startsWith('image/') ? cb(null, true) : cb(new Error('Apenas imagens'));
+    file.mimetype.startsWith('image/') ? cb(null, true) : cb(new Error('Apenas imagens são permitidas'));
   },
 });
+
+function handleUploadErrors(err, req, res, next) {
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: `Imagem muito grande. Máximo de ${MAX_FILE_SIZE / (1024 * 1024)}MB.` });
+  }
+  if (err) {
+    return res.status(400).json({ error: err.message || 'Erro ao processar imagem' });
+  }
+  next();
+}
 
 router.get('/', async (req, res) => {
   const cached = cache.get(CONFIG_CACHE_KEY);
@@ -114,7 +133,7 @@ router.patch('/encomenda-note', adminMiddleware, async (req, res) => {
   }
 });
 
-router.post('/banner', adminMiddleware, upload.single('banner'), async (req, res) => {
+router.post('/banner', adminMiddleware, upload.single('banner'), handleUploadErrors, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Imagem obrigatória' });
     const url = await new Promise((resolve, reject) => {
@@ -126,7 +145,7 @@ router.post('/banner', adminMiddleware, upload.single('banner'), async (req, res
     });
     const config = await prisma.$queryRaw`SELECT banners FROM "store_config" WHERE id = 'default'`;
     const newBanners = [...(config[0]?.banners || []), url];
-    await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${newBanners}, "updatedAt" = NOW() WHERE id = 'default'`;
+    await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${bannersArraySql(newBanners)}, "updatedAt" = NOW() WHERE id = 'default'`;
     cache.del(CONFIG_CACHE_KEY);
     res.json({ url, banners: newBanners });
   } catch (err) {
@@ -140,7 +159,7 @@ router.delete('/banner', adminMiddleware, async (req, res) => {
   try {
     const config = await prisma.$queryRaw`SELECT banners FROM "store_config" WHERE id = 'default'`;
     const newBanners = (config[0]?.banners || []).filter(b => b !== url);
-    await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${newBanners}, "updatedAt" = NOW() WHERE id = 'default'`;
+    await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${bannersArraySql(newBanners)}, "updatedAt" = NOW() WHERE id = 'default'`;
     cache.del(CONFIG_CACHE_KEY);
     res.json({ banners: newBanners });
   } catch {
@@ -148,7 +167,7 @@ router.delete('/banner', adminMiddleware, async (req, res) => {
   }
 });
 
-router.post('/favicon', adminMiddleware, upload.single('favicon'), async (req, res) => {
+router.post('/favicon', adminMiddleware, upload.single('favicon'), handleUploadErrors, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Imagem obrigatória' });
     const url = await new Promise((resolve, reject) => {
@@ -186,7 +205,7 @@ router.post('/banner/restore', adminMiddleware, async (req, res) => {
       max_results: 50,
     });
     const urls = result.resources.map(r => r.secure_url);
-    await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${urls}, "updatedAt" = NOW() WHERE id = 'default'`;
+    await prisma.$executeRaw`UPDATE "store_config" SET "banners" = ${bannersArraySql(urls)}, "updatedAt" = NOW() WHERE id = 'default'`;
     res.json({ restored: urls.length, banners: urls });
   } catch (err) {
     console.error(err);

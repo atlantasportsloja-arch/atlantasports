@@ -102,8 +102,8 @@ export default function CategoriasPage() {
       });
       setForm(f => ({ ...f, image: data.urls[0] }));
       toast.success('Imagem enviada!');
-    } catch {
-      toast.error('Erro ao enviar imagem');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao enviar imagem');
     } finally {
       setUploading(false);
       e.target.value = '';

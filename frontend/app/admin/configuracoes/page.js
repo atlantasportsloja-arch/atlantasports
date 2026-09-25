@@ -132,8 +132,8 @@ export default function ConfiguracoesPage() {
       });
       setConfig(c => ({ ...c, banners: data.banners }));
       toast.success('Banner adicionado!');
-    } catch {
-      toast.error('Erro ao enviar banner');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao enviar banner');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -174,8 +174,8 @@ export default function ConfiguracoesPage() {
       });
       setConfig(c => ({ ...c, faviconUrl: data.faviconUrl }));
       toast.success('Favicon atualizado! As alterações aparecem no navegador em até 1h.');
-    } catch {
-      toast.error('Erro ao enviar favicon');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao enviar favicon');
     } finally {
       setUploadingFavicon(false);
       e.target.value = '';
